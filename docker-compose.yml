@@ -1,0 +1,37 @@
+services:
+  database:
+    image: postgres:17
+    userns_mode: "keep-id:uid=999,gid=999"
+    sysctls:
+      net.ipv4.ping_group_range: "999 999"
+    container_name: matcha_database
+    environment:
+      POSTGRES_DB: matcha
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    
+  backend:
+    build:
+      context: ./backend
+    container_name: matcha_backend
+    ports:
+      - "18080:18080"
+    depends_on:
+      - database
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: matcha_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    
