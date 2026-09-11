@@ -6,20 +6,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	build-essential \
 	cmake \
 	git \
-	libasio-dev \
+	tar \
+	zip \
+	curl \
+	unzip \
 	ca-certificates \
+	pkg-config \
 	&& update-ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
+RUN git clone https://github.com/microsoft/vcpkg.git /opt/vcpkg \
+    && /opt/vcpkg/bootstrap-vcpkg.sh
+
 WORKDIR /app
 
-RUN git clone --depth 1 https://github.com/CrowCpp/Crow.git /tmp/crow \
-    && mkdir -p /usr/local/include \
-    && cp -r /tmp/crow/include/. /usr/local/include/
+COPY . .
 
-COPY CMakeLists.txt .
-COPY src ./src
+RUN /opt/vcpkg/vcpkg install
+
+RUN find /app/vcpkg_installed -name "crow.h" -o -name "CrowConfig.cmake"
+
 RUN cmake -B build -S . \
+	-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
 	&& cmake --build build
 
 EXPOSE 18080

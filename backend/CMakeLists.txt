@@ -1,17 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(matcha_backend)
+project(matcha_backend LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(
-    matcha_backend
+find_package(Crow CONFIG REQUIRED)
+
+add_executable(matcha_backend
     src/main.cpp
 )
 
-target_include_directories(
-    matcha_backend
-    PRIVATE
-    /usr/local/include
+target_link_libraries(matcha_backend
+    PRIVATE Crow::Crow
 )
