@@ -9,45 +9,33 @@ interface DataProfilProps
   bio: string;
 }
 
-function Button()
+function MyProfil({name, age, city, bio}: DataProfilProps)
 {
-  return (
-    <>
-      <button>Voir mon profil</button>
-    </>
-  )
-}
 
-function Save()
-{
   function handleSubmit(e)
   {
     e.preventDefault();
     const form = e.target;
-    const formData = FormData(form);
+    const formData = new FormData(form);
     const name = formData.get("name");
-    const age = formData.get("age");
+    const age = Number(formData.get("age"));
     const city = formData.get("location");
     const bio = formData.get("bio");
 
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({name:{name}, age:{age}, city:{city}, bio:{bio}})
+      body: JSON.stringify({name:name, age:age, city:city, bio:bio})
     };
-    fetch('http://localhost:18080/api/profil', requestOptions)
+    fetch('http://localhost:18080/api/pushProfil/', requestOptions)
     .then(response => response.json())
-    .then(data => console.log(data.message));
+    .then(data => console.log(data));
   }
-}
-
-function MyProfil({name, age, city, bio}: DataProfilProps)
-{
 
   return (
     <>
       <div>
-        <form action={Save}>
+        <form onSubmit={handleSubmit}>
           <input name="name" defaultValue={name}/>
           <input name="age" defaultValue={age}/>
           <input name="location" defaultValue={city}/>
@@ -79,7 +67,6 @@ function App() {
   return (
     <>
       <MyProfil name={name} city={city} age={age} bio={bio}/>
-      <Button/>
     </>
   );
 }

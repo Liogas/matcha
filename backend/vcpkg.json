@@ -2,6 +2,7 @@
     "name": "matcha-backend",
     "version-string": "0.1.0",
     "dependencies": [
-        "crow"
+        "crow",
+        "libpq"
     ]
 }

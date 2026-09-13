@@ -1,8 +1,17 @@
 #include <crow.h>
 #include <crow/middlewares/cors.h>
+#include <libpq-fe.h>
+#include "database/Database.hpp"
+
+int testBDD()
+{
+	Database db;
+	return (0);
+}
 
 int main()
 {
+	testBDD();
     crow::App<crow::CORSHandler> app;
 
     auto& cors = app.get_middleware<crow::CORSHandler>();
@@ -26,10 +35,11 @@ int main()
 		return (data);
 	});
 
-	CROW_ROUTE(app, "/api/profil/")
+	CROW_ROUTE(app, "/api/pushProfil/")
 	.methods(crow::HTTPMethod::POST)
 	([](const crow::request& req)
 	{
+		std::cout << "Valeurs reçues du frontend" << std::endl;
 		auto body = crow::json::load(req.body);
 		if (!body)
 			return crow::response(400, "Invalid JSON");
@@ -43,7 +53,10 @@ int main()
 		std::cout << "City : " << city << std::endl;
 		std::cout << "Bio : " << bio << std::endl;
 
-		return crow::response(201, "Datas modified");
+		crow::json::wvalue response;
+		response["message"] = "Datas modified";
+
+		return crow::response(201, response);
 	});
 
     app.port(18080).multithreaded().run();

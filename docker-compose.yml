@@ -5,7 +5,7 @@ services:
     sysctls:
       net.ipv4.ping_group_range: "999 999"
     container_name: matcha_database
-    environment:
+    environment: # NE PAS LAISSER LES VALEURS BRUTS
       POSTGRES_DB: matcha
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -18,10 +18,16 @@ services:
     build:
       context: ./backend
     container_name: matcha_backend
-    ports:
-      - "18080:18080"
     depends_on:
       - database
+    environment: # NE PAS LAISSER LES VALEURS BRUTS
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_NAME: matcha
+      DB_USER: admin
+      DB_PASSWORD: admin
+    ports:
+      - "18080:18080"
 
   frontend:
     build:
