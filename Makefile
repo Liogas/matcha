@@ -1,6 +1,6 @@
 
 all:
-	@echo "Liste de cmd disponibles : up_build / up / down / start / stop"
+	@echo "Liste de cmd disponibles : build / up / down / start / stop"
 
 build:
 	docker compose up --build

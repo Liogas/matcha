@@ -1,7 +1,6 @@
 #include "Database.hpp"
 
 #include <cstdlib>
-#include <string>
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -60,20 +59,75 @@ Database::~Database()
 		PQfinish(this->_connection);
 }
 
+QueryResult	Database::execute(const std::string &query)
+{
+	if (!this->_connection)
+	{
+		std::cerr << "[ERROR BDD] No connection with BDD" << std::endl;
+		return QueryResult();
+	}
+	std::cout 	<< "[INFO BDD] Query sended : "
+				<< query << std::endl;
+	return QueryResult(PQexec(this->_connection, query.c_str()));
+	// if (PQresultStatus(result) != PGRES_TUPLES_OK)
+	// {
+	// 	std::cerr	<< "[ERROR BDD] Query failed: "
+	// 				<< PQerrorMessage(this->_connection)
+	// 				<< std::endl;
+	// 	PQclear(result);
+	// 	return (nullptr);
+	// }
+	// return (res);
+}
+
 void	Database::testConnection()
 {
-	PGresult *result = PQexec(this->_connection, "SELECT 1");
+	QueryResult result(this->execute(
+		"SELECT 1 as id, "
+		"'Gaston' AS username, "
+		"25 AS age, "
+		"NULL AS bio, "
+		"true AS active"
+	));
 
-	if (PQresultStatus(result) != PGRES_TUPLES_OK)
+	if (result.isError())
 	{
 		std::cerr	<< "[ERROR BDD] Query failed: "
 					<< PQerrorMessage(this->_connection)
 					<< std::endl;
-		PQclear(result);
 		return ;
 	}
+	
 	std::cout << "[SUCCESS BDD] Query successful !" << std::endl;
-	std::cout 	<< "Result: "
-				<< PQgetvalue(result, 0, 0) << std::endl;
-	PQclear(result);
+	if (result.isTuples())
+	{
+		std::cout << "Query tuples" << std::endl;
+		std::cout << "Result: " << std::endl;
+		std::cout << "Rows: " << result.rowCount() << std::endl;
+		std::cout << "Columns: " << result.columnCount();
+		std::cout << std::endl << std::endl;
+		for (int i = 0; i < result.rowCount(); ++i)
+		{
+			for (int j = 0; j < result.columnCount(); ++j)
+			{
+				std::cout 	<< result.columnName(j) << " | Type OID "
+							<< result.columnType(j) << " = ";
+				if (result.isNull(i, j))
+					std::cout << "NULL";
+				else
+					std::cout << result.value(i, j);
+				std::cout << std::endl;
+			}
+			std::cout << std::endl;
+		}
+		auto username = result.getString(0,1);
+		auto bio = result.getString(0,3);
+		if (username.has_value())
+			std::cout << "Username: " << username.value() << std::endl;
+		if (!bio.has_value())
+			std::cout << "Bio is NULL" << std::endl;
+	} else if (result.isCommand())
+	{
+		std::cout << "Query command WIP" << std::endl;
+	}
 }

@@ -11,6 +11,7 @@ find_package(PostgreSQL REQUIRED)
 add_executable(matcha_backend
     src/main.cpp
     src/database/Database.cpp
+    src/database/QueryResult.cpp
 )
 
 target_link_libraries(matcha_backend
