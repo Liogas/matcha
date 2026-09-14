@@ -47,23 +47,23 @@ PGresult	*QueryResult::get() const
 	return (this->_result);
 }
 
-bool	QueryResult::isError() const
+bool	QueryResult::isError() const // CONDITION MODIFIEE A TESTER
 {
-	if (!this->_result || this->isCommand() || this->isTuples())
+	if (this->_result && (this->isCommand() || this->isTuples()))
 		return (false);
 	return (true);
 }
 
-bool	QueryResult::isCommand() const
+bool	QueryResult::isCommand() const // CONDITION MODIFIEE A TESTER
 {
-	if (PQresultStatus(this->_result) == PGRES_COMMAND_OK)
+	if (this->_result && PQresultStatus(this->_result) == PGRES_COMMAND_OK)
 		return (true);
 	return (false);
 }
 
-bool	QueryResult::isTuples() const
+bool	QueryResult::isTuples() const // CONDITION MODIFIEE A TESTER
 {
-	if (PQresultStatus(this->_result) == PGRES_TUPLES_OK)
+	if (this->_result && PQresultStatus(this->_result) == PGRES_TUPLES_OK)
 		return (true);
 	return (false);
 }
