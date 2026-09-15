@@ -3,6 +3,7 @@
 #include <libpq-fe.h>
 #include <string>
 #include <optional>
+#include <chrono>
 
 class QueryResult
 {
@@ -29,9 +30,11 @@ class QueryResult
 		bool		isNull(int row, int column) const;
 		Oid			columnType(int column) const;
 
-		std::optional<std::string>	getString(int row, int column) const;
-		std::optional<int>			getInt(int row, int column) const;
-		std::optional<bool>			getBool(int row, int column) const;
+		std::optional<std::string>										getString(int row, int column) const;
+		std::optional<int>												getInt(int row, int column) const;
+		std::optional<bool>												getBool(int row, int column) const;
+		std::optional<std::chrono::year_month_day>						getDate(int row, int column) const;
+		std::optional<std::chrono::sys_time<std::chrono::microseconds>>	getTimestamp(int row, int column) const;
 
 		bool	isValidPosition(int row, int column) const;
 	private:
