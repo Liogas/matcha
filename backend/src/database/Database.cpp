@@ -82,52 +82,173 @@ QueryResult	Database::execute(const std::string &query)
 
 void	Database::testConnection()
 {
-	QueryResult result(this->execute(
-		"SELECT 1 as id, "
-		"'Gaston' AS username, "
-		"25 AS age, "
-		"NULL AS bio, "
-		"true AS active"
-	));
+	{std::cout << "TEST 1" << std::endl;
+	QueryResult result = this->execute(
+        "SELECT "
+        "42 AS id, "
+        "'Gaston' AS username, "
+        "'Learning C++' AS bio"
+    );
 
-	if (result.isError())
+    if (result.isError())
+    {
+        std::cerr << "[ERROR BDD] Query failed: "
+                  << PQresultErrorMessage(result.get())
+                  << std::endl;
+        return;
+    }
+
+    std::cout << "[SUCCESS BDD] Query successful !" << std::endl;
+
+    std::cout << "Rows: "
+              << result.rowCount()
+              << std::endl;
+
+    std::cout << "Columns: "
+              << result.columnCount()
+              << std::endl;
+
+	// AFFICHER NOM DES COLONNES
+	std::cout << std::endl;
+	std::cout << "Test 2 : Nom colonnes" << std::endl;
+	for (int column = 0; column < result.columnCount(); ++column)
 	{
-		std::cerr	<< "[ERROR BDD] Query failed: "
-					<< PQerrorMessage(this->_connection)
-					<< std::endl;
-		return ;
+		std::cout << "Column " << column
+				<< ": "
+				<< result.columnName(column)
+				<< std::endl;
 	}
-	
-	std::cout << "[SUCCESS BDD] Query successful !" << std::endl;
-	if (result.isTuples())
+
+	// PARCOURT LA TABLE POUR TESTER QUERYRESULT.VALUE
+	for (int row = 0; row < result.rowCount(); ++row)
 	{
-		std::cout << "Query tuples" << std::endl;
-		std::cout << "Result: " << std::endl;
-		std::cout << "Rows: " << result.rowCount() << std::endl;
-		std::cout << "Columns: " << result.columnCount();
-		std::cout << std::endl << std::endl;
-		for (int i = 0; i < result.rowCount(); ++i)
+		for (int column = 0; column < result.columnCount(); ++column)
 		{
-			for (int j = 0; j < result.columnCount(); ++j)
-			{
-				std::cout 	<< result.columnName(j) << " | Type OID "
-							<< result.columnType(j) << " = ";
-				if (result.isNull(i, j))
-					std::cout << "NULL";
-				else
-					std::cout << result.value(i, j);
-				std::cout << std::endl;
-			}
-			std::cout << std::endl;
+			std::cout << result.columnName(column)
+					<< " = "
+					<< result.value(row, column)
+					<< std::endl;
 		}
-		auto username = result.getString(0,1);
-		auto bio = result.getString(0,3);
-		if (username.has_value())
-			std::cout << "Username: " << username.value() << std::endl;
-		if (!bio.has_value())
-			std::cout << "Bio is NULL" << std::endl;
-	} else if (result.isCommand())
+	}
+
+	// TEST GETSTRING ET GETINT
+	std::cout << std::endl;
+	std::cout << "Test 3 : getString et getInt" << std::endl;
+	auto id = result.getInt(0, 0);
+	auto username = result.getString(0, 1);
+	auto bio3 = result.getString(0, 2);
+
+	if (id)
+		std::cout << "ID: " << *id << std::endl;
+
+	if (username)
+		std::cout << "Username: " << *username << std::endl;
+
+	if (bio3)
+		std::cout << "Bio: " << *bio3 << std::endl;
+	
+
+	// TEST VALEUR NULL
+	std::cout << std::endl;
+	std::cout << "Test 4 : valeur null" << std::endl;
+	QueryResult nullResult = this->execute(
+		"SELECT "
+		"42 AS id, "
+		"NULL AS bio"
+	);
+
+	std::cout 	<< "bio is NULL: "
+				<< nullResult.isNull(0, 1)
+				<< std::endl;
+	auto bio2 = nullResult.getString(0, 1);
+	if (!bio2)
+    	std::cout << "bio has no value" << std::endl;
+
+	// TEST POSITION INVALIDE
+	std::cout << std::endl;
+	std::cout << "Test 5 : position invalide" << std::endl;
+	if (result.value(100, 0) == nullptr)
+		std::cout << "Invalid row handled correctly" << std::endl;
+
+	if (result.value(0, 100) == nullptr)
+		std::cout << "Invalid column handled correctly" << std::endl;
+	}
+	// TEST ERREUR
+	{std::cout << "Test 6 : erreur dans la requete" << std::endl;
+	QueryResult errorResult = this->execute(
+		"SELECT * FROM table_that_does_not_exist"
+	);
+	if (errorResult.isError())
 	{
-		std::cout << "Query command WIP" << std::endl;
+		std::cout << "SQL error handled correctly"
+				<< std::endl;
+
+		std::cout << "Erreur : " << PQresultErrorMessage(errorResult.get())
+				<< std::endl;
+	}}
+
+	{std::cout << std::endl;
+	std::cout << "Test 7 : getBool" << std::endl;
+	QueryResult boolResult = this->execute(
+		"SELECT "
+		"true AS active, "
+		"false AS banned, "
+		"NULL AS deleted"
+	);
+	auto active = boolResult.getBool(0, 0);
+	auto banned = boolResult.getBool(0, 1);
+	auto deleted = boolResult.getBool(0, 2);
+	if (active)
+		std::cout << "active: " << *active << std::endl;
+	if (banned)
+		std::cout << "banned: " << *banned << std::endl;
+	if (!deleted)
+		std::cout << "deleted: NULL" << std::endl;}
+	
+	{
+		std::cout << std::endl;
+		std::cout << "Test 8 : test avec verif du type" << std::endl;
+		QueryResult typeResult = this->execute(
+			"SELECT "
+			"42 AS id, "
+			"'Gaston' AS username, "
+			"true AS active"
+		);
+		auto id = typeResult.getInt(0, 0);
+		auto username = typeResult.getString(0, 1);
+		auto active = typeResult.getBool(0, 2);
+		auto wrongInt = typeResult.getInt(0, 1);
+		auto wrongBool = typeResult.getBool(0, 0);
+		auto wrongString = typeResult.getString(0, 0);
+		std::cout << "id = ";
+		if (id.has_value())
+			std::cout << *id << std::endl;
+		else
+			std::cout << "NULL/Incorrect type" << std::endl;
+		std::cout << "username = ";
+		if (username.has_value())
+			std::cout << *username << std::endl;
+		else
+			std::cout << "NULL/Incorrect type" << std::endl;
+		std::cout << "active = ";
+		if (active.has_value())
+			std::cout << *active << std::endl;
+		else
+			std::cout << "NULL/Incorrect type" << std::endl;
+		std::cout << "wrongInt = ";
+		if (wrongInt.has_value())
+			std::cout << *wrongInt << std::endl;
+		else
+			std::cout << "NULL/Incorrect type" << std::endl;
+		std::cout << "wrongBool = ";
+		if (wrongBool.has_value())
+			std::cout << *wrongBool << std::endl;
+		else
+			std::cout << "NULL/Incorrect type" << std::endl;
+		std::cout << "wrongString = ";
+		if (wrongString.has_value())
+			std::cout << *wrongString << std::endl;
+		else
+			std::cout << "NULL/Incorrect type" << std::endl;
 	}
 }

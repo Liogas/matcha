@@ -2,6 +2,7 @@
 #include <iostream>
 #include <charconv>
 #include <cstring>
+#include <catalog/pg_type_d.h>
 
 QueryResult::QueryResult():
 	_result(nullptr)
@@ -49,6 +50,9 @@ PGresult	*QueryResult::get() const
 
 bool	QueryResult::isError() const // CONDITION MODIFIEE A TESTER
 {
+	std::cout << "[LOG BDD] isError :" << std::endl;
+	std::cout << "isCommand -> " << this->isCommand() << std::endl;
+	std::cout << "isTuples -> " << this->isTuples() << std::endl;
 	if (this->_result && (this->isCommand() || this->isTuples()))
 		return (false);
 	return (true);
@@ -114,13 +118,19 @@ Oid			QueryResult::columnType(int column) const
 std::optional<std::string>	QueryResult::getString(int row, int column) const
 {
 	if (!this->_result || this->isNull(row, column))
-		return {}; // Revient au meme que std::nullopt
+		return std::nullopt;
+	Oid type = this->columnType(column);
+	if (type != TEXTOID && type != VARCHAROID && type != BPCHAROID)
+		return std::nullopt;
 	return std::string(this->value(row, column));
 }
 
 std::optional<int>	QueryResult::getInt(int row, int column) const
 {
 	if (!this->_result || this->isNull(row, column))
+		return std::nullopt;
+	Oid type = this->columnType(column);
+	if (type != INT2OID && type != INT4OID)
 		return std::nullopt;
 
 	const char *value	= this->value(row, column);
@@ -132,10 +142,23 @@ std::optional<int>	QueryResult::getInt(int row, int column) const
 		value + std::strlen(value),
 		result
 	);
-
 	if (error != std::errc() || ptr != end)
 		return std::nullopt;
 	return (result);
+}
+
+std::optional<bool>	QueryResult::getBool(int row, int column) const
+{
+	if (!this->_result || this->isNull(row, column))
+		return std::nullopt;
+	if (this->columnType(column) != BOOLOID)
+		return std::nullopt;
+	const char *value = this->value(row, column);
+	if (std::strcmp(value, "t") == 0)
+		return (true);
+	if (std::strcmp(value, "f") == 0)
+		return (false);
+	return (std::nullopt);
 }
 
 bool	QueryResult::isValidPosition(int row, int column) const
