@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	python3 \
 	bison \
 	flex \
+	linux-libc-dev \
 	&& update-ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 

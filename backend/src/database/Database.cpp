@@ -69,15 +69,35 @@ QueryResult	Database::execute(const std::string &query)
 	std::cout 	<< "[INFO BDD] Query sended : "
 				<< query << std::endl;
 	return QueryResult(PQexec(this->_connection, query.c_str()));
-	// if (PQresultStatus(result) != PGRES_TUPLES_OK)
-	// {
-	// 	std::cerr	<< "[ERROR BDD] Query failed: "
-	// 				<< PQerrorMessage(this->_connection)
-	// 				<< std::endl;
-	// 	PQclear(result);
-	// 	return (nullptr);
-	// }
-	// return (res);
+}
+
+QueryResult	Database::executeParams(
+	const std::string &query,
+	conts std::vector<std::string>& params
+)
+{
+	if (!this->_connection)
+	{
+		std::cerr << "[ERROR BDD] No connection with BDD" << std::endl;
+		return QueryResult();
+	}
+	std::vector<const char *> values;
+	values.reserve(params.size());
+	for (const std::string &param : params)
+		values.push_back(param.c_str());
+	std::cout 	<< "[INFO BDD] parameterized query sended : "
+				<< query << std::endl;
+	PGresult *result = PQexecParams(
+		this->_connection,
+		query.c_str(),
+		static_cast<int>(params.size()),
+		nullptr,
+		values.data(),
+		nullptr,
+		nullptr,
+		0
+	);
+	return QueryResult(result);
 }
 
 void	Database::testConnection()
@@ -250,5 +270,127 @@ void	Database::testConnection()
 			std::cout << *wrongString << std::endl;
 		else
 			std::cout << "NULL/Incorrect type" << std::endl;
+	}
+	{
+		QueryResult dateResult = execute(
+			"SELECT DATE '1998-02-30' AS birth_date"
+		);
+
+		if (dateResult.isError())
+		{
+			std::cout << "[TEST DATE] Query error" << std::endl;
+		}
+		else
+		{
+			auto date = dateResult.getDate(0, 0);
+
+			if (date)
+			{
+				std::cout << "[TEST DATE] Date converted correctly: "
+						<< static_cast<int>(date->year()) << "-"
+						<< static_cast<unsigned>(date->month()) << "-"
+						<< static_cast<unsigned>(date->day())
+						<< std::endl;
+			}
+			else
+			{
+				std::cout << "[TEST DATE] Date conversion failed"
+						<< std::endl;
+			}
+		}
+	}
+	{
+	std::cout << "Test Timestamp valide" << std::endl;
+	QueryResult timestampResult = execute(
+		"SELECT TIMESTAMP '2026-09-15 14:30:45' AS created_at"
+	);
+
+	auto timestamp = timestampResult.getTimestamp(0, 0);
+
+	if (timestamp)
+	{
+		auto time = *timestamp;
+
+		auto days = std::chrono::floor<std::chrono::days>(time);
+		auto timeOfDay = time - days;
+
+		auto date = std::chrono::year_month_day{days};
+
+		auto hours = std::chrono::duration_cast<std::chrono::hours>(
+			timeOfDay
+		);
+
+		timeOfDay -= hours;
+
+		auto minutes = std::chrono::duration_cast<std::chrono::minutes>(
+			timeOfDay
+		);
+
+		timeOfDay -= minutes;
+
+		auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
+			timeOfDay
+		);
+
+		if (static_cast<int>(date.year()) == 2026
+			&& static_cast<unsigned>(date.month()) == 9
+			&& static_cast<unsigned>(date.day()) == 15
+			&& hours.count() == 14
+			&& minutes.count() == 30
+			&& seconds.count() == 45)
+		{
+			std::cout << "[TEST TIMESTAMP] Valid timestamp: OK"
+					<< std::endl;
+		}
+		else
+		{
+			std::cout << "[TEST TIMESTAMP] Valid timestamp: FAILED"
+					<< std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "[TEST TIMESTAMP] Conversion failed"
+				<< std::endl;
+	}
+	}
+	{
+		std::cout << "Test 2 timestamp NULL" << std::endl;
+		QueryResult nullTimestampResult = execute(
+			"SELECT NULL::TIMESTAMP AS created_at"
+		);
+
+		auto nullTimestamp = nullTimestampResult.getTimestamp(0, 0);
+
+		if (!nullTimestamp)
+		{
+			std::cout << "[TEST TIMESTAMP] NULL timestamp: OK"
+					<< std::endl;
+		}
+		else
+		{
+			std::cout << "[TEST TIMESTAMP] NULL timestamp: FAILED"
+					<< std::endl;
+		}
+	}
+	{
+		std::cout << "test timestamp 3 mauvais type" << std::endl;
+		QueryResult wrongTypeTimestampResult = execute(
+			"SELECT '2026-09-15 14:30:45' AS created_at"
+		);
+
+		auto wrongTypeTimestamp =
+			wrongTypeTimestampResult.getTimestamp(0, 0);
+
+		if (!wrongTypeTimestamp)
+		{
+			std::cout << "[TEST TIMESTAMP] Wrong type rejected: OK"
+					<< std::endl;
+		}
+		else
+		{
+			std::cout << "[TEST TIMESTAMP] Wrong type rejected: FAILED"
+					<< std::endl;
+		}
 	}
 }
