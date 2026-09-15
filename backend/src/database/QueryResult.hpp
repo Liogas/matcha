@@ -14,7 +14,7 @@ class QueryResult
 		~QueryResult();
 
 		QueryResult &operator=(const QueryResult &) = delete;
-		QueryResult	&operator=(const QueryResult &&other) noexcept;
+		QueryResult	&operator=(QueryResult &&other) noexcept;
 
 		PGresult	*get() const;
 		bool		isError() const;
@@ -31,6 +31,7 @@ class QueryResult
 
 		std::optional<std::string>	getString(int row, int column) const;
 		std::optional<int>			getInt(int row, int column) const;
+		std::optional<bool>			getBool(int row, int column) const;
 
 		bool	isValidPosition(int row, int column) const;
 	private:
