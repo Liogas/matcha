@@ -2,10 +2,17 @@
 #include <crow/middlewares/cors.h>
 #include <libpq-fe.h>
 #include "database/Database.hpp"
+#include "database/DatabaseInitializer.hpp"
 
 int testBDD()
 {
 	Database db;
+	DatabaseInitializer	initializer(db);
+	if (!initializer.run())
+	{
+		std::cerr	<< "[ERROR BDD] Database initialization failed" << std::endl;
+		return (1);
+	}
 	return (0);
 }
 
