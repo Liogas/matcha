@@ -51,24 +51,21 @@ PGresult	*QueryResult::get() const
 	return (this->_result);
 }
 
-bool	QueryResult::isError() const // CONDITION MODIFIEE A TESTER
+bool	QueryResult::isError() const
 {
-	std::cout << "[LOG BDD] isError :" << std::endl;
-	std::cout << "isCommand -> " << this->isCommand() << std::endl;
-	std::cout << "isTuples -> " << this->isTuples() << std::endl;
 	if (this->_result && (this->isCommand() || this->isTuples()))
 		return (false);
 	return (true);
 }
 
-bool	QueryResult::isCommand() const // CONDITION MODIFIEE A TESTER
+bool	QueryResult::isCommand() const
 {
 	if (this->_result && PQresultStatus(this->_result) == PGRES_COMMAND_OK)
 		return (true);
 	return (false);
 }
 
-bool	QueryResult::isTuples() const // CONDITION MODIFIEE A TESTER
+bool	QueryResult::isTuples() const
 {
 	if (this->_result && PQresultStatus(this->_result) == PGRES_TUPLES_OK)
 		return (true);

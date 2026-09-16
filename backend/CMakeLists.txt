@@ -12,7 +12,8 @@ add_executable(matcha_backend
     src/main.cpp
     src/database/Database.cpp
     src/database/QueryResult.cpp
-    src/repository/UserRepository.cpp
+    src/database/DatabaseInitializer.cpp
+    src/repositories/UserRepository.cpp
 )
 
 target_link_libraries(matcha_backend
