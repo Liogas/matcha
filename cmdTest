@@ -1,0 +1,4 @@
+docker exec -it matcha_backend bash
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build
