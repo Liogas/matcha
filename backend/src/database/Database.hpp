@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
-#include "QueryResult.hpp"
 #include <vector>
+
+#include "QueryResult.hpp"
 
 class Database
 {
@@ -15,6 +16,6 @@ class Database
 			const std::vector<std::string> &params
 		);
 	private:
-		PGconn*	_connection; // Représente la connexion a PostgreSQL
+		PGconn*	_connection;
 		void	testConnection();
 };

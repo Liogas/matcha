@@ -32,7 +32,6 @@ Database::Database():
 		if (PQstatus(this->_connection) == CONNECTION_OK)
 		{
 			std::cout << "[SUCCESS BDD] Database connection ok" << std::endl;
-			// testConnection(); // A RETIRER PLUS TARD
 			return ;
 		}
 		std::cerr 	<< "[ERROR BDD] Database connection failed: "
