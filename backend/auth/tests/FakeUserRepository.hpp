@@ -6,6 +6,7 @@
 class FakeUserRepository : public auth::IUserRepository
 {
 	public:
+		bool	failCreateUser = false;
 		std::optional<auth::User>
 			findByEmail(const std::string &email) override
 			{
@@ -26,12 +27,14 @@ class FakeUserRepository : public auth::IUserRepository
 				}
 				return std::nullopt;
 			}
-		std::int64_t
+		std::optional<std::int64_t>
 			createUser(
 				const std::string &email,
 				const std::string &passwordHash
 			) override
 			{
+				if (failCreateUser)
+					return std::nullopt;
 				const std::int64_t id = this->_nextId++;
 				this->_users.push_back({
 					id,
@@ -39,6 +42,10 @@ class FakeUserRepository : public auth::IUserRepository
 					passwordHash
 				});
 				return id;
+			}
+			const std::vector<auth::User> &users() const
+			{
+				return this->_users;
 			}
 	private:
 		std::vector<auth::User> _users;
