@@ -62,7 +62,24 @@ std::optional<auth::User>	UserRepository::findById(
 	const std::int64_t id
 )
 {
-	return std::nullopt;
+	QueryResult result = this->_database.executeParams(
+		"SELECT id, email, password_hash "
+		"FROM users "
+		"WHERE id = $1",
+		{std::to_string(id)}
+	);
+	if (result.isError() || result.rowCount() == 0)
+		return std::nullopt;
+	const auto userId = result.getInt64(0, 0);
+	const auto userEmail = result.getString(0, 1);
+	const auto userPassword = result.getString(0, 2);
+	if (!userId.has_value() || !userEmail.has_value() || !userPassword.has_value())
+		return std::nullopt;
+	return auth::User{
+		*userId,
+		*userEmail,
+		*userPassword
+	};
 }
 
 std::optional<std::int64_t>	UserRepository::createUser(
@@ -70,5 +87,19 @@ std::optional<std::int64_t>	UserRepository::createUser(
 	const std::string &pwdHash
 )
 {
-	return std::nullopt;
+	QueryResult result = this->_database.executeParams(
+		"INSERT INTO users (email, password_hash) "
+		"VALUES ($1, $2) "
+		"RETURNING id",
+		{email, pwdHash}
+	);
+	if (result.isError() || result.rowCount() == 0)
+	{
+		std::cerr << "[ERROR UserRepository] INSERT failed" << std::endl;
+		return std::nullopt;
+	}
+	const auto id = result.getInt64(0, 0);
+	if (!id.has_value())
+		return std::nullopt;
+	return *id;
 }
