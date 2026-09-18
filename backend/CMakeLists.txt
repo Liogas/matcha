@@ -27,3 +27,24 @@ target_link_libraries(matcha_backend
     PRIVATE Crow::Crow
     PRIVATE PostgreSQL::PostgreSQL
 )
+
+add_executable(user_repository_integration_tests
+    tests/integration/UserRepositoryIntegrationTests.cpp
+    src/database/Database.cpp
+    src/database/QueryResult.cpp
+    src/repositories/UserRepository.cpp
+)
+
+target_include_directories(user_repository_integration_tests
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(user_repository_integration_tests
+    PRIVATE
+        auth
+        PostgreSQL::PostgreSQL
+        GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(user_repository_integration_tests)

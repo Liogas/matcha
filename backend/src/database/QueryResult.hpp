@@ -4,6 +4,7 @@
 #include <string>
 #include <optional>
 #include <chrono>
+#include <cstdint>
 
 class QueryResult
 {
@@ -32,6 +33,7 @@ class QueryResult
 
 		std::optional<std::string>										getString(int row, int column) const;
 		std::optional<int>												getInt(int row, int column) const;
+		std::optional<std::int64_t>										getInt64(int row, int column) const;
 		std::optional<bool>												getBool(int row, int column) const;
 		std::optional<std::chrono::year_month_day>						getDate(int row, int column) const;
 		std::optional<std::chrono::sys_time<std::chrono::microseconds>>	getTimestamp(int row, int column) const;
