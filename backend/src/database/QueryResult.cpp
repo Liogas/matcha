@@ -147,6 +147,28 @@ std::optional<int>	QueryResult::getInt(int row, int column) const
 	return (result);
 }
 
+std::optional<std::int64_t>	QueryResult::getInt64(int row, int column) const
+{
+	if (!this->_result || this->isNull(row, column))
+		return std::nullopt;
+	Oid type = this->columnType(column);
+	if (type != INT8OID)
+		return std::nullopt;
+
+	const char *value	= this->value(row, column);
+	const char *end		= value + std::strlen(value);
+	std::int64_t result	= 0;
+	
+	auto [ptr, error] 	= std::from_chars(
+		value,
+		value + std::strlen(value),
+		result
+	);
+	if (error != std::errc() || ptr != end)
+		return std::nullopt;
+	return (result);
+}
+
 std::optional<bool>	QueryResult::getBool(int row, int column) const
 {
 	if (!this->_result || this->isNull(row, column))

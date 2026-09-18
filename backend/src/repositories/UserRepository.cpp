@@ -12,7 +12,50 @@ std::optional<auth::User>	UserRepository::findByEmail(
 	const std::string &email
 )
 {
-	return std::nullopt;
+	QueryResult result = this->_database.executeParams(
+		"SELECT id, email, password_hash "
+		"FROM users "
+		"WHERE email = $1",
+		{email}
+	);
+	if (result.isError())
+	{
+		std::cerr << "[ERROR UserRepository] SELECT failed" << std::endl;
+		return std::nullopt;
+	}
+
+	if (result.rowCount() == 0)
+	{
+		std::cerr << "[ERROR UserRepository] SELECT return empty result" << std::endl;
+		return std::nullopt;
+	}
+	std::cout 	<< "[DEBUG] rowCount = "
+				<< result.rowCount() << std::endl;
+
+	const auto id = result.getInt64(0,0);
+	const auto userEmail = result.getString(0, 1);
+	const auto passwordHash = result.getString(0, 2);
+
+	std::cout	<< "[DEBUG] id = "
+				<< (id.has_value() ? std::to_string(*id) : "null")
+				<< std::endl;
+
+	std::cout << "[DEBUG] email = "
+              << (userEmail.has_value() ? *userEmail : "null")
+              << std::endl;
+
+	std::cout << "[DEBUG] passwordHash = "
+              << (passwordHash.has_value() ? *passwordHash : "null")
+              << std::endl;
+
+	if (!id.has_value() || !userEmail.has_value() || !passwordHash.has_value())
+		return std::nullopt;
+	auth::User user{
+		*id,
+		*userEmail,
+		*passwordHash
+	};
+	return user;
 }
 
 std::optional<auth::User>	UserRepository::findById(
