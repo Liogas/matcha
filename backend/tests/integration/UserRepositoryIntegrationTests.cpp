@@ -82,3 +82,30 @@ TEST(UserRepositoryIntegrationTest, CanFindExistingUserById)
 		{email}
 	);
 }
+
+// TEST 4
+TEST(UserRepositoryIntegrationTest, CreateUserFailsWhenEmailAlreadyExists)
+{
+	Database database;
+	UserRepository repository(database);
+	const std::string email = "duplicate_test@example.com";
+	const std::string pwd = "fake_hash";
+	database.executeParams(
+		"DELETE FROM users WHERE email = $1",
+		{email}
+	);
+	const auto firstId = repository.createUser(
+		email,
+		pwd
+	);
+	ASSERT_TRUE(firstId.has_value());
+	const auto secondId = repository.createUser(
+		email,
+		pwd
+	);
+	EXPECT_FALSE(secondId.has_value());
+	database.executeParams(
+		"DELETE FROM users WHERE email = $1",
+		{email}
+	);
+}

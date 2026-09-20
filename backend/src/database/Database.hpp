@@ -17,5 +17,4 @@ class Database
 		);
 	private:
 		PGconn*	_connection;
-		void	testConnection();
 };

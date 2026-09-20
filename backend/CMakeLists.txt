@@ -11,6 +11,7 @@ enable_testing()
 find_package(Crow CONFIG REQUIRED)
 find_package(PostgreSQL REQUIRED)
 find_package(GTest CONFIG REQUIRED)
+find_package(unofficial-sodium CONFIG REQUIRED)
 
 add_subdirectory(auth)
 
@@ -26,6 +27,7 @@ target_link_libraries(matcha_backend
     PRIVATE auth
     PRIVATE Crow::Crow
     PRIVATE PostgreSQL::PostgreSQL
+    PRIVATE unofficial-sodium::sodium
 )
 
 add_executable(user_repository_integration_tests

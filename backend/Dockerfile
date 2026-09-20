@@ -16,6 +16,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	bison \
 	flex \
 	linux-libc-dev \
+	autoconf \
+	autoconf-archive \
+	automake \
+	libtool \
 	&& update-ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
