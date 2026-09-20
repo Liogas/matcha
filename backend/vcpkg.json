@@ -2,8 +2,9 @@
     "name": "matcha-backend",
     "version-string": "0.1.0",
     "dependencies": [
-        "crow",
-        "libpq",
-        "gtest"
+        "crow", 
+        "libpq", 
+        "gtest", 
+        "libsodium" 
     ]
 }

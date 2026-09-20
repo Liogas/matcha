@@ -18,3 +18,11 @@ target_link_libraries(auth_tests PRIVATE
 
 include(GoogleTest)
 gtest_discover_tests(auth_tests)
+
+add_executable(libsodium_test
+    tests/libsodiumTest.cpp
+)
+
+target_link_libraries(libsodium_test
+    PRIVATE unofficial-sodium::sodium
+)
