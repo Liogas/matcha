@@ -6,42 +6,81 @@
 class FakeUserRepository : public auth::IUserRepository
 {
 	public:
-		bool	failCreateUser = false;
-		std::optional<auth::User>
+		bool	failCreateUser	= false;
+		bool	failFindUser	= false;
+		auth::UserLookupResult
 			findByEmail(const std::string &email) override
 			{
+				if (failFindUser)
+					return {
+						auth::UserLookupResult::Status::DatabaseError,
+						std::nullopt
+					};
 				for (const auto &user : this->_users)
 				{
 					if (user.email == email)
-						return user;
+						return {
+							auth::UserLookupResult::Status::Found,
+							user
+						};
 				}
-				return std::nullopt;
+				return {
+					auth::UserLookupResult::Status::NotFound,
+					std::nullopt
+				};
 			}
-		std::optional<auth::User>
+		auth::UserLookupResult
 			findById(std::int64_t id) override
 			{
+				if (failFindUser)
+					return {
+						auth::UserLookupResult::Status::DatabaseError,
+						std::nullopt
+					};
 				for (const auto &user : this->_users)
 				{
 					if (user.id == id)
-						return user;
+						return {
+							auth::UserLookupResult::Status::Found,
+							user
+						};
 				}
-				return std::nullopt;
+				return {
+					auth::UserLookupResult::Status::NotFound,
+					std::nullopt
+				};
 			}
-		std::optional<std::int64_t>
+		auth::CreateUserResult
 			createUser(
 				const std::string &email,
 				const std::string &passwordHash
 			) override
 			{
 				if (failCreateUser)
-					return std::nullopt;
+					return {
+						auth::CreateUserResult::Status::DatabaseError,
+						std::nullopt
+					};
+				for (const auto &user : this->_users)
+				{
+					if (user.email == email)
+					{
+						return {
+							auth::CreateUserResult::Status::EmailAlreadyExists,
+							std::nullopt
+						};
+					}
+				}
 				const std::int64_t id = this->_nextId++;
 				this->_users.push_back({
 					id,
 					email,
 					passwordHash
 				});
-				return id;
+				return {
+					auth::CreateUserResult::Status::Success,
+					id
+				};
 			}
 			const std::vector<auth::User> &users() const
 			{

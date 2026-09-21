@@ -10,11 +10,11 @@ class UserRepository : public auth::IUserRepository
 	public:
 		explicit UserRepository(Database &database);
 
-		std::optional<auth::User>
+		auth::UserLookupResult
 			findByEmail(const std::string &email) override;
-		std::optional<auth::User>
+		auth::UserLookupResult
 			findById(const std::int64_t id) override;
-		std::optional<std::int64_t> createUser(
+		auth::CreateUserResult createUser(
 			const std::string &email,
 			const std::string &pwdHash
 		) override;

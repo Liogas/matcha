@@ -21,10 +21,11 @@ TEST(UserRepositoryIntegrationTest, CanFindExistingUserByEmail)
 		{email, password}
 	);
 	ASSERT_FALSE(insertResult.isError());
-	const auto user = repository.findByEmail(email);
-	ASSERT_TRUE(user.has_value());
-	EXPECT_EQ(user->email, email);
-	EXPECT_EQ(user->passwordHash, password);
+	const auto result = repository.findByEmail(email);
+	EXPECT_EQ(result.status, auth::UserLookupResult::Status::Found);
+	ASSERT_TRUE(result.user.has_value());
+	EXPECT_EQ(result.user->email, email);
+	EXPECT_EQ(result.user->passwordHash, password);
 }
 
 // TEST 2
@@ -38,17 +39,19 @@ TEST(UserRepositoryIntegrationTest, CanCreateUser)
 		"DELETE FROM users WHERE email = $1",
 		{email}
 	);
-	const auto userId = repository.createUser(
+	const auto userResult = repository.createUser(
 		email,
 		password
 	);
-	ASSERT_TRUE(userId.has_value());
-	EXPECT_GT(*userId, 0);
-	const auto user = repository.findByEmail(email);
-	ASSERT_TRUE(user.has_value());
-	EXPECT_EQ(user->id, *userId);
-	EXPECT_EQ(user->email, email);
-	EXPECT_EQ(user->passwordHash, password);
+	EXPECT_EQ(userResult.status, auth::CreateUserResult::Status::Success);
+	ASSERT_TRUE(userResult.userId.has_value());
+	EXPECT_GT(*(userResult.userId), 0);
+	const auto result = repository.findByEmail(email);
+	EXPECT_EQ(result.status, auth::UserLookupResult::Status::Found);
+	ASSERT_TRUE(result.user.has_value());
+	EXPECT_EQ(result.user->id, *(userResult.userId));
+	EXPECT_EQ(result.user->email, email);
+	EXPECT_EQ(result.user->passwordHash, password);
 	database.executeParams(
 		"DELETE FROM users"
 		"WHERE email = $1",
@@ -67,16 +70,18 @@ TEST(UserRepositoryIntegrationTest, CanFindExistingUserById)
 		"DELETE FROM users WHERE email = $1",
 		{email}
 	);
-	const auto createdId = repository.createUser(
+	const auto userResult = repository.createUser(
 		email,
 		password
 	);
-	ASSERT_TRUE(createdId.has_value());
-	const auto user = repository.findById(*createdId);
-	ASSERT_TRUE(user.has_value());
-	EXPECT_EQ(user->id, *createdId);
-	EXPECT_EQ(user->email, email);
-	EXPECT_EQ(user->passwordHash, password);
+	EXPECT_EQ(userResult.status, auth::CreateUserResult::Status::Success);
+	ASSERT_TRUE(userResult.userId.has_value());
+	const auto result = repository.findById(*(userResult.userId));
+	EXPECT_EQ(result.status, auth::UserLookupResult::Status::Found);
+	ASSERT_TRUE(result.user.has_value());
+	EXPECT_EQ(result.user->id, *(userResult.userId));
+	EXPECT_EQ(result.user->email, email);
+	EXPECT_EQ(result.user->passwordHash, password);
 	database.executeParams(
 		"DELETE FROM users WHERE email = $1",
 		{email}
@@ -94,16 +99,18 @@ TEST(UserRepositoryIntegrationTest, CreateUserFailsWhenEmailAlreadyExists)
 		"DELETE FROM users WHERE email = $1",
 		{email}
 	);
-	const auto firstId = repository.createUser(
+	const auto userResult = repository.createUser(
 		email,
 		pwd
 	);
-	ASSERT_TRUE(firstId.has_value());
-	const auto secondId = repository.createUser(
+	EXPECT_EQ(userResult.status, auth::CreateUserResult::Status::Success);
+	ASSERT_TRUE(userResult.userId.has_value());
+	const auto userResult2 = repository.createUser(
 		email,
 		pwd
 	);
-	EXPECT_FALSE(secondId.has_value());
+	EXPECT_EQ(userResult2.status, auth::CreateUserResult::Status::EmailAlreadyExists);
+	EXPECT_FALSE(userResult2.userId.has_value());
 	database.executeParams(
 		"DELETE FROM users WHERE email = $1",
 		{email}

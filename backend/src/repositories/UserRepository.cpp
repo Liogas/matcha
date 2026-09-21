@@ -8,7 +8,7 @@ UserRepository::UserRepository(Database &database):
 {
 }
 
-std::optional<auth::User>	UserRepository::findByEmail(
+auth::UserLookupResult	UserRepository::findByEmail(
 	const std::string &email
 )
 {
@@ -21,13 +21,19 @@ std::optional<auth::User>	UserRepository::findByEmail(
 	if (result.isError())
 	{
 		std::cerr << "[ERROR UserRepository] SELECT failed" << std::endl;
-		return std::nullopt;
+		return {
+			auth::UserLookupResult::Status::DatabaseError,
+			std::nullopt
+		};
 	}
 
 	if (result.rowCount() == 0)
 	{
 		std::cerr << "[ERROR UserRepository] SELECT return empty result" << std::endl;
-		return std::nullopt;
+		return {
+			auth::UserLookupResult::Status::NotFound,
+			std::nullopt
+		};
 	}
 	std::cout 	<< "[DEBUG] rowCount = "
 				<< result.rowCount() << std::endl;
@@ -49,16 +55,23 @@ std::optional<auth::User>	UserRepository::findByEmail(
               << std::endl;
 
 	if (!id.has_value() || !userEmail.has_value() || !passwordHash.has_value())
-		return std::nullopt;
-	auth::User user{
-		*id,
-		*userEmail,
-		*passwordHash
+	{
+		return {
+			auth::UserLookupResult::Status::DatabaseError,
+			std::nullopt
+		};
+	}
+	return {
+		auth::UserLookupResult::Status::Found,
+		auth::User {
+			*id,
+			*userEmail,
+			*passwordHash
+		}
 	};
-	return user;
 }
 
-std::optional<auth::User>	UserRepository::findById(
+auth::UserLookupResult	UserRepository::findById(
 	const std::int64_t id
 )
 {
@@ -68,21 +81,35 @@ std::optional<auth::User>	UserRepository::findById(
 		"WHERE id = $1",
 		{std::to_string(id)}
 	);
-	if (result.isError() || result.rowCount() == 0)
-		return std::nullopt;
+	if (result.isError())
+		return {
+			auth::UserLookupResult::Status::DatabaseError,
+			std::nullopt
+		};
+	if (result.rowCount() == 0)
+		return {
+			auth::UserLookupResult::Status::NotFound,
+			std::nullopt
+		};
 	const auto userId = result.getInt64(0, 0);
 	const auto userEmail = result.getString(0, 1);
 	const auto userPassword = result.getString(0, 2);
 	if (!userId.has_value() || !userEmail.has_value() || !userPassword.has_value())
-		return std::nullopt;
-	return auth::User{
-		*userId,
-		*userEmail,
-		*userPassword
+		return {
+			auth::UserLookupResult::Status::DatabaseError,
+			std::nullopt
+		};
+	return {
+		auth::UserLookupResult::Status::Found,
+		auth::User{
+		   *userId,
+		   *userEmail,
+		   *userPassword
+	   }
 	};
 }
 
-std::optional<std::int64_t>	UserRepository::createUser(
+auth::CreateUserResult	UserRepository::createUser(
 	const std::string &email,
 	const std::string &pwdHash
 )
@@ -93,13 +120,31 @@ std::optional<std::int64_t>	UserRepository::createUser(
 		"RETURNING id",
 		{email, pwdHash}
 	);
-	if (result.isError() || result.rowCount() == 0)
+	if (result.isError())
 	{
-		std::cerr << "[ERROR UserRepository] INSERT failed" << std::endl;
-		return std::nullopt;
+		if (result.sqlState() == "23505")
+			return {
+				auth::CreateUserResult::Status::EmailAlreadyExists,
+				std::nullopt
+			};
+		return {
+			auth::CreateUserResult::Status::DatabaseError,
+			std::nullopt
+		};
 	}
+	if (result.rowCount() == 0)
+		return {
+			auth::CreateUserResult::Status::DatabaseError,
+			std::nullopt
+		};
 	const auto id = result.getInt64(0, 0);
 	if (!id.has_value())
-		return std::nullopt;
-	return *id;
+		return {
+			auth::CreateUserResult::Status::DatabaseError,
+			std::nullopt
+		};
+	return {
+		auth::CreateUserResult::Status::Success,
+		*id
+	};
 }

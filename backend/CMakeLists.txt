@@ -68,6 +68,27 @@ target_link_libraries(password_hasher_tests
         GTest::gtest_main
 )
 
+add_executable(auth_integration_tests
+    tests/integration/AuthIntegrationTests.cpp
+    src/database/Database.cpp
+    src/database/QueryResult.cpp
+    src/repositories/UserRepository.cpp
+    src/security/PasswordHasher.cpp
+)
+
+target_include_directories(auth_integration_tests
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(auth_integration_tests
+    PRIVATE
+        auth
+        PostgreSQL::PostgreSQL
+        unofficial-sodium::sodium
+        GTest::gtest_main
+)
+
 include(GoogleTest)
+gtest_discover_tests(auth_integration_tests)
 gtest_discover_tests(password_hasher_tests)
 gtest_discover_tests(user_repository_integration_tests)

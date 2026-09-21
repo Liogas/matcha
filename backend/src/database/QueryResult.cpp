@@ -72,6 +72,19 @@ bool	QueryResult::isTuples() const
 	return (false);
 }
 
+std::string	QueryResult::sqlState() const
+{
+	if (!this->_result)
+		return {};
+	const char *state = PQresultErrorField(
+		this->_result,
+		PG_DIAG_SQLSTATE
+	);
+	if (state == nullptr)
+		return {};
+	return state;
+}
+
 int	QueryResult::columnCount() const
 {
 	if (!this->_result)

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "User.hpp"
+#include "UserLookupResult.hpp"
+#include "CreateUserResult.hpp"
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -11,11 +12,11 @@ namespace auth
 	{
 		public:
 			virtual	~IUserRepository() = default;
-			virtual std::optional<User>
+			virtual UserLookupResult
 				findByEmail(const std::string &email) = 0;
-			virtual std::optional<User>
+			virtual UserLookupResult
 				findById(std::int64_t id) = 0;
-			virtual	std::optional<std::int64_t>
+			virtual	CreateUserResult
 				createUser(
 					const std::string &email,
 					const std::string &passwordHash
