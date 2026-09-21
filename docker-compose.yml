@@ -28,6 +28,9 @@ services:
       DB_PASSWORD: admin
     ports:
       - "18080:18080"
+    volumes:
+      - ./backend:/app
+      - backend_build:/app/build
 
   # frontend:
   #   build:
@@ -43,4 +46,5 @@ services:
 
 volumes:
   postgres_data:
+  backend_build:
     

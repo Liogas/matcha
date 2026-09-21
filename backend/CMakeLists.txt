@@ -17,10 +17,14 @@ add_subdirectory(auth)
 
 add_executable(matcha_backend
     src/main.cpp
+
     src/database/Database.cpp
     src/database/QueryResult.cpp
     src/database/DatabaseInitializer.cpp
+
     src/repositories/UserRepository.cpp
+
+    src/security/PasswordHasher.cpp
 )
 
 target_link_libraries(matcha_backend
@@ -48,5 +52,22 @@ target_link_libraries(user_repository_integration_tests
         GTest::gtest_main
 )
 
+add_executable(password_hasher_tests
+    tests/security/PasswordHasherTests.cpp
+    src/security/PasswordHasher.cpp
+)
+
+target_include_directories(password_hasher_tests
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(password_hasher_tests
+    PRIVATE
+        auth
+        unofficial-sodium::sodium
+        GTest::gtest_main
+)
+
 include(GoogleTest)
+gtest_discover_tests(password_hasher_tests)
 gtest_discover_tests(user_repository_integration_tests)
