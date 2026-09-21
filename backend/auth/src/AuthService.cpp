@@ -12,7 +12,8 @@ namespace auth
 
 	bool	AuthService::userExists(const std::string &email) const
 	{
-		return (this->_userRepository).findByEmail(email).has_value();
+		const auto result = this->_userRepository.findByEmail(email);
+		return result.status == UserLookupResult::Status::Found;
 	}
 
 	RegisterResult	AuthService::registerUser(
@@ -22,15 +23,23 @@ namespace auth
 	{
 		if (!isValidEmail(email))
 			return RegisterResult::InvalidEmail;
-		if (this->_userRepository.findByEmail(email).has_value())
+		const auto result = this->_userRepository.findByEmail(email);
+		if (result.status == UserLookupResult::Status::Found)
 			return RegisterResult::EmailAlreadyExists;
+		if (result.status == UserLookupResult::Status::DatabaseError)
+			return RegisterResult::CreationFailed;
 		const std::string pwdHash = this->_pwdHasher.hash(password);
-		const auto userId = this->_userRepository.createUser(
+		const auto createResult = this->_userRepository.createUser(
 			email,
 			pwdHash
 		);
-		if (!userId.has_value())
+
+		if (createResult.status == CreateUserResult::Status::DatabaseError)
 			return RegisterResult::CreationFailed;
+		if (createResult.status == CreateUserResult::Status::EmailAlreadyExists)
+			return RegisterResult::EmailAlreadyExists;
+		else if (createResult.status != CreateUserResult::Status::Success)
+			return RegisterResult::InvalidEmail;
 		return RegisterResult::Success;
 	}
 
@@ -49,5 +58,37 @@ namespace auth
 		if (dotPosition == email.size() - 1)
 			return (false);
 		return (true);
+	}
+
+	LoginResult	AuthService::login(
+		const std::string &email,
+		const std::string &pwd
+	)
+	{
+		const auto result = this->_userRepository.findByEmail(email);
+		if (result.status == UserLookupResult::Status::DatabaseError)
+			return {
+				LoginResult::Status::InternalError,
+				std::nullopt
+			};
+		if (result.status == UserLookupResult::Status::NotFound)
+			return {
+				LoginResult::Status::InvalidCredentials,
+				std::nullopt
+			};
+		if (!this->_pwdHasher.verify(
+			pwd,
+			result.user->passwordHash
+		))
+		{
+			return {
+				LoginResult::Status::InvalidCredentials,
+				std::nullopt
+			};
+		}
+		return {
+			LoginResult::Status::Success,
+			result.user
+		};
 	}
 }

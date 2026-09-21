@@ -22,6 +22,7 @@ class QueryResult
 		bool		isError() const;
 		bool		isTuples() const;
 		bool		isCommand() const;
+		std::string	sqlState() const;
 
 		int			rowCount() const;
 		int			columnCount() const;

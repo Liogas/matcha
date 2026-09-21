@@ -131,3 +131,102 @@ TEST(AuthServiceTest, RegisterUserPassesPasswordToHasher)
 		"pwd123"
 	);
 }
+
+// TEST 9
+TEST(AuthServiceTest, LoginRejectsUnknownEmail)
+{
+	FakeUserRepository repository;
+	FakePasswordHasher pwdHasher;
+	auth::AuthService authService(
+		repository,
+		pwdHasher
+	);
+	const auto result = authService.login(
+		"unknown@example.com",
+		"my_password"
+	);
+	EXPECT_EQ(
+		result.status,
+		auth::LoginResult::Status::InvalidCredentials
+	);
+	EXPECT_FALSE(result.user.has_value());
+}
+
+// TEST 10
+TEST(AuthServiceTest, LoginRejectsWrongPassword)
+{
+	FakeUserRepository repository;
+	FakePasswordHasher pwdHasher;
+	repository.createUser(
+		"user@example.com",
+		"hashed_correct_password"
+	);
+	auth::AuthService authService(
+		repository,
+		pwdHasher
+	);
+	const auto result = authService.login(
+		"user@example.com",
+		"wrong_password"
+	);
+	EXPECT_EQ(
+		result.status,
+		auth::LoginResult::Status::InvalidCredentials
+	);
+	EXPECT_FALSE(result.user.has_value());
+}
+
+// TEST 11
+TEST(AuthServiceTests, LoginSucceedsWithCorrectCredentials)
+{
+	FakeUserRepository repository;
+	FakePasswordHasher pwdHasher;
+	const auto userResult = repository.createUser(
+		"user@example.com",
+		"hashed_pwd"
+	);
+	EXPECT_EQ(userResult.status, auth::CreateUserResult::Status::Success);
+	ASSERT_TRUE(userResult.userId.has_value());
+	auth::AuthService authService(
+		repository,
+		pwdHasher
+	);
+	const auto result = authService.login(
+		"user@example.com",
+		"pwd"
+	);
+	ASSERT_EQ(
+		result.status,
+		auth::LoginResult::Status::Success
+	);
+	ASSERT_TRUE(result.user.has_value());
+	EXPECT_EQ(
+		result.user->id,
+		*(userResult.userId)
+	);
+	EXPECT_EQ(
+		result.user->email,
+		"user@example.com"
+	);
+}
+
+// TEST 12
+TEST(AuthServiceTest, LoginReturnsInternalErrorWhenRepositoryFails)
+{
+	FakeUserRepository repository;
+	FakePasswordHasher pwdHasher;
+	repository.failFindUser = true;
+	auth::AuthService authService(
+		repository,
+		pwdHasher
+	);
+	const auto result = authService.login(
+		"user@example.com",
+		"my_password"
+	);
+	EXPECT_EQ(
+		result.status,
+		auth::LoginResult::Status::InternalError
+	);
+	EXPECT_FALSE(result.user.has_value());
+}
