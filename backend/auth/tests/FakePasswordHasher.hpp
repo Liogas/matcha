@@ -11,4 +11,11 @@ class FakePasswordHasher : public auth::IPasswordHasher
 			lastPwd = pwd;
 			return "hashed_" + pwd;
 		}
+		bool	verify(
+			const std::string &password,
+			const std::string &passwordHash
+		)
+		{
+			return passwordHash == "hashed_" + password;
+		}
 };
