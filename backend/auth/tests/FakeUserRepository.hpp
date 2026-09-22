@@ -2,12 +2,15 @@
 
 #include <auth/IUserRepository.hpp>
 #include <vector>
+#include <optional>
 
 class FakeUserRepository : public auth::IUserRepository
 {
 	public:
 		bool	failCreateUser	= false;
 		bool	failFindUser	= false;
+		std::optional<auth::CreateUserResult::Status>
+			forcedStatus;
 		auth::UserLookupResult
 			findByEmail(const std::string &email) override
 			{
@@ -56,6 +59,11 @@ class FakeUserRepository : public auth::IUserRepository
 				const std::string &passwordHash
 			) override
 			{
+				if (this->forcedStatus.has_value())
+					return {
+						*(this->forcedStatus),
+						std::nullopt
+					};
 				if (failCreateUser)
 					return {
 						auth::CreateUserResult::Status::DatabaseError,

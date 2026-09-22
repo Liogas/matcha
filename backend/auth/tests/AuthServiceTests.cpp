@@ -39,7 +39,7 @@ TEST(AuthServiceTest, RegisterUserRejectsExistingEmail)
 	auth::AuthService service(repository, hasher);
 	const auto result = service.registerUser(
 		"test@test.com",
-		"pwd123"
+		"Abcdefg1!"
 	);
 	EXPECT_EQ(
 		result,
@@ -71,7 +71,7 @@ TEST(AuthServiceTest, RegisterUserSucceeds)
 	auth::AuthService service(repository, hasher);
 	const auto result = service.registerUser(
 		"new@example.com",
-		"pwd123"
+		"Abcdefg1!"
 	);
 	EXPECT_EQ(
 		result,
@@ -90,12 +90,12 @@ TEST(AuthServiceTest, RegisterUserHashesPasswordBeforeCreatingUser)
 	auth::AuthService service(repository, hasher);
 	service.registerUser(
 		"new@example.com",
-		"pwd123"
+		"Abcdefg1!"
 	);
 	ASSERT_EQ(repository.users().size(), 1);
 	EXPECT_EQ(
 		repository.users()[0].passwordHash,
-		"hashed_pwd123"
+		"hashed_Abcdefg1!"
 	);
 }
 
@@ -108,11 +108,11 @@ TEST(AuthServiceTest, RegisterUserReturnsCreationFailedWhenRepositoryFails)
 	auth::AuthService service(repository, hasher);
 	const auto result = service.registerUser(
 		"test@example.com",
-		"pwd123"
+		"Abcdefg1!"
 	);
 	EXPECT_EQ(
 		result,
-		auth::RegisterResult::CreationFailed
+		auth::RegisterResult::InternalError
 	);
 }
 
@@ -124,11 +124,11 @@ TEST(AuthServiceTest, RegisterUserPassesPasswordToHasher)
 	auth::AuthService service(repository, hasher);
 	service.registerUser(
 		"test@example.com",
-		"pwd123"
+		"Abcdefg1!"
 	);
 	EXPECT_EQ(
 		hasher.lastPwd,
-		"pwd123"
+		"Abcdefg1!"
 	);
 }
 
@@ -229,4 +229,147 @@ TEST(AuthServiceTest, LoginReturnsInternalErrorWhenRepositoryFails)
 		auth::LoginResult::Status::InternalError
 	);
 	EXPECT_FALSE(result.user.has_value());
+}
+
+// TEST 13
+TEST(AuthServiceTest, RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate)
+{
+	FakeUserRepository repository;
+	FakePasswordHasher pwdHasher;
+	auth::AuthService service(repository, pwdHasher);
+	repository.forcedStatus =
+		auth::CreateUserResult::Status::EmailAlreadyExists;
+	const auto result = service.registerUser(
+		"test@example.com",
+		"Abcdefg1!"
+	);
+	EXPECT_EQ(
+		result,
+		auth::RegisterResult::EmailAlreadyExists
+	);
+}
+
+// TEST 14
+TEST(AuthServiceTest, RegisterUserReturnsInternalErrorWhenHashingFails)
+{
+	FakeUserRepository repository;
+	FakePasswordHasher pwdHasher;
+	auth::AuthService authService(repository, pwdHasher);
+	pwdHasher.failHash = true;
+	const auto result = authService.registerUser(
+		"test@example.com",
+		"Abcdefg1!"
+	);
+	EXPECT_EQ(
+		result,
+		auth::RegisterResult::InternalError
+	);
+}
+
+// TEST 15
+TEST(AuthServiceTest, RegisterUserRejectsShortPassword)
+{
+    FakeUserRepository repository;
+    FakePasswordHasher hasher;
+    auth::AuthService service(repository, hasher);
+
+    const auto result = service.registerUser(
+        "test@example.com",
+        "Ab1!xyz"
+    );
+
+    EXPECT_EQ(
+        result,
+        auth::RegisterResult::InvalidPassword
+    );
+}
+
+// TEST 16
+TEST(AuthServiceTest, RegisterUserRejectsPasswordWithoutUppercase)
+{
+    FakeUserRepository repository;
+    FakePasswordHasher hasher;
+    auth::AuthService service(repository, hasher);
+
+    const auto result = service.registerUser(
+        "test@example.com",
+        "abcdefg1!"
+    );
+
+    EXPECT_EQ(
+        result,
+        auth::RegisterResult::InvalidPassword
+    );
+}
+
+// TEST 17
+TEST(AuthServiceTest, RegisterUserRejectsPasswordWithoutLowercase)
+{
+    FakeUserRepository repository;
+    FakePasswordHasher hasher;
+    auth::AuthService service(repository, hasher);
+
+    const auto result = service.registerUser(
+        "test@example.com",
+        "ABCDEFG1!"
+    );
+
+    EXPECT_EQ(
+        result,
+        auth::RegisterResult::InvalidPassword
+    );
+}
+
+// TEST 18
+TEST(AuthServiceTest, RegisterUserRejectsPasswordWithoutDigit)
+{
+    FakeUserRepository repository;
+    FakePasswordHasher hasher;
+    auth::AuthService service(repository, hasher);
+
+    const auto result = service.registerUser(
+        "test@example.com",
+        "Abcdefgh!"
+    );
+
+    EXPECT_EQ(
+        result,
+        auth::RegisterResult::InvalidPassword
+    );
+}
+
+// TEST 19
+TEST(AuthServiceTest, RegisterUserRejectsPasswordWithoutSpecialCharacter)
+{
+    FakeUserRepository repository;
+    FakePasswordHasher hasher;
+    auth::AuthService service(repository, hasher);
+
+    const auto result = service.registerUser(
+        "test@example.com",
+        "Abcdefgh1"
+    );
+
+    EXPECT_EQ(
+        result,
+        auth::RegisterResult::InvalidPassword
+    );
+}
+
+// TEST 20
+TEST(AuthServiceTest, RegisterUserAcceptsPasswordWithExactlyEightCharacters)
+{
+    FakeUserRepository repository;
+    FakePasswordHasher hasher;
+    auth::AuthService service(repository, hasher);
+
+    const auto result = service.registerUser(
+        "test@example.com",
+        "Abcdef1!"
+    );
+
+    EXPECT_EQ(
+        result,
+        auth::RegisterResult::Success
+    );
 }

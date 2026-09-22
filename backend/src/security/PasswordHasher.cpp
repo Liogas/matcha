@@ -1,16 +1,18 @@
 #include "PasswordHasher.hpp"
 #include <sodium.h>
 #include <stdexcept>
-#include <cstring>
 
 namespace auth
 {
-	std::string PasswordHasher::hash(const std::string &password)
+	PasswordHasher::PasswordHasher()
 	{
 		if (sodium_init() < 0)
 			throw std::runtime_error(
 				"libsodium initialization failed"
 			);
+	}
+	std::string PasswordHasher::hash(const std::string &password)
+	{
 		char hash[crypto_pwhash_STRBYTES];
 		if (crypto_pwhash_str(
 			hash,
@@ -31,8 +33,6 @@ namespace auth
 		const std::string &passwordHash
 	)
 	{
-		if (sodium_init() < 0)
-			return (false);
 		return crypto_pwhash_str_verify(
 			passwordHash.c_str(),
 			password.c_str(),

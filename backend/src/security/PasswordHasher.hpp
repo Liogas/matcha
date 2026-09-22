@@ -7,6 +7,7 @@ namespace auth
 	class PasswordHasher : public IPasswordHasher
 	{
 		public:
+			PasswordHasher();
 			std::string hash(
 				const std::string &password
 			) override;

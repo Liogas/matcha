@@ -25,6 +25,7 @@ namespace auth
 				const std::string &email,
 				const std::string &pwd
 			);
+			bool	isValidPwd(const std::string &pwd) const;
 		private:
 			IUserRepository	&_userRepository;
 			IPasswordHasher	&_pwdHasher;

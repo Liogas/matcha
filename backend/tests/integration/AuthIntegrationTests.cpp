@@ -14,7 +14,7 @@ TEST(AuthIntegrationTest, CanRegisterUser)
 
 	auth::AuthService authService(repository, pwdHasher);
 	const std::string email = "auth_integration@example.com";
-	const std::string pwd = "test123";
+	const std::string pwd = "Abcdefg1!";
 	database.executeParams(
 		"DELETE FROM users WHERE email = $1",
 		{email}
