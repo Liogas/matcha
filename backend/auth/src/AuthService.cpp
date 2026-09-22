@@ -1,4 +1,5 @@
 #include <auth/AuthService.hpp>
+#include <cctype>
 
 namespace auth
 {
@@ -23,19 +24,29 @@ namespace auth
 	{
 		if (!isValidEmail(email))
 			return RegisterResult::InvalidEmail;
+		if (!isValidPwd(password))
+			return RegisterResult::InvalidPassword;
 		const auto result = this->_userRepository.findByEmail(email);
 		if (result.status == UserLookupResult::Status::Found)
 			return RegisterResult::EmailAlreadyExists;
 		if (result.status == UserLookupResult::Status::DatabaseError)
-			return RegisterResult::CreationFailed;
-		const std::string pwdHash = this->_pwdHasher.hash(password);
+			return RegisterResult::InternalError;
+		std::string pwdHash;
+		try
+		{
+			pwdHash = this->_pwdHasher.hash(password);
+		}
+		catch(const std::exception& e)
+		{
+			return RegisterResult::InternalError;
+		}
 		const auto createResult = this->_userRepository.createUser(
 			email,
 			pwdHash
 		);
 
 		if (createResult.status == CreateUserResult::Status::DatabaseError)
-			return RegisterResult::CreationFailed;
+			return RegisterResult::InternalError;
 		if (createResult.status == CreateUserResult::Status::EmailAlreadyExists)
 			return RegisterResult::EmailAlreadyExists;
 		else if (createResult.status != CreateUserResult::Status::Success)
@@ -90,5 +101,28 @@ namespace auth
 			LoginResult::Status::Success,
 			result.user
 		};
+	}
+
+	bool	AuthService::isValidPwd(const std::string &pwd) const
+	{
+		if (pwd.size() < 8)
+			return false;
+		bool hasUpperCase = false;
+		bool hasLowerCase = false;
+		bool hasDigit = false;
+		bool hasSpecial = false;
+
+		for (const char c : pwd)
+		{
+			if (std::isupper(static_cast<unsigned char>(c)))
+				hasUpperCase = true;
+			else if (std::islower(static_cast<unsigned char>(c)))
+				hasLowerCase = true;
+			else if (std::isdigit(static_cast<unsigned char>(c)))
+				hasDigit = true;
+			else
+				hasSpecial = true;
+		}
+		return hasUpperCase && hasSpecial && hasLowerCase && hasDigit;
 	}
 }

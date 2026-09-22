@@ -7,6 +7,7 @@ namespace auth
 		Success,
 		EmailAlreadyExists,
 		InvalidEmail,
-		CreationFailed
+		InvalidPassword,
+		InternalError
 	};
 }
