@@ -1,6 +1,6 @@
 #pragma once
 
-#include "User.hpp"
+#include "AuthenticatedUser.hpp"
 #include <optional>
 
 namespace auth
@@ -14,6 +14,6 @@ namespace auth
 			InternalError
 		};
 		Status status;
-		std::optional<User> user;
+		std::optional<AuthenticatedUser> user;
 	};
 }

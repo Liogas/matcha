@@ -25,6 +25,8 @@ add_executable(matcha_backend
     src/repositories/UserRepository.cpp
 
     src/security/PasswordHasher.cpp
+
+    src/http/AuthRoutes.cpp
 )
 
 target_link_libraries(matcha_backend
