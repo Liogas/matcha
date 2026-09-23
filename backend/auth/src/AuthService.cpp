@@ -99,7 +99,10 @@ namespace auth
 		}
 		return {
 			LoginResult::Status::Success,
-			result.user
+			AuthenticatedUser{
+				result.user->id,
+				result.user->email
+			}
 		};
 	}
 

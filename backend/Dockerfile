@@ -40,4 +40,5 @@ RUN cmake -B build -S . \
 
 EXPOSE 18080
 
-CMD ["./build/matcha_backend"]
+CMD ["sleep", "infinity"]
+# CMD ["./build/matcha_backend"]
