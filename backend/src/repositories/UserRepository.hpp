@@ -1,6 +1,6 @@
 #pragma once
 
-#include <auth/IUserRepository.hpp>
+#include <auth/credentials/IUserRepository.hpp>
 #include <string>
 
 class Database;

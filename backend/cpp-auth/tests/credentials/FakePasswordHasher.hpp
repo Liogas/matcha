@@ -1,6 +1,6 @@
 #pragma once
 
-#include <auth/IPasswordHasher.hpp>
+#include <auth/credentials/IPasswordHasher.hpp>
 #include <stdexcept>
 
 class FakePasswordHasher : public auth::IPasswordHasher

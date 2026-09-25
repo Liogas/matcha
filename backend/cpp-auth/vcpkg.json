@@ -1,0 +1,9 @@
+{
+    "name": "cpp-auth",
+    "version-string": "0.1.0",
+    "dependencies": [
+        "jwt-cpp",
+        "openssl",
+        "gtest"
+    ]
+}

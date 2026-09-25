@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <auth/AuthService.hpp>
+#include <auth/credentials/AuthService.hpp>
 #include "FakeUserRepository.hpp"
 #include "FakePasswordHasher.hpp"
 
@@ -367,7 +367,6 @@ TEST(AuthServiceTest, RegisterUserAcceptsPasswordWithExactlyEightCharacters)
         "test@example.com",
         "Abcdef1!"
     );
-
     EXPECT_EQ(
         result,
         auth::RegisterResult::Success

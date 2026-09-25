@@ -5,6 +5,6 @@
         "crow", 
         "libpq", 
         "gtest", 
-        "libsodium" 
+        "libsodium"
     ]
 }
