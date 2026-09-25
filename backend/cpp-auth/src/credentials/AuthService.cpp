@@ -1,4 +1,4 @@
-#include <auth/AuthService.hpp>
+#include <auth/credentials/AuthService.hpp>
 #include <cctype>
 
 namespace auth

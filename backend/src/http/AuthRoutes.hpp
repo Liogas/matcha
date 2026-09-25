@@ -1,6 +1,6 @@
 #pragma once
 
-#include <auth/AuthService.hpp>
+#include <auth/credentials/AuthService.hpp>
 #include "AuthRequest.hpp"
 
 #include <crow.h>

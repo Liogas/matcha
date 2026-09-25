@@ -13,7 +13,7 @@ find_package(PostgreSQL REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(unofficial-sodium CONFIG REQUIRED)
 
-add_subdirectory(auth)
+add_subdirectory(cpp-auth)
 
 add_executable(matcha_backend
     src/main.cpp
@@ -30,7 +30,7 @@ add_executable(matcha_backend
 )
 
 target_link_libraries(matcha_backend
-    PRIVATE auth
+    PRIVATE cpp-auth
     PRIVATE Crow::Crow
     PRIVATE PostgreSQL::PostgreSQL
     PRIVATE unofficial-sodium::sodium
@@ -49,7 +49,7 @@ target_include_directories(user_repository_integration_tests
 
 target_link_libraries(user_repository_integration_tests
     PRIVATE
-        auth
+        cpp-auth
         PostgreSQL::PostgreSQL
         GTest::gtest_main
 )
@@ -65,7 +65,7 @@ target_include_directories(password_hasher_tests
 
 target_link_libraries(password_hasher_tests
     PRIVATE
-        auth
+        cpp-auth
         unofficial-sodium::sodium
         GTest::gtest_main
 )
@@ -84,7 +84,7 @@ target_include_directories(auth_integration_tests
 
 target_link_libraries(auth_integration_tests
     PRIVATE
-        auth
+        cpp-auth
         PostgreSQL::PostgreSQL
         unofficial-sodium::sodium
         GTest::gtest_main
