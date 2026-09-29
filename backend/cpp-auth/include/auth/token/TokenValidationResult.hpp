@@ -1,7 +1,7 @@
 #pragma once
 
 #include <optional>
-#include "AuthenticatedIdentity.hpp"
+#include <auth/identity/AuthenticatedIdentity.hpp>
 
 struct TokenValidationResult
 {

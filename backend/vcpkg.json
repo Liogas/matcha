@@ -5,6 +5,7 @@
         "crow", 
         "libpq", 
         "gtest", 
-        "libsodium"
+        "libsodium",
+        "nlohmann-json"
     ]
 }
