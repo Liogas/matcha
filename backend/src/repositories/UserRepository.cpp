@@ -20,7 +20,10 @@ auth::UserLookupResult	UserRepository::findByEmail(
 	);
 	if (result.isError())
 	{
-		std::cerr << "[ERROR UserRepository] SELECT failed" << std::endl;
+		std::cerr 
+				<< "[ERROR UserRepository] SELECT failed: "
+				<< result.errorMessage()
+				<< std::endl;
 		return {
 			auth::UserLookupResult::Status::DatabaseError,
 			std::nullopt
@@ -122,6 +125,10 @@ auth::CreateUserResult	UserRepository::createUser(
 	);
 	if (result.isError())
 	{
+		std::cerr
+        	<< "[ERROR UserRepository] INSERT failed: "
+        	<< result.errorMessage()
+        	<< std::endl;
 		if (result.sqlState() == "23505")
 			return {
 				auth::CreateUserResult::Status::EmailAlreadyExists,

@@ -32,6 +32,8 @@ class QueryResult
 		bool		isNull(int row, int column) const;
 		Oid			columnType(int column) const;
 
+		std::string	errorMessage() const;
+
 		std::optional<std::string>										getString(int row, int column) const;
 		std::optional<int>												getInt(int row, int column) const;
 		std::optional<std::int64_t>										getInt64(int row, int column) const;

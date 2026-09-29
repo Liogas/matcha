@@ -286,3 +286,13 @@ bool	QueryResult::isValidPosition(int row, int column) const
 		&& column >= 0
 		&& column < this->columnCount();
 }
+
+std::string	QueryResult::errorMessage() const
+{
+	if (!this->_result)
+		return {};
+	const char *message = PQresultErrorMessage(this->_result);
+	if (message == nullptr)
+		return {};
+	return message;
+}
