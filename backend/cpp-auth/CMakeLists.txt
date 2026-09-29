@@ -1,5 +1,14 @@
+find_package(nlohmann_json CONFIG REQUIRED)
+
 add_library(cpp-auth STATIC
     src/credentials/AuthService.cpp
+
+    src/jwks/JwksCache.cpp
+    src/jwks/JsonJwksParser.cpp
+)
+
+target_link_libraries(cpp-auth PRIVATE
+    nlohmann_json::nlohmann_json
 )
 
 target_include_directories(cpp-auth
@@ -9,6 +18,11 @@ target_include_directories(cpp-auth
 
 add_executable(cpp-auth_tests
     tests/credentials/AuthServiceTests.cpp
+    
+    tests/jwks/JwksCacheTests.cpp
+    tests/jwks/JwksParserTests.cpp
+
+    tests/http/HttpClientTests.cpp
 )
 
 target_link_libraries(cpp-auth_tests PRIVATE

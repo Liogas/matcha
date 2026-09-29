@@ -4,7 +4,7 @@
 
 namespace	auth
 {
-	struct JWK
+	struct Jwk
 	{
 		std::string kid;
 		std::string kty;

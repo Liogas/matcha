@@ -4,6 +4,7 @@
     "dependencies": [
         "jwt-cpp",
         "openssl",
-        "gtest"
+        "gtest",
+        "nlohmann-json"
     ]
 }
