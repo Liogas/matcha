@@ -53,7 +53,7 @@ TEST(UserRepositoryIntegrationTest, CanCreateUser)
 	EXPECT_EQ(result.user->email, email);
 	EXPECT_EQ(result.user->passwordHash, password);
 	database.executeParams(
-		"DELETE FROM users"
+		"DELETE FROM users "
 		"WHERE email = $1",
 		{email}
 	);

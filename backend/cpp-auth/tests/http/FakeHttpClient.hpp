@@ -12,8 +12,13 @@ class FakeHttpClient : public auth::HttpClient
 
 		auth::HttpResult get(const std::string& url) override
 		{
-			return _result;
+			called = true;
+			return {
+				auth::HttpResult::Status::NetworkError,
+				std::nullopt
+			};
 		}
+		bool called = false;
 
 	private:
 		auth::HttpResult _result;

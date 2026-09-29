@@ -11,6 +11,6 @@ struct JwksResult
 		KeyNotFound,
 		Unavailable
 	};
-	Status 				status;
-	std::optional<Jwk>	key;
+	Status 						status;
+	std::optional<auth::Jwk>	key;
 };

@@ -5,6 +5,7 @@ add_library(cpp-auth STATIC
 
     src/jwks/JwksCache.cpp
     src/jwks/JsonJwksParser.cpp
+    src/jwks/HttpJwksProvider.cpp
 )
 
 target_link_libraries(cpp-auth PRIVATE
