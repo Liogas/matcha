@@ -6,6 +6,12 @@
         "libpq", 
         "gtest", 
         "libsodium",
-        "nlohmann-json"
+        "nlohmann-json",
+        {
+            "name": "cpp-httplib",
+            "features": [
+                "openssl"
+            ]
+        }
     ]
 }

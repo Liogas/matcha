@@ -5,6 +5,12 @@
         "jwt-cpp",
         "openssl",
         "gtest",
-        "nlohmann-json"
+        "nlohmann-json",
+        {
+            "name": "cpp-httplib",
+            "features": [
+                "openssl"
+            ]
+        }
     ]
 }

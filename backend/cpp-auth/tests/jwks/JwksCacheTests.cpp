@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include <auth/jwks/JwksCache.hpp>
+#include "FakeClock.hpp"
+
 
 TEST(JwksCacheTest, FindsExistingKey)
 {
@@ -10,8 +12,8 @@ TEST(JwksCacheTest, FindsExistingKey)
 		.n = "modulus",
 		.e = "AQAB"
 	};
-
-	auth::JwksCache cache(std::chrono::seconds(300));
+    FakeClock clock;
+	auth::JwksCache cache(std::chrono::seconds(300), clock);
 	cache.replace({key});
 	const auto result = cache.get("key-1");
 	EXPECT_EQ(
@@ -24,7 +26,8 @@ TEST(JwksCacheTest, FindsExistingKey)
 
 TEST(JwksCacheTest, ReturnsNotFoundForUnknownKey)
 {
-    auth::JwksCache cache(std::chrono::seconds(300));
+    FakeClock clock;
+    auth::JwksCache cache(std::chrono::seconds(300), clock);
 
     auth::Jwk key{
         .kid = "key-1",
@@ -48,7 +51,8 @@ TEST(JwksCacheTest, ReturnsNotFoundForUnknownKey)
 
 TEST(JwksCacheTest, ReturnsExpiredWhenCacheIsExpired)
 {
-    auth::JwksCache cache(std::chrono::seconds(0));
+    FakeClock clock;
+    auth::JwksCache cache(std::chrono::seconds(0), clock);
 
     auth::Jwk key{
         .kid = "key-1",
