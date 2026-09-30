@@ -2,9 +2,9 @@
 
 namespace	auth
 {
-	JwksCache::JwksCache(std::chrono::seconds ttl):
+	JwksCache::JwksCache(std::chrono::seconds ttl, IClock &clock):
 		_ttl(ttl),
-		_fetchedAt(std::chrono::steady_clock::now())
+		_clock(clock)
 	{
 	}
 
@@ -14,14 +14,14 @@ namespace	auth
 		this->_keys.clear();
 		for (const auto &key : keys)
 			this->_keys[key.kid] = key;
-		this->_fetchedAt = std::chrono::steady_clock::now();
+		this->_fetchedAt = this->_clock.now();
 	}
 
 	bool	JwksCache::isExpired() const
 	{
 		if (!this->_fetchedAt.has_value())
 			return (true);
-		const auto now = std::chrono::steady_clock::now();
+		const auto now = this->_clock.now();
 		const auto age = now - *this->_fetchedAt;
 		return age >= this->_ttl;
 	}
