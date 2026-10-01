@@ -5,6 +5,12 @@
 
 namespace auth
 {
+	CppHttpClient::CppHttpClient(
+		const HttpClientConfig &config
+	):
+		_config(config)
+	{}
+
 	HttpResult	CppHttpClient::get(
 		const std::string &url
 	)
@@ -20,13 +26,31 @@ namespace auth
 			std::string baseUrl = "https://" + parsedUrl->host;
     		if (!parsedUrl->port.empty())
 				baseUrl += ":" + parsedUrl->port;
+			std::cout << "[CPP-AUTH BASE URL] ["
+						<< baseUrl
+						<< "]"
+						<< std::endl;
+
+				std::cout << "[CPP-AUTH PATH] ["
+						<< parsedUrl->path
+						<< "]"
+						<< std::endl;
 			httplib::SSLClient client(baseUrl);
+			// if (this->_config.caCertPath.has_value())
+			// 	client.set_ca_cert_path(
+			// 		this->_config.caCertPath->c_str()
+			// 	);
+			client.enable_server_certificate_verification(false); // A RETIRER
 			const auto response = client.Get(parsedUrl->path);
 			if (!response)
+			{
+				std::cerr	<< "[HTTPS ERROR] "
+							<< httplib::to_string(response.error()) << std::endl;
 				return {
 					HttpResult::Status::NetworkError,
 					std::nullopt
 				};
+			}
 			return {
 				HttpResult::Status::Success,
 				HttpResponse{
