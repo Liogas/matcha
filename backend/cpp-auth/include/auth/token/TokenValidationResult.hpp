@@ -3,14 +3,17 @@
 #include <optional>
 #include <auth/identity/AuthenticatedIdentity.hpp>
 
-struct TokenValidationResult
+namespace auth
 {
-	enum class Status
+	struct TokenValidationResult
 	{
-		Valid,
-		InvalidToken,
-		VerificationUnavailable
+		enum class Status
+		{
+			Valid,
+			InvalidToken,
+			VerificationUnavailable
+		};
+		Status status;
+		std::optional<AuthenticatedIdentity> identity;
 	};
-	Status status;
-	std::optional<AuthenticatedIdentity> identity;
-};
+}

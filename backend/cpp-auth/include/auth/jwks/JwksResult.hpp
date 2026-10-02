@@ -3,14 +3,17 @@
 #include "Jwk.hpp"
 #include <optional>
 
-struct JwksResult
+namespace auth
 {
-	enum class Status
+	struct JwksResult
 	{
-		Success,
-		KeyNotFound,
-		Unavailable
+		enum class Status
+		{
+			Success,
+			KeyNotFound,
+			Unavailable
+		};
+		Status 						status;
+		std::optional<auth::Jwk>	key;
 	};
-	Status 						status;
-	std::optional<auth::Jwk>	key;
-};
+}

@@ -2,9 +2,12 @@
 
 #include <string>
 
-struct	TokenValidatorConfig
+namespace auth
 {
-	std::string issuer;
-	std::string audience;
-	std::string algorithm;
-};
+	struct	TokenValidatorConfig
+	{
+		std::string issuer;
+		std::string audience;
+		std::string algorithm;
+	};
+}

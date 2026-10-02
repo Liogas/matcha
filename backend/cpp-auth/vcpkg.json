@@ -2,7 +2,12 @@
     "name": "cpp-auth",
     "version-string": "0.1.0",
     "dependencies": [
-        "jwt-cpp",
+        {
+            "name": "jwt-cpp",
+            "features": [
+                "picojson"
+            ]
+        },
         "openssl",
         "gtest",
         "nlohmann-json",
