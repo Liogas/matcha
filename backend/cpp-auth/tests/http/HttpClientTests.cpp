@@ -82,19 +82,21 @@ TEST(HttpClientTests, ReturnsNetworkError)
 
 TEST(CppHttpClientTests, GetsHttpsResponse)
 {
-    const std::string certPath =
-        "cpp-auth/tests/certs/test-cert.pem";
+    const std::filesystem::path certPath =
+		std::filesystem::path(CPP_AUTH_SOURCE_DIR)
+		/ "tests/certs/test-cert.pem";
 
-    const std::string keyPath =
-        "cpp-auth/tests/certs/test-key.pem";
+	const std::filesystem::path keyPath =
+		std::filesystem::path(CPP_AUTH_SOURCE_DIR)
+		/ "tests/certs/test-key.pem";
 
     std::cout << "CERT PATH = ["
-            << certPath
+            << certPath.c_str()
             << "]"
             << std::endl;
 
     std::cout << "KEY PATH = ["
-            << keyPath
+            << keyPath.c_str()
             << "]"
             << std::endl;
 
@@ -143,49 +145,19 @@ TEST(CppHttpClientTests, GetsHttpsResponse)
             server.listen_after_bind();
         }
     );
-    
+
     std::cout
         << "[SERVER IS_RUNNING] "
         << server.is_running()
         << std::endl;
-
-    std::this_thread::sleep_for(
-        std::chrono::seconds(60)
-    );
-
+        
     std::cout << "[DIRECT BASE URL] [https://127.0.0.1:"
-          << port
-          << "]"
-          << std::endl;
-
-    httplib::SSLClient directClient(
-        "https://127.0.0.1:" + std::to_string(port)
-    );
-
-    directClient.enable_server_certificate_verification(false);
-
-    const auto directResponse =
-        directClient.Get("/test");
-
-    if (!directResponse)
-    {
-        std::cout
-            << "[DIRECT HTTPS ERROR] "
-            << httplib::to_string(directResponse.error())
+            << port
+            << "]"
             << std::endl;
-    }
-    else
-    {
-        std::cout
-            << "[DIRECT HTTPS SUCCESS] "
-            << directResponse->status
-            << " / "
-            << directResponse->body
-            << std::endl;
-    }
 
     auth::CppHttpClient client({
-        "../../cpp-auth/tests/certs/test-cert.pem"
+        certPath.string()
     });
 
     const std::string url =
@@ -216,5 +188,90 @@ TEST(CppHttpClientTests, GetsHttpsResponse)
     EXPECT_EQ(
         result.response->body,
         "hello https"
+    );
+}
+
+TEST(CppHttpClientTests, ReturnsHttpErrorResponse)
+{
+    const std::filesystem::path certPath =
+        std::filesystem::absolute(
+            CPP_AUTH_SOURCE_DIR
+        ) / "tests/certs/test-cert.pem";
+
+    const std::filesystem::path keyPath =
+        std::filesystem::absolute(
+            CPP_AUTH_SOURCE_DIR
+        ) / "tests/certs/test-key.pem";
+
+    httplib::SSLServer server(
+        certPath.c_str(),
+        keyPath.c_str()
+    );
+
+    ASSERT_TRUE(server.is_valid());
+
+    server.Get(
+        "/not-found",
+        [](const httplib::Request&, httplib::Response& response)
+        {
+            response.status = 404;
+            response.set_content(
+                "not found",
+                "text/plain"
+            );
+        }
+    );
+
+    const int port =
+        server.bind_to_any_port("127.0.0.1");
+
+    ASSERT_GT(port, 0);
+
+    std::thread serverThread(
+        [&server]()
+        {
+            server.listen_after_bind();
+        }
+    );
+
+    while (!server.is_running())
+    {
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(50)
+        );
+    }
+
+    auth::CppHttpClient client({
+        certPath.string()
+    });
+
+    const std::string url =
+        "https://127.0.0.1:" +
+        std::to_string(port) +
+        "/not-found";
+
+    const auto result =
+        client.get(url);
+
+    server.stop();
+    serverThread.join();
+
+    ASSERT_EQ(
+        result.status,
+        auth::HttpResult::Status::Success
+    );
+
+    ASSERT_TRUE(
+        result.response.has_value()
+    );
+
+    EXPECT_EQ(
+        result.response->statusCode,
+        404
+    );
+
+    EXPECT_EQ(
+        result.response->body,
+        "not found"
     );
 }

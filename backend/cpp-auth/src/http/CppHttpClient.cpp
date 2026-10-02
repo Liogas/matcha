@@ -23,24 +23,16 @@ namespace auth
 			};
 		if (parsedUrl->scheme == "https")
 		{
-			std::string baseUrl = "https://" + parsedUrl->host;
-    		if (!parsedUrl->port.empty())
-				baseUrl += ":" + parsedUrl->port;
-			std::cout << "[CPP-AUTH BASE URL] ["
-						<< baseUrl
-						<< "]"
-						<< std::endl;
-
-				std::cout << "[CPP-AUTH PATH] ["
-						<< parsedUrl->path
-						<< "]"
-						<< std::endl;
-			httplib::SSLClient client(baseUrl);
-			// if (this->_config.caCertPath.has_value())
-			// 	client.set_ca_cert_path(
-			// 		this->_config.caCertPath->c_str()
-			// 	);
-			client.enable_server_certificate_verification(false); // A RETIRER
+			httplib::SSLClient client(
+				parsedUrl->host,
+				parsedUrl->port.empty() ? 
+					443 : std::stoi(parsedUrl->port)
+			);
+			if (this->_config.caCertPath.has_value())
+				client.set_ca_cert_path(
+					this->_config.caCertPath->c_str()
+				);
+			// client.enable_server_certificate_verification(false); // A RETIRER
 			const auto response = client.Get(parsedUrl->path);
 			if (!response)
 			{
@@ -60,10 +52,11 @@ namespace auth
 			};
 		} else if (parsedUrl->scheme == "http")
 		{
-			std::string baseUrl = "http://" + parsedUrl->host;
-			if (!parsedUrl->port.empty())
-				baseUrl += ":" + parsedUrl->port;
-			httplib::Client client(baseUrl);
+			httplib::Client client(
+				parsedUrl->host,
+				parsedUrl->port.empty() 
+					? 80 : std::stoi(parsedUrl->port)
+			);
 			const auto response = client.Get(parsedUrl->path);
 			if (!response)
 				return {

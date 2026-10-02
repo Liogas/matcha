@@ -13,6 +13,8 @@ add_library(cpp-auth STATIC
 
     src/http/CppHttpClient.cpp
     src/http/UrlParser.cpp
+
+    src/token/TokenValidator.cpp
 )
 
 target_link_libraries(cpp-auth PRIVATE
@@ -34,6 +36,12 @@ add_executable(cpp-auth_tests
 
     tests/http/HttpClientTests.cpp
     tests/http/UrlParserTests.cpp
+
+    tests/token/TokenValidatorTests.cpp
+)
+
+target_compile_definitions(cpp-auth_tests PRIVATE
+    CPP_AUTH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 target_link_libraries(cpp-auth_tests PRIVATE

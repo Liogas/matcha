@@ -2,18 +2,22 @@
 
 #include "TokenValidatorConfig.hpp"
 #include "TokenValidationResult.hpp"
+#include <auth/jwks/JwksProvider.hpp>
 
-class TokenValidator
+namespace auth
 {
-	public:
-		TokenValidator(
-			const TokenValidatorConfig 	&config,
-			JwksProvider				&jwksProvider
-		);
-		TokenValidationResult	validate(
-			const std::string &token
-		);
-	private:
-		TokenValidatorConfig	_config;
-		JwksProvider			&_jwksProvider;
-};
+	class TokenValidator
+	{
+		public:
+			TokenValidator(
+				const TokenValidatorConfig 	&config,
+				JwksProvider				&jwksProvider
+			);
+			TokenValidationResult	validate(
+				const std::string &token
+			);
+		private:
+			TokenValidatorConfig	_config;
+			JwksProvider			&_jwksProvider;
+	};
+}

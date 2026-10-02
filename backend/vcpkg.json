@@ -8,6 +8,12 @@
         "libsodium",
         "nlohmann-json",
         {
+            "name": "jwt-cpp",
+            "features": [
+                "picojson"
+            ]
+        },
+        {
             "name": "cpp-httplib",
             "features": [
                 "openssl"
