@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include <jwt-cpp/jwt.h>
+#include <fstream>
+#include <sstream>
 
 #include <auth/jwks/JwksProvider.hpp>
 #include <auth/token/TokenValidator.hpp>
@@ -235,4 +237,19 @@ TEST(TokenValidatorTest, ReturnsInvalidTokenWhenJwkIsNotFound)
     );
 
     EXPECT_EQ(jwksProvider.callCount, 1);
+}
+
+TEST(TokenValidatorTest, CreatesPublicKeyFromRsaComponents)
+{
+    const std::string modulus = 
+		"vagng93C3IB_M55qHHaw5rtfMEU38tHCPa6v9vgIIa09GJslCPmIltK-tCmDBAeQP5ok7v2Ryus4G4K23_BzubLqGznwq6U31MLg9L9BSfQthSR5ihd8tDLK4MyqLWzySChSUIzmrUACFGJZV_7nHpV3R4zZBeZTsH6Egu4qMlE-WjSuZ0yQyQQ43yWtzCb_YEmR_KjEfnyxnvbfJrqq3og9m20moKbOiJhhugUx7iLRavsZa62Y3UORl3WRhZ4TvCWjQBofNEaRLsvJgiwdm4_N8uRq8ELKDmLWwQ__5zPs8DzHll9Xr-VT8L-jJdTOR_Fg2dV5xWt-KS3yWf5amw";
+    const std::string exponent = "AQAB";
+
+    const auto publicKey =
+        jwt::helper::create_public_key_from_rsa_components(
+            modulus,
+            exponent
+        );
+
+    EXPECT_FALSE(publicKey.empty());
 }
