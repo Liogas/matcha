@@ -1,0 +1,5 @@
+build/
+backend/build/
+frontend/node_modules/
+.git/
+vcpkg_installed/
