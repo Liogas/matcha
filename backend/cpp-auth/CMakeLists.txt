@@ -15,6 +15,8 @@ add_library(cpp-auth STATIC
     src/http/UrlParser.cpp
 
     src/token/TokenValidator.cpp
+
+    src/auth/Authenticator.cpp
 )
 
 target_link_libraries(cpp-auth PRIVATE
@@ -38,6 +40,9 @@ add_executable(cpp-auth_tests
     tests/http/UrlParserTests.cpp
 
     tests/token/TokenValidatorTests.cpp
+    tests/token/TokenValidatorInterfaceTests.cpp
+
+    tests/auth/AuthenticatorTests.cpp
 )
 
 target_compile_definitions(cpp-auth_tests PRIVATE

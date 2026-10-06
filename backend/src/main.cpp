@@ -19,9 +19,24 @@ int main()
     }
 	UserRepository userRepository(database);
 	auth::PasswordHasher passwordHasher;
+
+    auth::TokenValidatorConfig config{
+        "https://issuer.example.com",
+        "matcha-api",
+        "RS256"
+    };
+
+    JwksProvider jwksProvider(...);
+
+    auth::TokenValidator tokenValidator(
+        config,
+        jwksProvider
+    );
+    auth::Authenticator authenticator(tokenValidator);
 	auth::AuthService authService(
 		userRepository,
-		passwordHasher
+		passwordHasher,
+        authenticator
 	);
     crow::SimpleApp app;
 

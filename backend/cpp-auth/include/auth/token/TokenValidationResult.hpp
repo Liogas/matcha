@@ -14,6 +14,6 @@ namespace auth
 			VerificationUnavailable
 		};
 		Status status;
-		std::optional<AuthenticatedIdentity> identity;
+		std::optional<AuthenticatedIdentity> claims;
 	};
 }

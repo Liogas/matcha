@@ -72,9 +72,13 @@ target_link_libraries(password_hasher_tests
 
 add_executable(auth_integration_tests
     tests/integration/AuthIntegrationTests.cpp
+    tests/integration/AuthAuthentificationIntegrationTests.cpp
+
     src/database/Database.cpp
     src/database/QueryResult.cpp
+    
     src/repositories/UserRepository.cpp
+    
     src/security/PasswordHasher.cpp
 )
 
