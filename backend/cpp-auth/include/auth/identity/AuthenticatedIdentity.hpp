@@ -1,9 +1,15 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <chrono>
 
-struct AuthenticatedIdentity
+namespace auth
 {
-	std::string subject;
-	std::string issuer;
-};
+	struct AuthenticatedIdentity
+	{
+		std::string subject;
+		std::string issuer;
+		std::vector<std::string> audience;
+	};
+}

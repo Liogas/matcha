@@ -25,7 +25,8 @@ namespace
 
 void	registerAuthRoutes(
 	crow::SimpleApp &app,
-	auth::AuthService &authService
+	auth::AuthService &authService,
+	auth::Authenticator	&authenticator
 )
 {
 	CROW_ROUTE(app, "/api/auth/register")
