@@ -1,5 +1,6 @@
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(httplib CONFIG REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 message(STATUS "HTTPLIB_IS_USING_OPENSSL=${HTTPLIB_IS_USING_OPENSSL}")
 message(STATUS "HTTPLIB_IS_COMPILED=${HTTPLIB_IS_COMPILED}")
@@ -14,7 +15,12 @@ add_library(cpp-auth STATIC
     src/http/CppHttpClient.cpp
     src/http/UrlParser.cpp
 
+    src/time/SystemClock.cpp
+    src/time/SystemWallClock.cpp
+
     src/token/TokenValidator.cpp
+    src/token/TokenGenerator.cpp
+    src/token/RsaTokenSigner.cpp
 
     src/auth/Authenticator.cpp
 )
@@ -22,6 +28,7 @@ add_library(cpp-auth STATIC
 target_link_libraries(cpp-auth PRIVATE
     nlohmann_json::nlohmann_json
     httplib::httplib
+    OpenSSL::Crypto
 )
 
 target_include_directories(cpp-auth
@@ -41,6 +48,8 @@ add_executable(cpp-auth_tests
 
     tests/token/TokenValidatorTests.cpp
     tests/token/TokenValidatorInterfaceTests.cpp
+    tests/token/TokenGeneratorTests.cpp
+    tests/token/RsaTokenSignerTests.cpp
 
     tests/auth/AuthenticatorTests.cpp
 )
@@ -53,6 +62,7 @@ target_link_libraries(cpp-auth_tests PRIVATE
     cpp-auth
     httplib::httplib
     GTest::gtest_main
+    OpenSSL::Crypto
 )
 
 include(GoogleTest)
