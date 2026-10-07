@@ -1,0 +1,1 @@
+« J'ai développé en C++ une bibliothèque permettant de générer et valider des JWT signés, avec vérification de signature RSA, issuer, audience, expiration, algorithme et gestion des clés via JWKS. J'ai conçu les composants en suivant une approche TDD et en séparant la génération, la validation, la récupération et le cache des clés. »
