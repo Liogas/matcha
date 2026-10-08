@@ -1,12 +1,13 @@
-#include <auth/token/RsaTokenSigner.hpp>
-
 #include <openssl/evp.h>
+#include <jwt-cpp/jwt.h> 
 #include <openssl/pem.h>
 
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
+
+#include <auth/token/RsaTokenSigner.hpp>
 
 namespace auth
 {
@@ -61,9 +62,11 @@ namespace auth
     }
 
     RsaTokenSigner::RsaTokenSigner(
-        const std::string &privateKeyPath
+        const std::string &privateKeyPath,
+        const std::string &keyId
     ):
-        _privateKeyPath(privateKeyPath)
+        _privateKeyPath(privateKeyPath),
+        _keyId(keyId)
     {
     }
 
@@ -160,9 +163,16 @@ namespace auth
         EVP_MD_CTX_free(context);
         EVP_PKEY_free(privateKey);
 
-        return std::string(
-            reinterpret_cast<const char *>(signature.data()),
-            signatureSize
+        return jwt::base::encode<jwt::alphabet::base64url>(
+            std::string(
+                reinterpret_cast<const char *>(signature.data()),
+                signatureSize
+            )
         );
+    }
+
+    std::string RsaTokenSigner::keyId() const
+    {
+        return this->_keyId;
     }
 }

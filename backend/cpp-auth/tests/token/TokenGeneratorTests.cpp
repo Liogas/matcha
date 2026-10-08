@@ -18,6 +18,10 @@ namespace
 				signedData = data;
 				return "fake-signature";
 			}
+			std::string	keyId() const
+			{
+				return "key-123";
+			}
 			std::string signedData;
 	};
 
@@ -105,6 +109,7 @@ TEST(TokenGeneratorTest, GeneratesTokenWithExpectedClaims)
 
     EXPECT_EQ(header["alg"], "RS256");
     EXPECT_EQ(header["typ"], "JWT");
+	EXPECT_EQ(header["kid"], "key-123");
 
     EXPECT_EQ(payload["iss"], "https://auth.cpp.local");
     EXPECT_EQ(payload["sub"], "user-42");

@@ -3,6 +3,7 @@
 #include <auth/token/TokenValidatorInterface.hpp>
 #include <auth/jwks/JwksProvider.hpp>
 #include <auth/token/TokenValidatorConfig.hpp>
+#include <auth/token/ITokenSignatureVerifier.hpp>
 #include <jwt-cpp/jwt.h>
 
 namespace auth
@@ -12,7 +13,8 @@ namespace auth
 		public:
 			TokenValidator(
 				const TokenValidatorConfig 	&config,
-				JwksProvider				&jwksProvider
+				JwksProvider				&jwksProvider,
+				ITokenSignatureVerifier		&signatureVerifier
 			);
 			TokenValidationResult	validate(
 				const std::string &token
@@ -20,6 +22,7 @@ namespace auth
 		private:
 			TokenValidatorConfig	_config;
 			JwksProvider			&_jwksProvider;
+			ITokenSignatureVerifier	&_signatureVerifier;
 
 			bool	validateAlgorithm(
 				const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
