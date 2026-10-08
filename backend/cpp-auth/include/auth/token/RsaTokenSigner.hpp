@@ -8,12 +8,15 @@ namespace auth
 	{
 		public:
 			explicit RsaTokenSigner(
-				const std::string &privateKeyPath
+				const std::string &privateKeyPath,
+				const std::string &keyId
 			);
 			std::string sign(
 				const std::string &data
 			) override;
+			std::string	keyId() const override;
 		private:
 			std::string	_privateKeyPath;
+			std::string	_keyId;
 	};
 }

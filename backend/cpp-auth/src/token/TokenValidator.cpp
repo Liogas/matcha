@@ -3,11 +3,13 @@
 namespace auth
 {
 	TokenValidator::TokenValidator(
-		const TokenValidatorConfig &config,
-		auth::JwksProvider &jwksProvider
+		const TokenValidatorConfig 	&config,
+		auth::JwksProvider 			&jwksProvider,
+		ITokenSignatureVerifier		&signatureVerifier
 	):
 		_config(config),
-		_jwksProvider(jwksProvider)
+		_jwksProvider(jwksProvider),
+		_signatureVerifier(signatureVerifier)
 	{}
 
 	TokenValidationResult	TokenValidator::validate(
@@ -30,6 +32,8 @@ namespace auth
 			if (jwksResult.status == JwksResult::Status::KeyNotFound)
 				return this->invalidToken();
 			if (!jwksResult.key.has_value())
+				return this->invalidToken();
+			if (jwksResult.key->alg != decoded.get_algorithm())
 				return this->invalidToken();
 			if (!this->verifSignature(decoded, jwksResult.key.value()))
 				return this->invalidToken();
@@ -134,16 +138,16 @@ namespace auth
 		const Jwk &jwk
 	)
 	{
-		const auto publicKey = 
-			jwt::helper::create_public_key_from_rsa_components(
-				jwk.n,
-				jwk.e
-			);
-		const auto algorithm = jwt::algorithm::rs256(publicKey);
-		jwt::verify()
-			.allow_algorithm(algorithm)
-			.verify(decoded);
-		return true;
+		const std::string signingInput =
+			decoded.get_header_base64() + "."
+			+ decoded.get_payload_base64();
+		const std::string signature =
+			decoded.get_signature();
+		return this->_signatureVerifier.verify(
+			signingInput,
+			signature,
+			jwk
+		);
 	}
 
 	TokenValidationResult	TokenValidator::invalidToken()

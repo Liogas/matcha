@@ -20,7 +20,8 @@ namespace auth
 	{
 		const nlohmann::json header{
 			{"alg", "RS256"},
-			{"typ", "JWT"}
+			{"typ", "JWT"},
+			{"kid", this->_signer.keyId()}
 		};
 
 		const auto now = this->_clock.now();

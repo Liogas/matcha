@@ -21,6 +21,9 @@ add_library(cpp-auth STATIC
     src/token/TokenValidator.cpp
     src/token/TokenGenerator.cpp
     src/token/RsaTokenSigner.cpp
+    src/token/RsaTokenSignatureVerifier.cpp
+
+    src/crypto/RsaPublicKeyBuilder.cpp
 
     src/auth/Authenticator.cpp
 )
@@ -50,6 +53,9 @@ add_executable(cpp-auth_tests
     tests/token/TokenValidatorInterfaceTests.cpp
     tests/token/TokenGeneratorTests.cpp
     tests/token/RsaTokenSignerTests.cpp
+    tests/token/RsaTokenSignatureVerifierTests.cpp
+
+    tests/crypto/RsaPublicKeyBuilderTests.cpp
 
     tests/auth/AuthenticatorTests.cpp
 )

@@ -1,14 +1,15 @@
 #include <gtest/gtest.h>
-
-#include <auth/token/RsaTokenSigner.hpp>
-
+#include <jwt-cpp/jwt.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
+#include <openssl/bn.h>
 
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
 #include <string>
+
+#include <auth/token/RsaTokenSigner.hpp>
 
 namespace
 {
@@ -100,6 +101,30 @@ namespace
     }
 }
 
+TEST(RsaPublicKeyBuilderTest, DecodesJwkModulus)
+{
+    const std::string n =
+        "n1z9S3kUIxwJ33ZWT2fAGiUuEszJMbpmzWZfRitpxYlrfmD0SLOUhIkygTbCgzThHBNAd_UWLw1vr4vRnxL5_TMUrWZgGPZdlTp84hw0QKuTDo-xLYYSDdS585M7EsHpNU8A7uttAPS4D7910dhGrjVdtOrcldljbafGrNk48TZnCUasfsS4uiPtHhMUQBObXn17lEQqrn-I676Yyx5dXeHvm7tCMbMi44rYhoC40N4W7gGA9UMQLhCiTU7Kj2PHVtdaIRxRYkaqIXytDiYbeHcRcuB0M0m58cPHp64D_4P_wwJwhB00zXfLhE2j47TuS9uAYSqCMtmKbFNN2DXUfw";
+
+    std::cout << "n size = " << n.size() << '\n';
+    std::cout << "n mod 4 = " << n.size() % 4 << '\n';
+
+    EXPECT_EQ(n.size(), 342);
+
+    // std::string padded = n;
+
+    // while (padded.size() % 4 != 0)
+    //     padded += '=';
+
+    const auto bytes =
+    jwt::base::decode<jwt::alphabet::base64url>(
+        jwt::base::pad<jwt::alphabet::base64url>(n)
+    );
+
+    EXPECT_EQ(bytes.size(), 256);
+}
+
+
 TEST(RsaTokenSignerTest, SignsDataThatCanBeVerifiedWithPublicKey)
 {
     const auto privateKeyPath =
@@ -110,7 +135,12 @@ TEST(RsaTokenSignerTest, SignsDataThatCanBeVerifiedWithPublicKey)
         std::string(CPP_AUTH_SOURCE_DIR)
         + "/tests/fixtures/rsa_public_test.pem";
 
-    auth::RsaTokenSigner signer(privateKeyPath);
+    auth::RsaTokenSigner signer(
+        privateKeyPath,
+        "key-123"
+    );
+
+    EXPECT_EQ(signer.keyId(), "key-123");
 
     const std::string data = "hello";
 
@@ -122,11 +152,16 @@ TEST(RsaTokenSignerTest, SignsDataThatCanBeVerifiedWithPublicKey)
 
     ASSERT_NE(publicKey, nullptr);
 
+    const auto decodedSignature =
+        jwt::base::decode<jwt::alphabet::base64url>(
+            signature
+        );
+
     EXPECT_TRUE(
         verifySignature(
             publicKey,
             data,
-            signature
+            decodedSignature
         )
     );
 
@@ -143,7 +178,10 @@ TEST(RsaTokenSignerTest, SignatureIsInvalidForModifiedData)
         std::string(CPP_AUTH_SOURCE_DIR)
         + "/tests/fixtures/rsa_public_test.pem";
 
-    auth::RsaTokenSigner signer(privateKeyPath);
+    auth::RsaTokenSigner signer(
+        privateKeyPath,
+        "key-123"
+    );
 
     const std::string data = "hello";
 
@@ -155,11 +193,16 @@ TEST(RsaTokenSignerTest, SignatureIsInvalidForModifiedData)
 
     ASSERT_NE(publicKey, nullptr);
 
+    const auto decodedSignature =
+        jwt::base::decode<jwt::alphabet::base64url>(
+            signature
+        );
+
     EXPECT_FALSE(
         verifySignature(
             publicKey,
             "hello-modified",
-            signature
+            decodedSignature
         )
     );
 

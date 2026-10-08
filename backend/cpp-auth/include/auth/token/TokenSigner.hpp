@@ -11,5 +11,6 @@ namespace auth
 			virtual std::string	sign(
 				const std::string &data
 			) = 0;
+			virtual std::string	keyId() const = 0;
 	};
 }
