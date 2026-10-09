@@ -36,6 +36,9 @@ namespace auth
 			bool	validateExpiration(
 				const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 			);
+			bool	validateSubject(
+				const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
+			);
 			JwksResult	getJwk(
 				const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 			);

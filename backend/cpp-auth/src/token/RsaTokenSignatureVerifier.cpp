@@ -1,8 +1,11 @@
 #include <openssl/evp.h>
+#include <openssl/err.h>
 #include <jwt-cpp/jwt.h>
 
 #include <auth/token/RsaTokenSignatureVerifier.hpp>
 #include <auth/crypto/RsaPublicKeyBuilder.hpp>
+#include <iostream>
+#include <exception>
 
 namespace auth
 {
@@ -15,10 +18,12 @@ namespace auth
 		const Jwk &jwk
 	)
 	{
-		EVP_PKEY *publicKey = 
-			RsaPublicKeyBuilder::build(jwk);
+		EVP_PKEY *publicKey = RsaPublicKeyBuilder::build(jwk);
 		if (!publicKey)
+		{
+        	ERR_print_errors_fp(stderr);
 			return false;
+		}
 		EVP_MD_CTX *context = EVP_MD_CTX_new();
 		if (!context)
 		{
@@ -34,6 +39,7 @@ namespace auth
 		);
 		if (result != 1)
 		{
+			ERR_print_errors_fp(stderr);
 			EVP_MD_CTX_free(context);
 			EVP_PKEY_free(publicKey);
 			return false;
@@ -49,25 +55,12 @@ namespace auth
 			EVP_PKEY_free(publicKey);
 			return false;
 		}
-		std::string decodedSignature;
-		try
-		{
-			decodedSignature =
-				jwt::base::decode<jwt::alphabet::base64url>(
-					jwt::base::pad<jwt::alphabet::base64url>(signature)
-				);
-		} catch (...)
-		{
-			EVP_MD_CTX_free(context);
-			EVP_PKEY_free(publicKey);
-			return false;
-		}
 		const auto verifyResult = EVP_DigestVerifyFinal(
 			context,
 			reinterpret_cast<const unsigned char *>(
-				decodedSignature.data()
+				signature.data()
 			),
-			decodedSignature.size()
+			signature.size()
 		);
 		EVP_MD_CTX_free(context);
 		EVP_PKEY_free(publicKey);
