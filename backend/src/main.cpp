@@ -21,6 +21,7 @@
 #include <auth/jwks/JsonJwksParser.hpp>
 #include <auth/time/SystemClock.hpp>
 #include <auth/token/TokenValidator.hpp>
+#include <auth/token/RsaTokenSignatureVerifier.hpp>
 
 int main()
 {
@@ -86,9 +87,11 @@ int main()
         "RS256"
     };
 
+    auth::RsaTokenSignatureVerifier signatureVerifier;
     auth::TokenValidator tokenValidator(
         tokenValidatorConfig,
-        jwksProvider
+        jwksProvider,
+        signatureVerifier
     );
 
     auth::Authenticator authenticator(

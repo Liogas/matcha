@@ -1,4 +1,5 @@
 #include <auth/token/TokenValidator.hpp>
+#include <iostream>
 
 namespace auth
 {
@@ -16,32 +17,37 @@ namespace auth
 		const std::string &token
 	)
 	{
+		using DecodedJwt = jwt::decoded_jwt<jwt::traits::kazuho_picojson>;
+		std::optional<DecodedJwt> decoded;
 		try {
-			const auto decoded = jwt::decode(token);
-			if (!this->validateAlgorithm(decoded))
-				return this->invalidToken();
-			if (!this->validateIssuer(decoded))
-				return this->invalidToken();
-			if (!this->validateAudience(decoded))
-				return this->invalidToken();
-			if (!this->validateExpiration(decoded))
-				return this->invalidToken();
-			const auto jwksResult = this->getJwk(decoded);
-			if (jwksResult.status == JwksResult::Status::Unavailable)
-				return this->verifUnavailable();
-			if (jwksResult.status == JwksResult::Status::KeyNotFound)
-				return this->invalidToken();
-			if (!jwksResult.key.has_value())
-				return this->invalidToken();
-			if (jwksResult.key->alg != decoded.get_algorithm())
-				return this->invalidToken();
-			if (!this->verifSignature(decoded, jwksResult.key.value()))
-				return this->invalidToken();
-			return this->validToken(decoded);
-		} catch (...)
-		{
+			decoded.emplace(jwt::decode(token));
+		} catch (const std::invalid_argument &) {
+			return this->invalidToken();
+		} catch (const std::runtime_error &) {
 			return this->invalidToken();
 		}
+		if (!this->validateAlgorithm(*decoded))
+			return this->invalidToken();
+		if (!this->validateIssuer(*decoded))
+			return this->invalidToken();
+		if (!this->validateSubject(*decoded))
+			return this->invalidToken();
+		if (!this->validateAudience(*decoded))
+			return this->invalidToken();
+		if (!this->validateExpiration(*decoded))
+			return this->invalidToken();
+		const auto jwksResult = this->getJwk(*decoded);
+		if (jwksResult.status == JwksResult::Status::Unavailable)
+			return this->verifUnavailable();
+		if (jwksResult.status == JwksResult::Status::KeyNotFound)
+			return this->invalidToken();
+		if (!jwksResult.key.has_value())
+			return this->invalidToken();
+		if (jwksResult.key->alg != decoded->get_algorithm())
+			return this->invalidToken();
+		if (!this->verifSignature(*decoded, jwksResult.key.value()))
+			return this->invalidToken();
+		return this->validToken(*decoded);
 	}
 
 	bool	TokenValidator::validateAlgorithm(
@@ -58,17 +64,19 @@ namespace auth
 		const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 	)
 	{
+		if (!decoded.has_payload_claim("iss"))
+			return false;
 		const std::string issuer =
 			decoded.get_payload_claim("iss").as_string();
-		if (issuer != this->_config.issuer)
-			return false;
-		return true;
+		return issuer == this->_config.issuer;
 	}
 
 	bool	TokenValidator::validateAudience(
 		const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 	)
 	{
+		if (!decoded.has_payload_claim("aud"))
+			return false;
 		const auto audienceClaim =
 			decoded.get_payload_claim("aud");
 		try
@@ -117,11 +125,22 @@ namespace auth
 		const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 	)
 	{
+		if (!decoded.has_payload_claim("exp"))
+			return false;
 		const auto expiration =
 			decoded.get_payload_claim("exp").as_date();
-		if (expiration <= jwt::date::clock::now())
+		return expiration > jwt::date::clock::now();
+	}
+
+	bool	TokenValidator::validateSubject(
+		const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
+	)
+	{
+		if (!decoded.has_payload_claim("sub"))
 			return false;
-		return true;
+		const std::string subject =
+			decoded.get_payload_claim("sub").as_string();
+		return !subject.empty();
 	}
 
 	JwksResult	TokenValidator::getJwk(

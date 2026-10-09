@@ -1,3 +1,4 @@
+#include <jwt-cpp/jwt.h>
 #include <gtest/gtest.h>
 
 #include <auth/token/RsaTokenSigner.hpp>
@@ -24,8 +25,13 @@ TEST(RsaTokenSignatureVerifierTest, VerifiesValidSignature)
 
     const std::string data = "hello.jwt";
 
-    const std::string signature =
+    const std::string encodedSignature =
         signer.sign(data);
+
+    const std::string signature =
+        jwt::base::decode<jwt::alphabet::base64url>(
+            jwt::base::pad<jwt::alphabet::base64url>(encodedSignature)
+        );
 
     auth::RsaTokenSignatureVerifier verifier;
 
@@ -59,8 +65,13 @@ TEST(RsaTokenSignatureVerifierTest, RejectsModifiedData)
 
     const std::string data = "hello.jwt";
 
-    const std::string signature =
+    const std::string encodedSignature =
         signer.sign(data);
+
+    const std::string signature =
+        jwt::base::decode<jwt::alphabet::base64url>(
+            jwt::base::pad<jwt::alphabet::base64url>(encodedSignature)
+        );
 
     auth::RsaTokenSignatureVerifier verifier;
 
@@ -94,8 +105,13 @@ TEST(RsaTokenSignatureVerifierTest, RejectsModifiedSignature)
 
     const std::string data = "hello.jwt";
 
-    const std::string signature =
+    const std::string encodedSignature =
         signer.sign(data);
+
+    const std::string signature =
+        jwt::base::decode<jwt::alphabet::base64url>(
+            jwt::base::pad<jwt::alphabet::base64url>(encodedSignature)
+        );
 
     std::string invalidSignature = signature;
     invalidSignature[0] =
@@ -107,6 +123,27 @@ TEST(RsaTokenSignatureVerifierTest, RejectsModifiedSignature)
         verifier.verify(
             data,
             invalidSignature,
+            jwk
+        )
+    );
+}
+
+TEST(RsaTokenSignatureVerifierTest, RejectsMalformedJwk)
+{
+    auth::Jwk jwk{
+        .kid = "invalid-key",
+        .kty = "RSA",
+        .alg = "RS256",
+        .n = "invalid-modulus",
+        .e = "AQAB"
+    };
+
+    auth::RsaTokenSignatureVerifier verifier;
+
+    EXPECT_FALSE(
+        verifier.verify(
+            "hello.jwt",
+            "invalid-signature",
             jwk
         )
     );

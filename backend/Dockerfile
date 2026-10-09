@@ -35,9 +35,9 @@ RUN /opt/vcpkg/vcpkg install
 
 RUN find /app/vcpkg_installed -name "crow.h" -o -name "CrowConfig.cmake"
 
-RUN cmake -B build -S . \
-	-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
-	&& cmake --build build
+# RUN cmake -B build -S . \
+# 	-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
+# 	&& cmake --build build
 
 EXPOSE 18080
 
