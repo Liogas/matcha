@@ -1,6 +1,4 @@
 #include <gtest/gtest.h>
-#include <atomic>
-#include <thread>
 
 #include <auth/jwks/HttpJwksProvider.hpp>
 #include <auth/jwks/JsonJwksParser.hpp>
@@ -8,28 +6,57 @@
 
 #include "FakeClock.hpp"
 
-class FakeHttpClient : public auth::HttpClient
+#include <atomic>
+#include <thread>
+#include <string>
+
+namespace
 {
-    public:
-        explicit FakeHttpClient(auth::HttpResult result)
-            : _result(std::move(result))
-        {}
-        auth::HttpResult get(const std::string&) override
-        {
-            called = true;
-            ++callCount;
-            requestStarted = true;
-            while (blockRequest)
-                std::this_thread::yield();
-            return (this->_result);
-        }
-        bool called = false;
-        std::atomic<int> callCount{0};
-        std::atomic<bool> blockRequest{false};
-        std::atomic<bool> requestStarted{false};
-    private:
-        auth::HttpResult    _result;
-};
+    class FakeHttpClient : public auth::HttpClient
+    {
+        public:
+            explicit FakeHttpClient(auth::HttpResult result)
+                : _result(std::move(result))
+            {}
+            auth::HttpResult get(const std::string&) override
+            {
+                called = true;
+                ++callCount;
+                requestStarted = true;
+                while (blockRequest)
+                    std::this_thread::yield();
+                return (this->_result);
+            }
+            bool called = false;
+            std::atomic<int> callCount{0};
+            std::atomic<bool> blockRequest{false};
+            std::atomic<bool> requestStarted{false};
+        private:
+            auth::HttpResult    _result;
+    };
+    std::string validTestModulus()
+    {
+        return std::string(342, 'w');
+    }
+
+    std::string makeTestJwks(
+        const std::string &kid,
+        const std::string &modulus
+    )
+    {
+        return R"({
+            "keys": [
+                {
+                    "kid": ")" + kid + R"(",
+                    "kty": "RSA",
+                    "alg": "RS256",
+                    "n": ")" + modulus + R"(",
+                    "e": "AQAB"
+                }
+            ]
+        })";
+    }
+}
 
 TEST(HttpJwksProviderTest, ReturnsCachedKey)
 {
@@ -98,17 +125,7 @@ TEST(HttpJwksProviderTest, RefreshesExpiredCache)
 
     auth::HttpResponse response{
         200,
-        R"({
-            "keys": [
-                {
-                    "kid": "key-123",
-                    "kty": "RSA",
-                    "alg": "RS256",
-                    "n": "modulus",
-                    "e": "AQAB"
-                }
-            ]
-        })"
+        makeTestJwks("key-123", validTestModulus())
     };
 
     auth::HttpResult httpResult{
@@ -160,17 +177,7 @@ TEST(HttpJwksProviderTest, ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid)
 
     auth::HttpResponse response{
         200,
-        R"({
-            "keys": [
-                {
-                    "kid": "key-456",
-                    "kty": "RSA",
-                    "alg": "RS256",
-                    "n": "new-modulus",
-                    "e": "AQAB"
-                }
-            ]
-        })"
+        makeTestJwks("key-456", validTestModulus())
     };
 
     auth::HttpResult httpResult{
@@ -346,17 +353,7 @@ TEST(HttpJwksProviderTest, RefreshReplacesOldKeys)
 
     auth::HttpResponse response{
         200,
-        R"({
-            "keys": [
-                {
-                    "kid": "key-new",
-                    "kty": "RSA",
-                    "alg": "RS256",
-                    "n": "new-modulus",
-                    "e": "AQAB"
-                }
-            ]
-        })"
+        makeTestJwks("key-new", validTestModulus())
     };
 
     auth::HttpResult httpResult{
@@ -428,17 +425,7 @@ TEST(HttpJwksProviderTest, RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey)
 
     auth::HttpResponse response{
         200,
-        R"({
-            "keys": [
-                {
-                    "kid": "key-123",
-                    "kty": "RSA",
-                    "alg": "RS256",
-                    "n": "new-modulus",
-                    "e": "AQAB"
-                }
-            ]
-        })"
+        makeTestJwks("key-123", validTestModulus())
     };
 
     auth::HttpResult httpResult{

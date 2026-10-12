@@ -1,6 +1,7 @@
 #include <jwt-cpp/jwt.h>
 #include <openssl/core_names.h>
 #include <openssl/param_build.h>
+#include <openssl/bn.h>
 
 #include <vector>
 #include <stdexcept>
@@ -50,6 +51,32 @@ namespace auth
 				"unable to create RSA parameters"
 			);
 		}
+		if (BN_is_zero(modulus)
+			|| BN_is_negative(modulus)
+			|| BN_is_zero(exponent)
+			|| BN_is_one(exponent)
+			|| BN_is_negative(exponent)
+			|| !BN_is_odd(exponent)
+			|| !BN_is_odd(modulus)
+			|| BN_num_bits(modulus) < 2048
+		)
+		{
+			BN_free(modulus);
+			BN_free(exponent);
+			OSSL_PARAM_BLD_free(builder);
+			throw std::runtime_error(
+				"invalid RSA modulus or exponent"
+			);
+		}
+		if (BN_num_bits(modulus) < 2048)
+		{
+			BN_free(modulus);
+			BN_free(exponent);
+			OSSL_PARAM_BLD_free(builder);
+			throw std::runtime_error(
+				"RSA modulus is too small"
+			);
+		}
 		if (OSSL_PARAM_BLD_push_BN(
 				builder,
 				OSSL_PKEY_PARAM_RSA_N,
@@ -76,7 +103,6 @@ namespace auth
 			 BN_free(modulus);
 			BN_free(exponent);
 			OSSL_PARAM_BLD_free(builder);
-
 			throw std::runtime_error(
 				"unable to create RSA parameters"
 			);
@@ -122,6 +148,7 @@ namespace auth
 			OSSL_PARAM_free(params);
 			OSSL_PARAM_BLD_free(builder);
 			EVP_PKEY_CTX_free(context);
+			EVP_PKEY_free(publicKey);
 			throw std::runtime_error(
 				"unable to construct RSA public key"
 			);
