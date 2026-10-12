@@ -1,5 +1,7 @@
-#include <auth/jwks/JsonJwksParser.hpp>
 #include <nlohmann/json.hpp>
+#include <jwt-cpp/base.h>
+
+#include <auth/jwks/JsonJwksParser.hpp>
 
 using json = nlohmann::json;
 
@@ -11,7 +13,7 @@ auth::JwksParseResult	auth::JsonJwksParser::parse(
 	{
 		const auto document = json::parse(jsonBody);
 		const auto &keys = document.at("keys");
-		if (keys.empty() || !keys.is_array())
+		if (!keys.is_array() || keys.empty())
 			return {
 				JwksParseResult::Status::InvalidJwks,
 				{}
@@ -19,6 +21,11 @@ auth::JwksParseResult	auth::JsonJwksParser::parse(
 		std::vector<auth::Jwk> result;
 		for (const auto &key : keys)
 		{
+			if (!key.is_object())
+				return {
+					JwksParseResult::Status::InvalidJwks,
+					{}
+				};
 			const auto kid = key.at("kid").get<std::string>();
 			const auto kty = key.at("kty").get<std::string>();
 			const auto alg = key.at("alg").get<std::string>();
@@ -26,11 +33,20 @@ auth::JwksParseResult	auth::JsonJwksParser::parse(
 			const auto e = key.at("e").get<std::string>();
 			if (kid.empty() ||
 				kty != "RSA" ||
-				alg.empty() ||
+				alg != "RS256" ||
 				n.empty() ||
 				e.empty() ||
 				!isValidBase64Url(n) ||
 				!isValidBase64Url(e))
+				return {
+					JwksParseResult::Status::InvalidJwks,
+					{}
+				};
+			const auto modulusBytes = 
+				jwt::base::decode<jwt::alphabet::base64url>(
+					jwt::base::pad<jwt::alphabet::base64url>(n)
+				);
+			if (modulusBytes.size() < 256)
 				return {
 					JwksParseResult::Status::InvalidJwks,
 					{}

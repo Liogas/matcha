@@ -52,7 +52,7 @@ namespace auth
 			);
 			TokenValidationResult	verifUnavailable();
 
-			AuthenticatedIdentity	extractClaims(
+			std::optional<AuthenticatedIdentity>	extractClaims(
 				const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 			);
 			

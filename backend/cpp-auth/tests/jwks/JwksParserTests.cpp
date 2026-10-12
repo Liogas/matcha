@@ -10,7 +10,7 @@ TEST(JsonJwksParserTest, ParsesSingleRsaKey)
                 "kid": "key-1",
                 "kty": "RSA",
                 "alg": "RS256",
-                "n": "modulus-value",
+                "n": "YWJj",
                 "e": "AQAB"
             }
         ]
@@ -30,7 +30,7 @@ TEST(JsonJwksParserTest, ParsesSingleRsaKey)
     EXPECT_EQ(result.keys[0].kid, "key-1");
     EXPECT_EQ(result.keys[0].kty, "RSA");
     EXPECT_EQ(result.keys[0].alg, "RS256");
-    EXPECT_EQ(result.keys[0].n, "modulus-value");
+    EXPECT_EQ(result.keys[0].n, "YWJj");
     EXPECT_EQ(result.keys[0].e, "AQAB");
 }
 
@@ -308,3 +308,48 @@ TEST(JsonJwksParserTest, ParsesMultipleRsaKeys)
     EXPECT_EQ(result.keys[1].kid, "key-2");
     EXPECT_EQ(result.keys[1].n, "modulus-value-2");
 }
+
+
+TEST(JsonJwksParserTest, RejectsNonObjectKey)
+{
+    const std::string jwks = R"({
+        "keys": ["not-a-key"]
+    })";
+
+    auth::JsonJwksParser parser;
+
+    const auto result = parser.parse(jwks);
+
+    EXPECT_EQ(
+        result.status,
+        auth::JwksParseResult::Status::InvalidJwks
+    );
+    EXPECT_TRUE(result.keys.empty());
+}
+
+
+TEST(JsonJwksParserTest, RejectsRsaModulusTooShort)
+{
+    const std::string jwks = R"({
+        "keys": [
+            {
+                "kid": "key-1",
+                "kty": "RSA",
+                "alg": "RS256",
+                "n": "YWJj",
+                "e": "AQAB"
+            }
+        ]
+    })";
+
+    auth::JsonJwksParser parser;
+
+    const auto result = parser.parse(jwks);
+
+    EXPECT_EQ(
+        result.status,
+        auth::JwksParseResult::Status::InvalidJwks
+    );
+    EXPECT_TRUE(result.keys.empty());
+}
+

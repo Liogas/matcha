@@ -6,6 +6,8 @@ namespace
 {
 	bool	isValidBase64Url(const std::string &value)
 	{
+		if (value.empty() || value.size() % 4 == 1)
+			return false;
 		for (const char c : value)
 		{
 			const bool isUppercase = c >= 'A' && c <= 'Z';
