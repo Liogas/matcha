@@ -5,6 +5,7 @@
 #include <auth/token/RsaTokenSignatureVerifier.hpp>
 #include <auth/crypto/RsaPublicKeyBuilder.hpp>
 #include <iostream>
+#include <stdexcept>
 #include <exception>
 
 namespace auth
@@ -42,7 +43,9 @@ namespace auth
 			ERR_print_errors_fp(stderr);
 			EVP_MD_CTX_free(context);
 			EVP_PKEY_free(publicKey);
-			return false;
+			throw std::runtime_error(
+				"OpenSSL failed to initialize signature verification"
+			);
 		}
 		const auto updateResult = EVP_DigestVerifyUpdate(
 			context,
@@ -53,7 +56,9 @@ namespace auth
 		{
 			EVP_MD_CTX_free(context);
 			EVP_PKEY_free(publicKey);
-			return false;
+			throw std::runtime_error(
+				"OpenSSL failed to process the token signing input"
+			);
 		}
 		const auto verifyResult = EVP_DigestVerifyFinal(
 			context,
@@ -64,6 +69,12 @@ namespace auth
 		);
 		EVP_MD_CTX_free(context);
 		EVP_PKEY_free(publicKey);
-		return verifyResult == 1;
+		if (verifyResult == 1)
+			return true;
+		if (verifyResult == 0)
+			return false;
+		throw std::runtime_error(
+			"OpenSSL failed to verify the token signature"
+		);
 	}
 }

@@ -1,0 +1,2696 @@
+Start testing: Oct 12 09:42 UTC
+----------------------------------------------------------
+1/96 Testing: AuthIntegrationTest.CanRegisterUser
+1/96 Test: AuthIntegrationTest.CanRegisterUser
+Command: "/app/build/auth_integration_tests" "--gtest_filter=AuthIntegrationTest.CanRegisterUser" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"AuthIntegrationTest.CanRegisterUser" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthIntegrationTest.CanRegisterUser
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthIntegrationTest
+[ RUN      ] AuthIntegrationTest.CanRegisterUser
+[INFO BDD] Connecting to database (attempt 1/ 12)
+[SUCCESS BDD] Database connection ok
+[INFO BDD] parameterized query sended : DELETE FROM users WHERE email = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : SELECT id, email, password_hash FROM users WHERE email = $1
+[LOG BDD] Result created
+[ERROR UserRepository] SELECT return empty result
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+CA MARCHE PAS JUSTE APRES : 
+5
+!!!!!!!!!!!!!!!!! Je suis ici 3 !!!!!!!!!!!!!!!!!
+[INFO BDD] parameterized query sended : SELECT id, email, password_hash FROM users WHERE email = $1
+[LOG BDD] Result created
+[DEBUG] rowCount = 1
+[DEBUG] id = 31
+[DEBUG] email = auth_integration@example.com
+[DEBUG] passwordHash = $argon2id$v=19$m=65536,t=2,p=1$u7bJhhDVRVtQnHw/vcjZXg$HsiliggHpb34UnTv8WqKQULuOc/baIuUXj4VwadyX70
+[LOG BDD] Result destroyed
+!!!!!!!!!!!!!!!!! Je suis ici 1 !!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!! Je suis ici 2 !!!!!!!!!!!!!!!!!
+[INFO BDD] parameterized query sended : DELETE FROM users WHERE email = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[       OK ] AuthIntegrationTest.CanRegisterUser (163 ms)
+[----------] 1 test from AuthIntegrationTest (163 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (163 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"AuthIntegrationTest.CanRegisterUser" end time: Oct 12 09:42 UTC
+"AuthIntegrationTest.CanRegisterUser" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/96 Testing: AuthAuthenticationIntegrationTest.AuthenticatesValidToken
+2/96 Test: AuthAuthenticationIntegrationTest.AuthenticatesValidToken
+Command: "/app/build/auth_integration_tests" "--gtest_filter=AuthAuthenticationIntegrationTest.AuthenticatesValidToken" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"AuthAuthenticationIntegrationTest.AuthenticatesValidToken" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthAuthenticationIntegrationTest.AuthenticatesValidToken
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthAuthenticationIntegrationTest
+[ RUN      ] AuthAuthenticationIntegrationTest.AuthenticatesValidToken
+[       OK ] AuthAuthenticationIntegrationTest.AuthenticatesValidToken (0 ms)
+[----------] 1 test from AuthAuthenticationIntegrationTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthAuthenticationIntegrationTest.AuthenticatesValidToken" end time: Oct 12 09:42 UTC
+"AuthAuthenticationIntegrationTest.AuthenticatesValidToken" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/96 Testing: PasswordHasherTest.CanHashPassword
+3/96 Test: PasswordHasherTest.CanHashPassword
+Command: "/app/build/password_hasher_tests" "--gtest_filter=PasswordHasherTest.CanHashPassword" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"PasswordHasherTest.CanHashPassword" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = PasswordHasherTest.CanHashPassword
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PasswordHasherTest
+[ RUN      ] PasswordHasherTest.CanHashPassword
+[       OK ] PasswordHasherTest.CanHashPassword (46 ms)
+[----------] 1 test from PasswordHasherTest (46 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (46 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"PasswordHasherTest.CanHashPassword" end time: Oct 12 09:42 UTC
+"PasswordHasherTest.CanHashPassword" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/96 Testing: PasswordHasherTest.SamePasswordProducesDifferentHashes
+4/96 Test: PasswordHasherTest.SamePasswordProducesDifferentHashes
+Command: "/app/build/password_hasher_tests" "--gtest_filter=PasswordHasherTest.SamePasswordProducesDifferentHashes" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"PasswordHasherTest.SamePasswordProducesDifferentHashes" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = PasswordHasherTest.SamePasswordProducesDifferentHashes
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PasswordHasherTest
+[ RUN      ] PasswordHasherTest.SamePasswordProducesDifferentHashes
+[       OK ] PasswordHasherTest.SamePasswordProducesDifferentHashes (87 ms)
+[----------] 1 test from PasswordHasherTest (87 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (87 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"PasswordHasherTest.SamePasswordProducesDifferentHashes" end time: Oct 12 09:42 UTC
+"PasswordHasherTest.SamePasswordProducesDifferentHashes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/96 Testing: PasswordHasherTest.VerifyCorrectPassword
+5/96 Test: PasswordHasherTest.VerifyCorrectPassword
+Command: "/app/build/password_hasher_tests" "--gtest_filter=PasswordHasherTest.VerifyCorrectPassword" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"PasswordHasherTest.VerifyCorrectPassword" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = PasswordHasherTest.VerifyCorrectPassword
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PasswordHasherTest
+[ RUN      ] PasswordHasherTest.VerifyCorrectPassword
+[       OK ] PasswordHasherTest.VerifyCorrectPassword (89 ms)
+[----------] 1 test from PasswordHasherTest (89 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (89 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"PasswordHasherTest.VerifyCorrectPassword" end time: Oct 12 09:42 UTC
+"PasswordHasherTest.VerifyCorrectPassword" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/96 Testing: PasswordHasherTest.RejectsWrongPassword
+6/96 Test: PasswordHasherTest.RejectsWrongPassword
+Command: "/app/build/password_hasher_tests" "--gtest_filter=PasswordHasherTest.RejectsWrongPassword" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"PasswordHasherTest.RejectsWrongPassword" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = PasswordHasherTest.RejectsWrongPassword
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PasswordHasherTest
+[ RUN      ] PasswordHasherTest.RejectsWrongPassword
+[       OK ] PasswordHasherTest.RejectsWrongPassword (89 ms)
+[----------] 1 test from PasswordHasherTest (89 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (89 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"PasswordHasherTest.RejectsWrongPassword" end time: Oct 12 09:42 UTC
+"PasswordHasherTest.RejectsWrongPassword" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/96 Testing: PasswordHasherTest.RejectsInvalidHash
+7/96 Test: PasswordHasherTest.RejectsInvalidHash
+Command: "/app/build/password_hasher_tests" "--gtest_filter=PasswordHasherTest.RejectsInvalidHash" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"PasswordHasherTest.RejectsInvalidHash" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = PasswordHasherTest.RejectsInvalidHash
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PasswordHasherTest
+[ RUN      ] PasswordHasherTest.RejectsInvalidHash
+[       OK ] PasswordHasherTest.RejectsInvalidHash (0 ms)
+[----------] 1 test from PasswordHasherTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"PasswordHasherTest.RejectsInvalidHash" end time: Oct 12 09:42 UTC
+"PasswordHasherTest.RejectsInvalidHash" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/96 Testing: UserRepositoryIntegrationTest.CanFindExistingUserByEmail
+8/96 Test: UserRepositoryIntegrationTest.CanFindExistingUserByEmail
+Command: "/app/build/user_repository_integration_tests" "--gtest_filter=UserRepositoryIntegrationTest.CanFindExistingUserByEmail" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"UserRepositoryIntegrationTest.CanFindExistingUserByEmail" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UserRepositoryIntegrationTest.CanFindExistingUserByEmail
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UserRepositoryIntegrationTest
+[ RUN      ] UserRepositoryIntegrationTest.CanFindExistingUserByEmail
+[INFO BDD] Connecting to database (attempt 1/ 12)
+[SUCCESS BDD] Database connection ok
+[INFO BDD] parameterized query sended : DELETE FROM users WHERE email = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : INSERT INTO users (email, password_hash) VALUES ($1, $2)
+[LOG BDD] Result created
+[INFO BDD] parameterized query sended : SELECT id, email, password_hash FROM users WHERE email = $1
+[LOG BDD] Result created
+[DEBUG] rowCount = 1
+[DEBUG] id = 32
+[DEBUG] email = integration_test@example.com
+[DEBUG] passwordHash = fake_hash
+[LOG BDD] Result destroyed
+[LOG BDD] Result destroyed
+[       OK ] UserRepositoryIntegrationTest.CanFindExistingUserByEmail (16 ms)
+[----------] 1 test from UserRepositoryIntegrationTest (16 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (16 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"UserRepositoryIntegrationTest.CanFindExistingUserByEmail" end time: Oct 12 09:42 UTC
+"UserRepositoryIntegrationTest.CanFindExistingUserByEmail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/96 Testing: UserRepositoryIntegrationTest.CanCreateUser
+9/96 Test: UserRepositoryIntegrationTest.CanCreateUser
+Command: "/app/build/user_repository_integration_tests" "--gtest_filter=UserRepositoryIntegrationTest.CanCreateUser" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"UserRepositoryIntegrationTest.CanCreateUser" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UserRepositoryIntegrationTest.CanCreateUser
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UserRepositoryIntegrationTest
+[ RUN      ] UserRepositoryIntegrationTest.CanCreateUser
+[INFO BDD] Connecting to database (attempt 1/ 12)
+[SUCCESS BDD] Database connection ok
+[INFO BDD] parameterized query sended : DELETE FROM users WHERE email = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : SELECT id, email, password_hash FROM users WHERE email = $1
+[LOG BDD] Result created
+[DEBUG] rowCount = 1
+[DEBUG] id = 33
+[DEBUG] email = create_test@example.com
+[DEBUG] passwordHash = fake_hash
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : DELETE FROM users WHERE email = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[       OK ] UserRepositoryIntegrationTest.CanCreateUser (10 ms)
+[----------] 1 test from UserRepositoryIntegrationTest (10 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (10 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"UserRepositoryIntegrationTest.CanCreateUser" end time: Oct 12 09:42 UTC
+"UserRepositoryIntegrationTest.CanCreateUser" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/96 Testing: UserRepositoryIntegrationTest.CanFindExistingUserById
+10/96 Test: UserRepositoryIntegrationTest.CanFindExistingUserById
+Command: "/app/build/user_repository_integration_tests" "--gtest_filter=UserRepositoryIntegrationTest.CanFindExistingUserById" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"UserRepositoryIntegrationTest.CanFindExistingUserById" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UserRepositoryIntegrationTest.CanFindExistingUserById
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UserRepositoryIntegrationTest
+[ RUN      ] UserRepositoryIntegrationTest.CanFindExistingUserById
+[INFO BDD] Connecting to database (attempt 1/ 12)
+[SUCCESS BDD] Database connection ok
+[INFO BDD] parameterized query sended : DELETE FROM users WHERE email = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : SELECT id, email, password_hash FROM users WHERE id = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : DELETE FROM users WHERE email = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[       OK ] UserRepositoryIntegrationTest.CanFindExistingUserById (10 ms)
+[----------] 1 test from UserRepositoryIntegrationTest (10 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (10 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"UserRepositoryIntegrationTest.CanFindExistingUserById" end time: Oct 12 09:42 UTC
+"UserRepositoryIntegrationTest.CanFindExistingUserById" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/96 Testing: UserRepositoryIntegrationTest.CreateUserFailsWhenEmailAlreadyExists
+11/96 Test: UserRepositoryIntegrationTest.CreateUserFailsWhenEmailAlreadyExists
+Command: "/app/build/user_repository_integration_tests" "--gtest_filter=UserRepositoryIntegrationTest.CreateUserFailsWhenEmailAlreadyExists" "--gtest_also_run_disabled_tests"
+Directory: /app/build
+"UserRepositoryIntegrationTest.CreateUserFailsWhenEmailAlreadyExists" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UserRepositoryIntegrationTest.CreateUserFailsWhenEmailAlreadyExists
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UserRepositoryIntegrationTest
+[ RUN      ] UserRepositoryIntegrationTest.CreateUserFailsWhenEmailAlreadyExists
+[INFO BDD] Connecting to database (attempt 1/ 12)
+[SUCCESS BDD] Database connection ok
+[INFO BDD] parameterized query sended : DELETE FROM users WHERE email = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id
+[LOG BDD] Result created
+[ERROR UserRepository] INSERT failed: ERROR:  duplicate key value violates unique constraint "users_email_key"
+DETAIL:  Key (email)=(duplicate_test@example.com) already exists.
+
+[LOG BDD] Result destroyed
+[INFO BDD] parameterized query sended : DELETE FROM users WHERE email = $1
+[LOG BDD] Result created
+[LOG BDD] Result destroyed
+[       OK ] UserRepositoryIntegrationTest.CreateUserFailsWhenEmailAlreadyExists (12 ms)
+[----------] 1 test from UserRepositoryIntegrationTest (12 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (12 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"UserRepositoryIntegrationTest.CreateUserFailsWhenEmailAlreadyExists" end time: Oct 12 09:42 UTC
+"UserRepositoryIntegrationTest.CreateUserFailsWhenEmailAlreadyExists" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/96 Testing: AuthServiceTest.UserExistsReturnsTrueForExistingEmail
+12/96 Test: AuthServiceTest.UserExistsReturnsTrueForExistingEmail
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.UserExistsReturnsTrueForExistingEmail" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.UserExistsReturnsTrueForExistingEmail" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.UserExistsReturnsTrueForExistingEmail
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.UserExistsReturnsTrueForExistingEmail
+[       OK ] AuthServiceTest.UserExistsReturnsTrueForExistingEmail (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.UserExistsReturnsTrueForExistingEmail" end time: Oct 12 09:42 UTC
+"AuthServiceTest.UserExistsReturnsTrueForExistingEmail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/96 Testing: AuthServiceTest.UserExistsReturnsFalseForUnknownEmail
+13/96 Test: AuthServiceTest.UserExistsReturnsFalseForUnknownEmail
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.UserExistsReturnsFalseForUnknownEmail" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.UserExistsReturnsFalseForUnknownEmail" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.UserExistsReturnsFalseForUnknownEmail
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.UserExistsReturnsFalseForUnknownEmail
+[       OK ] AuthServiceTest.UserExistsReturnsFalseForUnknownEmail (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.UserExistsReturnsFalseForUnknownEmail" end time: Oct 12 09:42 UTC
+"AuthServiceTest.UserExistsReturnsFalseForUnknownEmail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/96 Testing: AuthServiceTest.RegisterUserRejectsExistingEmail
+14/96 Test: AuthServiceTest.RegisterUserRejectsExistingEmail
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserRejectsExistingEmail" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserRejectsExistingEmail" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserRejectsExistingEmail
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserRejectsExistingEmail
+[       OK ] AuthServiceTest.RegisterUserRejectsExistingEmail (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserRejectsExistingEmail" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserRejectsExistingEmail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/96 Testing: AuthServiceTest.RegisterUserRejectsInvalidEmail
+15/96 Test: AuthServiceTest.RegisterUserRejectsInvalidEmail
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserRejectsInvalidEmail" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserRejectsInvalidEmail" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserRejectsInvalidEmail
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserRejectsInvalidEmail
+[       OK ] AuthServiceTest.RegisterUserRejectsInvalidEmail (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserRejectsInvalidEmail" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserRejectsInvalidEmail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/96 Testing: AuthServiceTest.RegisterUserSucceeds
+16/96 Test: AuthServiceTest.RegisterUserSucceeds
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserSucceeds" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserSucceeds" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserSucceeds
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserSucceeds
+[       OK ] AuthServiceTest.RegisterUserSucceeds (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserSucceeds" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserSucceeds" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/96 Testing: AuthServiceTest.RegisterUserHashesPasswordBeforeCreatingUser
+17/96 Test: AuthServiceTest.RegisterUserHashesPasswordBeforeCreatingUser
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserHashesPasswordBeforeCreatingUser" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserHashesPasswordBeforeCreatingUser" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserHashesPasswordBeforeCreatingUser
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserHashesPasswordBeforeCreatingUser
+[       OK ] AuthServiceTest.RegisterUserHashesPasswordBeforeCreatingUser (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserHashesPasswordBeforeCreatingUser" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserHashesPasswordBeforeCreatingUser" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/96 Testing: AuthServiceTest.RegisterUserReturnsCreationFailedWhenRepositoryFails
+18/96 Test: AuthServiceTest.RegisterUserReturnsCreationFailedWhenRepositoryFails
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserReturnsCreationFailedWhenRepositoryFails" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserReturnsCreationFailedWhenRepositoryFails" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserReturnsCreationFailedWhenRepositoryFails
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserReturnsCreationFailedWhenRepositoryFails
+[       OK ] AuthServiceTest.RegisterUserReturnsCreationFailedWhenRepositoryFails (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserReturnsCreationFailedWhenRepositoryFails" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserReturnsCreationFailedWhenRepositoryFails" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/96 Testing: AuthServiceTest.RegisterUserPassesPasswordToHasher
+19/96 Test: AuthServiceTest.RegisterUserPassesPasswordToHasher
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserPassesPasswordToHasher" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserPassesPasswordToHasher" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserPassesPasswordToHasher
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserPassesPasswordToHasher
+[       OK ] AuthServiceTest.RegisterUserPassesPasswordToHasher (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserPassesPasswordToHasher" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserPassesPasswordToHasher" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/96 Testing: AuthServiceTest.LoginRejectsUnknownEmail
+20/96 Test: AuthServiceTest.LoginRejectsUnknownEmail
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.LoginRejectsUnknownEmail" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.LoginRejectsUnknownEmail" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.LoginRejectsUnknownEmail
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.LoginRejectsUnknownEmail
+[       OK ] AuthServiceTest.LoginRejectsUnknownEmail (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.LoginRejectsUnknownEmail" end time: Oct 12 09:42 UTC
+"AuthServiceTest.LoginRejectsUnknownEmail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/96 Testing: AuthServiceTest.LoginRejectsWrongPassword
+21/96 Test: AuthServiceTest.LoginRejectsWrongPassword
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.LoginRejectsWrongPassword" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.LoginRejectsWrongPassword" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.LoginRejectsWrongPassword
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.LoginRejectsWrongPassword
+[       OK ] AuthServiceTest.LoginRejectsWrongPassword (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.LoginRejectsWrongPassword" end time: Oct 12 09:42 UTC
+"AuthServiceTest.LoginRejectsWrongPassword" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/96 Testing: AuthServiceTest.LoginReturnsInternalErrorWhenRepositoryFails
+22/96 Test: AuthServiceTest.LoginReturnsInternalErrorWhenRepositoryFails
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.LoginReturnsInternalErrorWhenRepositoryFails" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.LoginReturnsInternalErrorWhenRepositoryFails" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.LoginReturnsInternalErrorWhenRepositoryFails
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.LoginReturnsInternalErrorWhenRepositoryFails
+[       OK ] AuthServiceTest.LoginReturnsInternalErrorWhenRepositoryFails (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.LoginReturnsInternalErrorWhenRepositoryFails" end time: Oct 12 09:42 UTC
+"AuthServiceTest.LoginReturnsInternalErrorWhenRepositoryFails" time elapsed: 00:00:00
+----------------------------------------------------------
+
+23/96 Testing: AuthServiceTest.RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate
+23/96 Test: AuthServiceTest.RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate
+[       OK ] AuthServiceTest.RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/96 Testing: AuthServiceTest.RegisterUserReturnsInternalErrorWhenHashingFails
+24/96 Test: AuthServiceTest.RegisterUserReturnsInternalErrorWhenHashingFails
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserReturnsInternalErrorWhenHashingFails" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserReturnsInternalErrorWhenHashingFails" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserReturnsInternalErrorWhenHashingFails
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserReturnsInternalErrorWhenHashingFails
+[       OK ] AuthServiceTest.RegisterUserReturnsInternalErrorWhenHashingFails (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserReturnsInternalErrorWhenHashingFails" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserReturnsInternalErrorWhenHashingFails" time elapsed: 00:00:00
+----------------------------------------------------------
+
+25/96 Testing: AuthServiceTest.RegisterUserRejectsShortPassword
+25/96 Test: AuthServiceTest.RegisterUserRejectsShortPassword
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserRejectsShortPassword" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserRejectsShortPassword" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserRejectsShortPassword
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserRejectsShortPassword
+[       OK ] AuthServiceTest.RegisterUserRejectsShortPassword (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserRejectsShortPassword" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserRejectsShortPassword" time elapsed: 00:00:00
+----------------------------------------------------------
+
+26/96 Testing: AuthServiceTest.RegisterUserRejectsPasswordWithoutUppercase
+26/96 Test: AuthServiceTest.RegisterUserRejectsPasswordWithoutUppercase
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserRejectsPasswordWithoutUppercase" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutUppercase" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserRejectsPasswordWithoutUppercase
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserRejectsPasswordWithoutUppercase
+[       OK ] AuthServiceTest.RegisterUserRejectsPasswordWithoutUppercase (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutUppercase" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutUppercase" time elapsed: 00:00:00
+----------------------------------------------------------
+
+27/96 Testing: AuthServiceTest.RegisterUserRejectsPasswordWithoutLowercase
+27/96 Test: AuthServiceTest.RegisterUserRejectsPasswordWithoutLowercase
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserRejectsPasswordWithoutLowercase" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutLowercase" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserRejectsPasswordWithoutLowercase
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserRejectsPasswordWithoutLowercase
+[       OK ] AuthServiceTest.RegisterUserRejectsPasswordWithoutLowercase (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutLowercase" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutLowercase" time elapsed: 00:00:00
+----------------------------------------------------------
+
+28/96 Testing: AuthServiceTest.RegisterUserRejectsPasswordWithoutDigit
+28/96 Test: AuthServiceTest.RegisterUserRejectsPasswordWithoutDigit
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserRejectsPasswordWithoutDigit" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutDigit" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserRejectsPasswordWithoutDigit
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserRejectsPasswordWithoutDigit
+[       OK ] AuthServiceTest.RegisterUserRejectsPasswordWithoutDigit (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutDigit" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutDigit" time elapsed: 00:00:00
+----------------------------------------------------------
+
+29/96 Testing: AuthServiceTest.RegisterUserRejectsPasswordWithoutSpecialCharacter
+29/96 Test: AuthServiceTest.RegisterUserRejectsPasswordWithoutSpecialCharacter
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserRejectsPasswordWithoutSpecialCharacter" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutSpecialCharacter" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserRejectsPasswordWithoutSpecialCharacter
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserRejectsPasswordWithoutSpecialCharacter
+[       OK ] AuthServiceTest.RegisterUserRejectsPasswordWithoutSpecialCharacter (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutSpecialCharacter" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserRejectsPasswordWithoutSpecialCharacter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+30/96 Testing: AuthServiceTest.RegisterUserAcceptsPasswordWithExactlyEightCharacters
+30/96 Test: AuthServiceTest.RegisterUserAcceptsPasswordWithExactlyEightCharacters
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTest.RegisterUserAcceptsPasswordWithExactlyEightCharacters" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTest.RegisterUserAcceptsPasswordWithExactlyEightCharacters" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTest.RegisterUserAcceptsPasswordWithExactlyEightCharacters
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTest
+[ RUN      ] AuthServiceTest.RegisterUserAcceptsPasswordWithExactlyEightCharacters
+[       OK ] AuthServiceTest.RegisterUserAcceptsPasswordWithExactlyEightCharacters (0 ms)
+[----------] 1 test from AuthServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTest.RegisterUserAcceptsPasswordWithExactlyEightCharacters" end time: Oct 12 09:42 UTC
+"AuthServiceTest.RegisterUserAcceptsPasswordWithExactlyEightCharacters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+31/96 Testing: AuthServiceTests.LoginSucceedsWithCorrectCredentials
+31/96 Test: AuthServiceTests.LoginSucceedsWithCorrectCredentials
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthServiceTests.LoginSucceedsWithCorrectCredentials" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthServiceTests.LoginSucceedsWithCorrectCredentials" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthServiceTests.LoginSucceedsWithCorrectCredentials
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthServiceTests
+[ RUN      ] AuthServiceTests.LoginSucceedsWithCorrectCredentials
+[       OK ] AuthServiceTests.LoginSucceedsWithCorrectCredentials (0 ms)
+[----------] 1 test from AuthServiceTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthServiceTests.LoginSucceedsWithCorrectCredentials" end time: Oct 12 09:42 UTC
+"AuthServiceTests.LoginSucceedsWithCorrectCredentials" time elapsed: 00:00:00
+----------------------------------------------------------
+
+32/96 Testing: JwksCacheTest.FindsExistingKey
+32/96 Test: JwksCacheTest.FindsExistingKey
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JwksCacheTest.FindsExistingKey" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JwksCacheTest.FindsExistingKey" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JwksCacheTest.FindsExistingKey
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JwksCacheTest
+[ RUN      ] JwksCacheTest.FindsExistingKey
+[       OK ] JwksCacheTest.FindsExistingKey (0 ms)
+[----------] 1 test from JwksCacheTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JwksCacheTest.FindsExistingKey" end time: Oct 12 09:42 UTC
+"JwksCacheTest.FindsExistingKey" time elapsed: 00:00:00
+----------------------------------------------------------
+
+33/96 Testing: JwksCacheTest.ReturnsNotFoundForUnknownKey
+33/96 Test: JwksCacheTest.ReturnsNotFoundForUnknownKey
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JwksCacheTest.ReturnsNotFoundForUnknownKey" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JwksCacheTest.ReturnsNotFoundForUnknownKey" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JwksCacheTest.ReturnsNotFoundForUnknownKey
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JwksCacheTest
+[ RUN      ] JwksCacheTest.ReturnsNotFoundForUnknownKey
+[       OK ] JwksCacheTest.ReturnsNotFoundForUnknownKey (0 ms)
+[----------] 1 test from JwksCacheTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JwksCacheTest.ReturnsNotFoundForUnknownKey" end time: Oct 12 09:42 UTC
+"JwksCacheTest.ReturnsNotFoundForUnknownKey" time elapsed: 00:00:00
+----------------------------------------------------------
+
+34/96 Testing: JwksCacheTest.ReturnsExpiredWhenCacheIsExpired
+34/96 Test: JwksCacheTest.ReturnsExpiredWhenCacheIsExpired
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JwksCacheTest.ReturnsExpiredWhenCacheIsExpired" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JwksCacheTest.ReturnsExpiredWhenCacheIsExpired" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JwksCacheTest.ReturnsExpiredWhenCacheIsExpired
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JwksCacheTest
+[ RUN      ] JwksCacheTest.ReturnsExpiredWhenCacheIsExpired
+[       OK ] JwksCacheTest.ReturnsExpiredWhenCacheIsExpired (0 ms)
+[----------] 1 test from JwksCacheTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JwksCacheTest.ReturnsExpiredWhenCacheIsExpired" end time: Oct 12 09:42 UTC
+"JwksCacheTest.ReturnsExpiredWhenCacheIsExpired" time elapsed: 00:00:00
+----------------------------------------------------------
+
+35/96 Testing: JsonJwksParserTest.ParsesSingleRsaKey
+35/96 Test: JsonJwksParserTest.ParsesSingleRsaKey
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.ParsesSingleRsaKey" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.ParsesSingleRsaKey" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.ParsesSingleRsaKey
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.ParsesSingleRsaKey
+[       OK ] JsonJwksParserTest.ParsesSingleRsaKey (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.ParsesSingleRsaKey" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.ParsesSingleRsaKey" time elapsed: 00:00:00
+----------------------------------------------------------
+
+36/96 Testing: JsonJwksParserTest.RejectsJwksWithoutKeys
+36/96 Test: JsonJwksParserTest.RejectsJwksWithoutKeys
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsJwksWithoutKeys" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsJwksWithoutKeys" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsJwksWithoutKeys
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsJwksWithoutKeys
+[       OK ] JsonJwksParserTest.RejectsJwksWithoutKeys (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsJwksWithoutKeys" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsJwksWithoutKeys" time elapsed: 00:00:00
+----------------------------------------------------------
+
+37/96 Testing: JsonJwksParserTest.RejectsEmptyKeys
+37/96 Test: JsonJwksParserTest.RejectsEmptyKeys
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsEmptyKeys" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsEmptyKeys" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsEmptyKeys
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsEmptyKeys
+[       OK ] JsonJwksParserTest.RejectsEmptyKeys (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsEmptyKeys" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsEmptyKeys" time elapsed: 00:00:00
+----------------------------------------------------------
+
+38/96 Testing: JsonJwksParserTest.RejectsNonRsaKey
+38/96 Test: JsonJwksParserTest.RejectsNonRsaKey
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsNonRsaKey" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsNonRsaKey" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsNonRsaKey
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsNonRsaKey
+[       OK ] JsonJwksParserTest.RejectsNonRsaKey (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsNonRsaKey" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsNonRsaKey" time elapsed: 00:00:00
+----------------------------------------------------------
+
+39/96 Testing: JsonJwksParserTest.RejectsKeyWithEmptyKid
+39/96 Test: JsonJwksParserTest.RejectsKeyWithEmptyKid
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsKeyWithEmptyKid" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsKeyWithEmptyKid" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsKeyWithEmptyKid
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsKeyWithEmptyKid
+[       OK ] JsonJwksParserTest.RejectsKeyWithEmptyKid (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsKeyWithEmptyKid" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsKeyWithEmptyKid" time elapsed: 00:00:00
+----------------------------------------------------------
+
+40/96 Testing: JsonJwksParserTest.RejectsKeyWithEmptyModulus
+40/96 Test: JsonJwksParserTest.RejectsKeyWithEmptyModulus
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsKeyWithEmptyModulus" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsKeyWithEmptyModulus" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsKeyWithEmptyModulus
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsKeyWithEmptyModulus
+[       OK ] JsonJwksParserTest.RejectsKeyWithEmptyModulus (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsKeyWithEmptyModulus" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsKeyWithEmptyModulus" time elapsed: 00:00:00
+----------------------------------------------------------
+
+41/96 Testing: JsonJwksParserTest.RejectsKeyWithEmptyExponent
+41/96 Test: JsonJwksParserTest.RejectsKeyWithEmptyExponent
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsKeyWithEmptyExponent" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsKeyWithEmptyExponent" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsKeyWithEmptyExponent
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsKeyWithEmptyExponent
+[       OK ] JsonJwksParserTest.RejectsKeyWithEmptyExponent (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsKeyWithEmptyExponent" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsKeyWithEmptyExponent" time elapsed: 00:00:00
+----------------------------------------------------------
+
+42/96 Testing: JsonJwksParserTest.RejectsNonArrayKeys
+42/96 Test: JsonJwksParserTest.RejectsNonArrayKeys
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsNonArrayKeys" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsNonArrayKeys" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsNonArrayKeys
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsNonArrayKeys
+[       OK ] JsonJwksParserTest.RejectsNonArrayKeys (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsNonArrayKeys" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsNonArrayKeys" time elapsed: 00:00:00
+----------------------------------------------------------
+
+43/96 Testing: JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInModulus
+43/96 Test: JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInModulus
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInModulus" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInModulus" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInModulus
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInModulus
+[       OK ] JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInModulus (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInModulus" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInModulus" time elapsed: 00:00:00
+----------------------------------------------------------
+
+44/96 Testing: JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInExponent
+44/96 Test: JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInExponent
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInExponent" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInExponent" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInExponent
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInExponent
+[       OK ] JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInExponent (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInExponent" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsInvalidBase64UrlCharactersInExponent" time elapsed: 00:00:00
+----------------------------------------------------------
+
+45/96 Testing: JsonJwksParserTest.RejectsKeyWithEmptyAlgorithm
+45/96 Test: JsonJwksParserTest.RejectsKeyWithEmptyAlgorithm
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.RejectsKeyWithEmptyAlgorithm" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.RejectsKeyWithEmptyAlgorithm" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.RejectsKeyWithEmptyAlgorithm
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.RejectsKeyWithEmptyAlgorithm
+[       OK ] JsonJwksParserTest.RejectsKeyWithEmptyAlgorithm (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.RejectsKeyWithEmptyAlgorithm" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.RejectsKeyWithEmptyAlgorithm" time elapsed: 00:00:00
+----------------------------------------------------------
+
+46/96 Testing: JsonJwksParserTest.ParsesMultipleRsaKeys
+46/96 Test: JsonJwksParserTest.ParsesMultipleRsaKeys
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=JsonJwksParserTest.ParsesMultipleRsaKeys" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"JsonJwksParserTest.ParsesMultipleRsaKeys" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = JsonJwksParserTest.ParsesMultipleRsaKeys
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from JsonJwksParserTest
+[ RUN      ] JsonJwksParserTest.ParsesMultipleRsaKeys
+[       OK ] JsonJwksParserTest.ParsesMultipleRsaKeys (0 ms)
+[----------] 1 test from JsonJwksParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"JsonJwksParserTest.ParsesMultipleRsaKeys" end time: Oct 12 09:42 UTC
+"JsonJwksParserTest.ParsesMultipleRsaKeys" time elapsed: 00:00:00
+----------------------------------------------------------
+
+47/96 Testing: HttpJwksProviderTest.ReturnsCachedKey
+47/96 Test: HttpJwksProviderTest.ReturnsCachedKey
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpJwksProviderTest.ReturnsCachedKey" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpJwksProviderTest.ReturnsCachedKey" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpJwksProviderTest.ReturnsCachedKey
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpJwksProviderTest
+[ RUN      ] HttpJwksProviderTest.ReturnsCachedKey
+[       OK ] HttpJwksProviderTest.ReturnsCachedKey (0 ms)
+[----------] 1 test from HttpJwksProviderTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpJwksProviderTest.ReturnsCachedKey" end time: Oct 12 09:42 UTC
+"HttpJwksProviderTest.ReturnsCachedKey" time elapsed: 00:00:00
+----------------------------------------------------------
+
+48/96 Testing: HttpJwksProviderTest.RefreshesExpiredCache
+48/96 Test: HttpJwksProviderTest.RefreshesExpiredCache
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpJwksProviderTest.RefreshesExpiredCache" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpJwksProviderTest.RefreshesExpiredCache" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpJwksProviderTest.RefreshesExpiredCache
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpJwksProviderTest
+[ RUN      ] HttpJwksProviderTest.RefreshesExpiredCache
+[       OK ] HttpJwksProviderTest.RefreshesExpiredCache (0 ms)
+[----------] 1 test from HttpJwksProviderTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpJwksProviderTest.RefreshesExpiredCache" end time: Oct 12 09:42 UTC
+"HttpJwksProviderTest.RefreshesExpiredCache" time elapsed: 00:00:00
+----------------------------------------------------------
+
+49/96 Testing: HttpJwksProviderTest.ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid
+49/96 Test: HttpJwksProviderTest.ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpJwksProviderTest.ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpJwksProviderTest.ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpJwksProviderTest.ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpJwksProviderTest
+[ RUN      ] HttpJwksProviderTest.ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid
+[       OK ] HttpJwksProviderTest.ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid (0 ms)
+[----------] 1 test from HttpJwksProviderTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpJwksProviderTest.ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid" end time: Oct 12 09:42 UTC
+"HttpJwksProviderTest.ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid" time elapsed: 00:00:00
+----------------------------------------------------------
+
+50/96 Testing: HttpJwksProviderTest.ReturnsUnavailableWhenHttpRequestFails
+50/96 Test: HttpJwksProviderTest.ReturnsUnavailableWhenHttpRequestFails
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpJwksProviderTest.ReturnsUnavailableWhenHttpRequestFails" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpJwksProviderTest.ReturnsUnavailableWhenHttpRequestFails" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpJwksProviderTest.ReturnsUnavailableWhenHttpRequestFails
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpJwksProviderTest
+[ RUN      ] HttpJwksProviderTest.ReturnsUnavailableWhenHttpRequestFails
+[       OK ] HttpJwksProviderTest.ReturnsUnavailableWhenHttpRequestFails (0 ms)
+[----------] 1 test from HttpJwksProviderTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpJwksProviderTest.ReturnsUnavailableWhenHttpRequestFails" end time: Oct 12 09:42 UTC
+"HttpJwksProviderTest.ReturnsUnavailableWhenHttpRequestFails" time elapsed: 00:00:00
+----------------------------------------------------------
+
+51/96 Testing: HttpJwksProviderTest.ReturnsUnavailableWhenHttpResponseIsNotSuccessful
+51/96 Test: HttpJwksProviderTest.ReturnsUnavailableWhenHttpResponseIsNotSuccessful
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpJwksProviderTest.ReturnsUnavailableWhenHttpResponseIsNotSuccessful" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpJwksProviderTest.ReturnsUnavailableWhenHttpResponseIsNotSuccessful" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpJwksProviderTest.ReturnsUnavailableWhenHttpResponseIsNotSuccessful
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpJwksProviderTest
+[ RUN      ] HttpJwksProviderTest.ReturnsUnavailableWhenHttpResponseIsNotSuccessful
+[       OK ] HttpJwksProviderTest.ReturnsUnavailableWhenHttpResponseIsNotSuccessful (0 ms)
+[----------] 1 test from HttpJwksProviderTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpJwksProviderTest.ReturnsUnavailableWhenHttpResponseIsNotSuccessful" end time: Oct 12 09:42 UTC
+"HttpJwksProviderTest.ReturnsUnavailableWhenHttpResponseIsNotSuccessful" time elapsed: 00:00:00
+----------------------------------------------------------
+
+52/96 Testing: HttpJwksProviderTest.ReturnsUnavailableWhenJwksResponseIsInvalid
+52/96 Test: HttpJwksProviderTest.ReturnsUnavailableWhenJwksResponseIsInvalid
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpJwksProviderTest.ReturnsUnavailableWhenJwksResponseIsInvalid" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpJwksProviderTest.ReturnsUnavailableWhenJwksResponseIsInvalid" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpJwksProviderTest.ReturnsUnavailableWhenJwksResponseIsInvalid
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpJwksProviderTest
+[ RUN      ] HttpJwksProviderTest.ReturnsUnavailableWhenJwksResponseIsInvalid
+[       OK ] HttpJwksProviderTest.ReturnsUnavailableWhenJwksResponseIsInvalid (0 ms)
+[----------] 1 test from HttpJwksProviderTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpJwksProviderTest.ReturnsUnavailableWhenJwksResponseIsInvalid" end time: Oct 12 09:42 UTC
+"HttpJwksProviderTest.ReturnsUnavailableWhenJwksResponseIsInvalid" time elapsed: 00:00:00
+----------------------------------------------------------
+
+53/96 Testing: HttpJwksProviderTest.RefreshReplacesOldKeys
+53/96 Test: HttpJwksProviderTest.RefreshReplacesOldKeys
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpJwksProviderTest.RefreshReplacesOldKeys" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpJwksProviderTest.RefreshReplacesOldKeys" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpJwksProviderTest.RefreshReplacesOldKeys
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpJwksProviderTest
+[ RUN      ] HttpJwksProviderTest.RefreshReplacesOldKeys
+[       OK ] HttpJwksProviderTest.RefreshReplacesOldKeys (0 ms)
+[----------] 1 test from HttpJwksProviderTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpJwksProviderTest.RefreshReplacesOldKeys" end time: Oct 12 09:42 UTC
+"HttpJwksProviderTest.RefreshReplacesOldKeys" time elapsed: 00:00:00
+----------------------------------------------------------
+
+54/96 Testing: HttpJwksProviderTest.RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey
+54/96 Test: HttpJwksProviderTest.RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpJwksProviderTest.RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpJwksProviderTest.RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpJwksProviderTest.RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpJwksProviderTest
+[ RUN      ] HttpJwksProviderTest.RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey
+[       OK ] HttpJwksProviderTest.RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey (0 ms)
+[----------] 1 test from HttpJwksProviderTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpJwksProviderTest.RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey" end time: Oct 12 09:42 UTC
+"HttpJwksProviderTest.RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey" time elapsed: 00:00:00
+----------------------------------------------------------
+
+55/96 Testing: HttpClientTests.ReturnsSuccessfulResponse
+55/96 Test: HttpClientTests.ReturnsSuccessfulResponse
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpClientTests.ReturnsSuccessfulResponse" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpClientTests.ReturnsSuccessfulResponse" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpClientTests.ReturnsSuccessfulResponse
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpClientTests
+[ RUN      ] HttpClientTests.ReturnsSuccessfulResponse
+[       OK ] HttpClientTests.ReturnsSuccessfulResponse (0 ms)
+[----------] 1 test from HttpClientTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpClientTests.ReturnsSuccessfulResponse" end time: Oct 12 09:42 UTC
+"HttpClientTests.ReturnsSuccessfulResponse" time elapsed: 00:00:00
+----------------------------------------------------------
+
+56/96 Testing: HttpClientTests.ReturnsNetworkError
+56/96 Test: HttpClientTests.ReturnsNetworkError
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=HttpClientTests.ReturnsNetworkError" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"HttpClientTests.ReturnsNetworkError" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = HttpClientTests.ReturnsNetworkError
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from HttpClientTests
+[ RUN      ] HttpClientTests.ReturnsNetworkError
+[       OK ] HttpClientTests.ReturnsNetworkError (0 ms)
+[----------] 1 test from HttpClientTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpClientTests.ReturnsNetworkError" end time: Oct 12 09:42 UTC
+"HttpClientTests.ReturnsNetworkError" time elapsed: 00:00:00
+----------------------------------------------------------
+
+57/96 Testing: CppHttpClientTests.GetsHttpsResponse
+57/96 Test: CppHttpClientTests.GetsHttpsResponse
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=CppHttpClientTests.GetsHttpsResponse" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"CppHttpClientTests.GetsHttpsResponse" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = CppHttpClientTests.GetsHttpsResponse
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from CppHttpClientTests
+[ RUN      ] CppHttpClientTests.GetsHttpsResponse
+CERT PATH = [/app/cpp-auth/tests/certs/test-cert.pem]
+KEY PATH = [/app/cpp-auth/tests/certs/test-key.pem]
+CWD = ["/app/build/cpp-auth"]
+CERT EXISTS = 1
+KEY EXISTS = 1
+[PORT] 53143
+[SERVER IS_RUNNING] 0
+[DIRECT BASE URL] [https://127.0.0.1:53143]
+[       OK ] CppHttpClientTests.GetsHttpsResponse (9 ms)
+[----------] 1 test from CppHttpClientTests (9 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (9 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"CppHttpClientTests.GetsHttpsResponse" end time: Oct 12 09:42 UTC
+"CppHttpClientTests.GetsHttpsResponse" time elapsed: 00:00:00
+----------------------------------------------------------
+
+58/96 Testing: CppHttpClientTests.ReturnsHttpErrorResponse
+58/96 Test: CppHttpClientTests.ReturnsHttpErrorResponse
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=CppHttpClientTests.ReturnsHttpErrorResponse" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"CppHttpClientTests.ReturnsHttpErrorResponse" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = CppHttpClientTests.ReturnsHttpErrorResponse
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from CppHttpClientTests
+[ RUN      ] CppHttpClientTests.ReturnsHttpErrorResponse
+[       OK ] CppHttpClientTests.ReturnsHttpErrorResponse (59 ms)
+[----------] 1 test from CppHttpClientTests (59 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (59 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"CppHttpClientTests.ReturnsHttpErrorResponse" end time: Oct 12 09:42 UTC
+"CppHttpClientTests.ReturnsHttpErrorResponse" time elapsed: 00:00:00
+----------------------------------------------------------
+
+59/96 Testing: UrlParserTests.ParsesHttpsUrl
+59/96 Test: UrlParserTests.ParsesHttpsUrl
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=UrlParserTests.ParsesHttpsUrl" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"UrlParserTests.ParsesHttpsUrl" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UrlParserTests.ParsesHttpsUrl
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UrlParserTests
+[ RUN      ] UrlParserTests.ParsesHttpsUrl
+[       OK ] UrlParserTests.ParsesHttpsUrl (0 ms)
+[----------] 1 test from UrlParserTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"UrlParserTests.ParsesHttpsUrl" end time: Oct 12 09:42 UTC
+"UrlParserTests.ParsesHttpsUrl" time elapsed: 00:00:00
+----------------------------------------------------------
+
+60/96 Testing: UrlParserTests.ParsesHttpUrl
+60/96 Test: UrlParserTests.ParsesHttpUrl
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=UrlParserTests.ParsesHttpUrl" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"UrlParserTests.ParsesHttpUrl" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UrlParserTests.ParsesHttpUrl
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UrlParserTests
+[ RUN      ] UrlParserTests.ParsesHttpUrl
+[       OK ] UrlParserTests.ParsesHttpUrl (0 ms)
+[----------] 1 test from UrlParserTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"UrlParserTests.ParsesHttpUrl" end time: Oct 12 09:42 UTC
+"UrlParserTests.ParsesHttpUrl" time elapsed: 00:00:00
+----------------------------------------------------------
+
+61/96 Testing: UrlParserTests.ParsesUrlWithPort
+61/96 Test: UrlParserTests.ParsesUrlWithPort
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=UrlParserTests.ParsesUrlWithPort" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"UrlParserTests.ParsesUrlWithPort" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UrlParserTests.ParsesUrlWithPort
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UrlParserTests
+[ RUN      ] UrlParserTests.ParsesUrlWithPort
+[       OK ] UrlParserTests.ParsesUrlWithPort (0 ms)
+[----------] 1 test from UrlParserTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"UrlParserTests.ParsesUrlWithPort" end time: Oct 12 09:42 UTC
+"UrlParserTests.ParsesUrlWithPort" time elapsed: 00:00:00
+----------------------------------------------------------
+
+62/96 Testing: UrlParserTests.UsesRootPathWhenPathIsMissing
+62/96 Test: UrlParserTests.UsesRootPathWhenPathIsMissing
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=UrlParserTests.UsesRootPathWhenPathIsMissing" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"UrlParserTests.UsesRootPathWhenPathIsMissing" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UrlParserTests.UsesRootPathWhenPathIsMissing
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UrlParserTests
+[ RUN      ] UrlParserTests.UsesRootPathWhenPathIsMissing
+[       OK ] UrlParserTests.UsesRootPathWhenPathIsMissing (0 ms)
+[----------] 1 test from UrlParserTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"UrlParserTests.UsesRootPathWhenPathIsMissing" end time: Oct 12 09:42 UTC
+"UrlParserTests.UsesRootPathWhenPathIsMissing" time elapsed: 00:00:00
+----------------------------------------------------------
+
+63/96 Testing: UrlParserTests.RejectsUnsupportedScheme
+63/96 Test: UrlParserTests.RejectsUnsupportedScheme
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=UrlParserTests.RejectsUnsupportedScheme" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"UrlParserTests.RejectsUnsupportedScheme" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UrlParserTests.RejectsUnsupportedScheme
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UrlParserTests
+[ RUN      ] UrlParserTests.RejectsUnsupportedScheme
+[       OK ] UrlParserTests.RejectsUnsupportedScheme (0 ms)
+[----------] 1 test from UrlParserTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"UrlParserTests.RejectsUnsupportedScheme" end time: Oct 12 09:42 UTC
+"UrlParserTests.RejectsUnsupportedScheme" time elapsed: 00:00:00
+----------------------------------------------------------
+
+64/96 Testing: UrlParserTests.RejectsUrlWithoutScheme
+64/96 Test: UrlParserTests.RejectsUrlWithoutScheme
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=UrlParserTests.RejectsUrlWithoutScheme" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"UrlParserTests.RejectsUrlWithoutScheme" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = UrlParserTests.RejectsUrlWithoutScheme
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from UrlParserTests
+[ RUN      ] UrlParserTests.RejectsUrlWithoutScheme
+[       OK ] UrlParserTests.RejectsUrlWithoutScheme (0 ms)
+[----------] 1 test from UrlParserTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"UrlParserTests.RejectsUrlWithoutScheme" end time: Oct 12 09:42 UTC
+"UrlParserTests.RejectsUrlWithoutScheme" time elapsed: 00:00:00
+----------------------------------------------------------
+
+65/96 Testing: TokenValidatorTest.AcceptsValidToken
+65/96 Test: TokenValidatorTest.AcceptsValidToken
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.AcceptsValidToken" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.AcceptsValidToken" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.AcceptsValidToken
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.AcceptsValidToken
+[       OK ] TokenValidatorTest.AcceptsValidToken (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.AcceptsValidToken" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.AcceptsValidToken" time elapsed: 00:00:00
+----------------------------------------------------------
+
+66/96 Testing: TokenValidatorTest.RejectsEmptyToken
+66/96 Test: TokenValidatorTest.RejectsEmptyToken
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsEmptyToken" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsEmptyToken" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsEmptyToken
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsEmptyToken
+[       OK ] TokenValidatorTest.RejectsEmptyToken (0 ms)
+[----------] 1 test from TokenValidatorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsEmptyToken" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsEmptyToken" time elapsed: 00:00:00
+----------------------------------------------------------
+
+67/96 Testing: TokenValidatorTest.RejectsMalformedToken
+67/96 Test: TokenValidatorTest.RejectsMalformedToken
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsMalformedToken" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsMalformedToken" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsMalformedToken
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsMalformedToken
+[       OK ] TokenValidatorTest.RejectsMalformedToken (0 ms)
+[----------] 1 test from TokenValidatorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsMalformedToken" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsMalformedToken" time elapsed: 00:00:00
+----------------------------------------------------------
+
+68/96 Testing: TokenValidatorTest.RejectsWrongIssuer
+68/96 Test: TokenValidatorTest.RejectsWrongIssuer
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsWrongIssuer" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsWrongIssuer" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsWrongIssuer
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsWrongIssuer
+[       OK ] TokenValidatorTest.RejectsWrongIssuer (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsWrongIssuer" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsWrongIssuer" time elapsed: 00:00:00
+----------------------------------------------------------
+
+69/96 Testing: TokenValidatorTest.RejectsWrongAudience
+69/96 Test: TokenValidatorTest.RejectsWrongAudience
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsWrongAudience" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsWrongAudience" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsWrongAudience
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsWrongAudience
+[       OK ] TokenValidatorTest.RejectsWrongAudience (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsWrongAudience" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsWrongAudience" time elapsed: 00:00:00
+----------------------------------------------------------
+
+70/96 Testing: TokenValidatorTest.AcceptsAudienceArrayContainingExpectedAudience
+70/96 Test: TokenValidatorTest.AcceptsAudienceArrayContainingExpectedAudience
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.AcceptsAudienceArrayContainingExpectedAudience" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.AcceptsAudienceArrayContainingExpectedAudience" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.AcceptsAudienceArrayContainingExpectedAudience
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.AcceptsAudienceArrayContainingExpectedAudience
+[       OK ] TokenValidatorTest.AcceptsAudienceArrayContainingExpectedAudience (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.AcceptsAudienceArrayContainingExpectedAudience" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.AcceptsAudienceArrayContainingExpectedAudience" time elapsed: 00:00:00
+----------------------------------------------------------
+
+71/96 Testing: TokenValidatorTest.RejectsAudienceArrayWithoutExpectedAudience
+71/96 Test: TokenValidatorTest.RejectsAudienceArrayWithoutExpectedAudience
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsAudienceArrayWithoutExpectedAudience" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsAudienceArrayWithoutExpectedAudience" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsAudienceArrayWithoutExpectedAudience
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsAudienceArrayWithoutExpectedAudience
+[       OK ] TokenValidatorTest.RejectsAudienceArrayWithoutExpectedAudience (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsAudienceArrayWithoutExpectedAudience" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsAudienceArrayWithoutExpectedAudience" time elapsed: 00:00:00
+----------------------------------------------------------
+
+72/96 Testing: TokenValidatorTest.RejectsExpiredToken
+72/96 Test: TokenValidatorTest.RejectsExpiredToken
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsExpiredToken" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsExpiredToken" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsExpiredToken
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsExpiredToken
+[       OK ] TokenValidatorTest.RejectsExpiredToken (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsExpiredToken" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsExpiredToken" time elapsed: 00:00:00
+----------------------------------------------------------
+
+73/96 Testing: TokenValidatorTest.RejectsTokenWithoutExpiration
+73/96 Test: TokenValidatorTest.RejectsTokenWithoutExpiration
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenWithoutExpiration" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenWithoutExpiration" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenWithoutExpiration
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenWithoutExpiration
+[       OK ] TokenValidatorTest.RejectsTokenWithoutExpiration (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenWithoutExpiration" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenWithoutExpiration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+74/96 Testing: TokenValidatorTest.RejectsTokenWithoutKeyId
+74/96 Test: TokenValidatorTest.RejectsTokenWithoutKeyId
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenWithoutKeyId" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenWithoutKeyId" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenWithoutKeyId
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenWithoutKeyId
+[       OK ] TokenValidatorTest.RejectsTokenWithoutKeyId (5 ms)
+[----------] 1 test from TokenValidatorTest (5 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (5 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenWithoutKeyId" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenWithoutKeyId" time elapsed: 00:00:00
+----------------------------------------------------------
+
+75/96 Testing: TokenValidatorTest.RejectsWrongConfiguredAlgorithm
+75/96 Test: TokenValidatorTest.RejectsWrongConfiguredAlgorithm
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsWrongConfiguredAlgorithm" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsWrongConfiguredAlgorithm" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsWrongConfiguredAlgorithm
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsWrongConfiguredAlgorithm
+[       OK ] TokenValidatorTest.RejectsWrongConfiguredAlgorithm (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsWrongConfiguredAlgorithm" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsWrongConfiguredAlgorithm" time elapsed: 00:00:00
+----------------------------------------------------------
+
+76/96 Testing: TokenValidatorTest.ReturnsVerificationUnavailableWhenJwksIsUnavailable
+76/96 Test: TokenValidatorTest.ReturnsVerificationUnavailableWhenJwksIsUnavailable
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.ReturnsVerificationUnavailableWhenJwksIsUnavailable" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.ReturnsVerificationUnavailableWhenJwksIsUnavailable" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.ReturnsVerificationUnavailableWhenJwksIsUnavailable
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.ReturnsVerificationUnavailableWhenJwksIsUnavailable
+[       OK ] TokenValidatorTest.ReturnsVerificationUnavailableWhenJwksIsUnavailable (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.ReturnsVerificationUnavailableWhenJwksIsUnavailable" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.ReturnsVerificationUnavailableWhenJwksIsUnavailable" time elapsed: 00:00:00
+----------------------------------------------------------
+
+77/96 Testing: TokenValidatorTest.RejectsTokenWhenJwksKeyIsNotFound
+77/96 Test: TokenValidatorTest.RejectsTokenWhenJwksKeyIsNotFound
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenWhenJwksKeyIsNotFound" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenWhenJwksKeyIsNotFound" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenWhenJwksKeyIsNotFound
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenWhenJwksKeyIsNotFound
+[       OK ] TokenValidatorTest.RejectsTokenWhenJwksKeyIsNotFound (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenWhenJwksKeyIsNotFound" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenWhenJwksKeyIsNotFound" time elapsed: 00:00:00
+----------------------------------------------------------
+
+78/96 Testing: TokenValidatorTest.RejectsTokenWhenJwksSuccessHasNoKey
+78/96 Test: TokenValidatorTest.RejectsTokenWhenJwksSuccessHasNoKey
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenWhenJwksSuccessHasNoKey" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenWhenJwksSuccessHasNoKey" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenWhenJwksSuccessHasNoKey
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenWhenJwksSuccessHasNoKey
+[       OK ] TokenValidatorTest.RejectsTokenWhenJwksSuccessHasNoKey (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenWhenJwksSuccessHasNoKey" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenWhenJwksSuccessHasNoKey" time elapsed: 00:00:00
+----------------------------------------------------------
+
+79/96 Testing: TokenValidatorTest.RejectsTokenWhenJwksKeyAlgorithmDoesNotMatch
+79/96 Test: TokenValidatorTest.RejectsTokenWhenJwksKeyAlgorithmDoesNotMatch
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenWhenJwksKeyAlgorithmDoesNotMatch" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenWhenJwksKeyAlgorithmDoesNotMatch" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenWhenJwksKeyAlgorithmDoesNotMatch
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenWhenJwksKeyAlgorithmDoesNotMatch
+[       OK ] TokenValidatorTest.RejectsTokenWhenJwksKeyAlgorithmDoesNotMatch (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenWhenJwksKeyAlgorithmDoesNotMatch" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenWhenJwksKeyAlgorithmDoesNotMatch" time elapsed: 00:00:00
+----------------------------------------------------------
+
+80/96 Testing: TokenValidatorTest.RejectsTokenWithModifiedSignature
+80/96 Test: TokenValidatorTest.RejectsTokenWithModifiedSignature
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenWithModifiedSignature" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenWithModifiedSignature" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenWithModifiedSignature
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenWithModifiedSignature
+[       OK ] TokenValidatorTest.RejectsTokenWithModifiedSignature (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenWithModifiedSignature" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenWithModifiedSignature" time elapsed: 00:00:00
+----------------------------------------------------------
+
+81/96 Testing: TokenValidatorTest.RequestsJwkUsingTokenKeyId
+81/96 Test: TokenValidatorTest.RequestsJwkUsingTokenKeyId
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RequestsJwkUsingTokenKeyId" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RequestsJwkUsingTokenKeyId" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RequestsJwkUsingTokenKeyId
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RequestsJwkUsingTokenKeyId
+[       OK ] TokenValidatorTest.RequestsJwkUsingTokenKeyId (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RequestsJwkUsingTokenKeyId" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RequestsJwkUsingTokenKeyId" time elapsed: 00:00:00
+----------------------------------------------------------
+
+82/96 Testing: TokenValidatorTest.RejectsTokenWithoutIssuer
+82/96 Test: TokenValidatorTest.RejectsTokenWithoutIssuer
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenWithoutIssuer" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenWithoutIssuer" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenWithoutIssuer
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenWithoutIssuer
+[       OK ] TokenValidatorTest.RejectsTokenWithoutIssuer (6 ms)
+[----------] 1 test from TokenValidatorTest (6 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (6 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenWithoutIssuer" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenWithoutIssuer" time elapsed: 00:00:00
+----------------------------------------------------------
+
+83/96 Testing: TokenValidatorTest.RejectsTokenWithoutAudience
+83/96 Test: TokenValidatorTest.RejectsTokenWithoutAudience
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenWithoutAudience" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenWithoutAudience" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenWithoutAudience
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenWithoutAudience
+[       OK ] TokenValidatorTest.RejectsTokenWithoutAudience (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenWithoutAudience" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenWithoutAudience" time elapsed: 00:00:00
+----------------------------------------------------------
+
+84/96 Testing: TokenValidatorTest.RejectsTokenWithoutSubject
+84/96 Test: TokenValidatorTest.RejectsTokenWithoutSubject
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenWithoutSubject" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenWithoutSubject" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenWithoutSubject
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenWithoutSubject
+[       OK ] TokenValidatorTest.RejectsTokenWithoutSubject (4 ms)
+[----------] 1 test from TokenValidatorTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenWithoutSubject" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenWithoutSubject" time elapsed: 00:00:00
+----------------------------------------------------------
+
+85/96 Testing: TokenValidatorTest.RejectsTokenSignedWithDifferentPrivateKey
+85/96 Test: TokenValidatorTest.RejectsTokenSignedWithDifferentPrivateKey
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorTest.RejectsTokenSignedWithDifferentPrivateKey" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorTest.RejectsTokenSignedWithDifferentPrivateKey" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorTest.RejectsTokenSignedWithDifferentPrivateKey
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorTest
+[ RUN      ] TokenValidatorTest.RejectsTokenSignedWithDifferentPrivateKey
+[       OK ] TokenValidatorTest.RejectsTokenSignedWithDifferentPrivateKey (3 ms)
+[----------] 1 test from TokenValidatorTest (3 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (3 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorTest.RejectsTokenSignedWithDifferentPrivateKey" end time: Oct 12 09:42 UTC
+"TokenValidatorTest.RejectsTokenSignedWithDifferentPrivateKey" time elapsed: 00:00:00
+----------------------------------------------------------
+
+86/96 Testing: TokenValidatorInterfaceTest.ValidatesToken
+86/96 Test: TokenValidatorInterfaceTest.ValidatesToken
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenValidatorInterfaceTest.ValidatesToken" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenValidatorInterfaceTest.ValidatesToken" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenValidatorInterfaceTest.ValidatesToken
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenValidatorInterfaceTest
+[ RUN      ] TokenValidatorInterfaceTest.ValidatesToken
+[       OK ] TokenValidatorInterfaceTest.ValidatesToken (0 ms)
+[----------] 1 test from TokenValidatorInterfaceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"TokenValidatorInterfaceTest.ValidatesToken" end time: Oct 12 09:42 UTC
+"TokenValidatorInterfaceTest.ValidatesToken" time elapsed: 00:00:00
+----------------------------------------------------------
+
+87/96 Testing: TokenGeneratorTest.GeneratesTokenWithExpectedClaims
+87/96 Test: TokenGeneratorTest.GeneratesTokenWithExpectedClaims
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=TokenGeneratorTest.GeneratesTokenWithExpectedClaims" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"TokenGeneratorTest.GeneratesTokenWithExpectedClaims" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = TokenGeneratorTest.GeneratesTokenWithExpectedClaims
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TokenGeneratorTest
+[ RUN      ] TokenGeneratorTest.GeneratesTokenWithExpectedClaims
+[       OK ] TokenGeneratorTest.GeneratesTokenWithExpectedClaims (0 ms)
+[----------] 1 test from TokenGeneratorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"TokenGeneratorTest.GeneratesTokenWithExpectedClaims" end time: Oct 12 09:42 UTC
+"TokenGeneratorTest.GeneratesTokenWithExpectedClaims" time elapsed: 00:00:00
+----------------------------------------------------------
+
+88/96 Testing: RsaPublicKeyBuilderTest.DecodesJwkModulus
+88/96 Test: RsaPublicKeyBuilderTest.DecodesJwkModulus
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=RsaPublicKeyBuilderTest.DecodesJwkModulus" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"RsaPublicKeyBuilderTest.DecodesJwkModulus" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = RsaPublicKeyBuilderTest.DecodesJwkModulus
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RsaPublicKeyBuilderTest
+[ RUN      ] RsaPublicKeyBuilderTest.DecodesJwkModulus
+n size = 342
+n mod 4 = 2
+[       OK ] RsaPublicKeyBuilderTest.DecodesJwkModulus (0 ms)
+[----------] 1 test from RsaPublicKeyBuilderTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"RsaPublicKeyBuilderTest.DecodesJwkModulus" end time: Oct 12 09:42 UTC
+"RsaPublicKeyBuilderTest.DecodesJwkModulus" time elapsed: 00:00:00
+----------------------------------------------------------
+
+89/96 Testing: RsaPublicKeyBuilderTest.BuildsPublicKeyFromJwk
+89/96 Test: RsaPublicKeyBuilderTest.BuildsPublicKeyFromJwk
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=RsaPublicKeyBuilderTest.BuildsPublicKeyFromJwk" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"RsaPublicKeyBuilderTest.BuildsPublicKeyFromJwk" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = RsaPublicKeyBuilderTest.BuildsPublicKeyFromJwk
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RsaPublicKeyBuilderTest
+[ RUN      ] RsaPublicKeyBuilderTest.BuildsPublicKeyFromJwk
+[       OK ] RsaPublicKeyBuilderTest.BuildsPublicKeyFromJwk (1 ms)
+[----------] 1 test from RsaPublicKeyBuilderTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"RsaPublicKeyBuilderTest.BuildsPublicKeyFromJwk" end time: Oct 12 09:42 UTC
+"RsaPublicKeyBuilderTest.BuildsPublicKeyFromJwk" time elapsed: 00:00:00
+----------------------------------------------------------
+
+90/96 Testing: RsaTokenSignerTest.SignsDataThatCanBeVerifiedWithPublicKey
+90/96 Test: RsaTokenSignerTest.SignsDataThatCanBeVerifiedWithPublicKey
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=RsaTokenSignerTest.SignsDataThatCanBeVerifiedWithPublicKey" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"RsaTokenSignerTest.SignsDataThatCanBeVerifiedWithPublicKey" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = RsaTokenSignerTest.SignsDataThatCanBeVerifiedWithPublicKey
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RsaTokenSignerTest
+[ RUN      ] RsaTokenSignerTest.SignsDataThatCanBeVerifiedWithPublicKey
+[       OK ] RsaTokenSignerTest.SignsDataThatCanBeVerifiedWithPublicKey (3 ms)
+[----------] 1 test from RsaTokenSignerTest (3 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (3 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"RsaTokenSignerTest.SignsDataThatCanBeVerifiedWithPublicKey" end time: Oct 12 09:42 UTC
+"RsaTokenSignerTest.SignsDataThatCanBeVerifiedWithPublicKey" time elapsed: 00:00:00
+----------------------------------------------------------
+
+91/96 Testing: RsaTokenSignerTest.SignatureIsInvalidForModifiedData
+91/96 Test: RsaTokenSignerTest.SignatureIsInvalidForModifiedData
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=RsaTokenSignerTest.SignatureIsInvalidForModifiedData" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"RsaTokenSignerTest.SignatureIsInvalidForModifiedData" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = RsaTokenSignerTest.SignatureIsInvalidForModifiedData
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RsaTokenSignerTest
+[ RUN      ] RsaTokenSignerTest.SignatureIsInvalidForModifiedData
+[       OK ] RsaTokenSignerTest.SignatureIsInvalidForModifiedData (3 ms)
+[----------] 1 test from RsaTokenSignerTest (3 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (3 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"RsaTokenSignerTest.SignatureIsInvalidForModifiedData" end time: Oct 12 09:42 UTC
+"RsaTokenSignerTest.SignatureIsInvalidForModifiedData" time elapsed: 00:00:00
+----------------------------------------------------------
+
+92/96 Testing: RsaTokenSignatureVerifierTest.VerifiesValidSignature
+92/96 Test: RsaTokenSignatureVerifierTest.VerifiesValidSignature
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=RsaTokenSignatureVerifierTest.VerifiesValidSignature" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"RsaTokenSignatureVerifierTest.VerifiesValidSignature" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = RsaTokenSignatureVerifierTest.VerifiesValidSignature
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RsaTokenSignatureVerifierTest
+[ RUN      ] RsaTokenSignatureVerifierTest.VerifiesValidSignature
+[       OK ] RsaTokenSignatureVerifierTest.VerifiesValidSignature (3 ms)
+[----------] 1 test from RsaTokenSignatureVerifierTest (3 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (3 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"RsaTokenSignatureVerifierTest.VerifiesValidSignature" end time: Oct 12 09:42 UTC
+"RsaTokenSignatureVerifierTest.VerifiesValidSignature" time elapsed: 00:00:00
+----------------------------------------------------------
+
+93/96 Testing: RsaTokenSignatureVerifierTest.RejectsModifiedData
+93/96 Test: RsaTokenSignatureVerifierTest.RejectsModifiedData
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=RsaTokenSignatureVerifierTest.RejectsModifiedData" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"RsaTokenSignatureVerifierTest.RejectsModifiedData" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = RsaTokenSignatureVerifierTest.RejectsModifiedData
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RsaTokenSignatureVerifierTest
+[ RUN      ] RsaTokenSignatureVerifierTest.RejectsModifiedData
+[       OK ] RsaTokenSignatureVerifierTest.RejectsModifiedData (3 ms)
+[----------] 1 test from RsaTokenSignatureVerifierTest (3 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (3 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"RsaTokenSignatureVerifierTest.RejectsModifiedData" end time: Oct 12 09:42 UTC
+"RsaTokenSignatureVerifierTest.RejectsModifiedData" time elapsed: 00:00:00
+----------------------------------------------------------
+
+94/96 Testing: RsaTokenSignatureVerifierTest.RejectsModifiedSignature
+94/96 Test: RsaTokenSignatureVerifierTest.RejectsModifiedSignature
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=RsaTokenSignatureVerifierTest.RejectsModifiedSignature" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"RsaTokenSignatureVerifierTest.RejectsModifiedSignature" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = RsaTokenSignatureVerifierTest.RejectsModifiedSignature
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RsaTokenSignatureVerifierTest
+[ RUN      ] RsaTokenSignatureVerifierTest.RejectsModifiedSignature
+[       OK ] RsaTokenSignatureVerifierTest.RejectsModifiedSignature (4 ms)
+[----------] 1 test from RsaTokenSignatureVerifierTest (4 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (4 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"RsaTokenSignatureVerifierTest.RejectsModifiedSignature" end time: Oct 12 09:42 UTC
+"RsaTokenSignatureVerifierTest.RejectsModifiedSignature" time elapsed: 00:00:00
+----------------------------------------------------------
+
+95/96 Testing: RsaTokenSignatureVerifierTest.RejectsMalformedJwk
+95/96 Test: RsaTokenSignatureVerifierTest.RejectsMalformedJwk
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=RsaTokenSignatureVerifierTest.RejectsMalformedJwk" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"RsaTokenSignatureVerifierTest.RejectsMalformedJwk" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = RsaTokenSignatureVerifierTest.RejectsMalformedJwk
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RsaTokenSignatureVerifierTest
+[ RUN      ] RsaTokenSignatureVerifierTest.RejectsMalformedJwk
+[       OK ] RsaTokenSignatureVerifierTest.RejectsMalformedJwk (1 ms)
+[----------] 1 test from RsaTokenSignatureVerifierTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"RsaTokenSignatureVerifierTest.RejectsMalformedJwk" end time: Oct 12 09:42 UTC
+"RsaTokenSignatureVerifierTest.RejectsMalformedJwk" time elapsed: 00:00:00
+----------------------------------------------------------
+
+96/96 Testing: AuthenticatorTest.DelegatesTokenValidation
+96/96 Test: AuthenticatorTest.DelegatesTokenValidation
+Command: "/app/build/cpp-auth/cpp-auth_tests" "--gtest_filter=AuthenticatorTest.DelegatesTokenValidation" "--gtest_also_run_disabled_tests"
+Directory: /app/build/cpp-auth
+"AuthenticatorTest.DelegatesTokenValidation" start time: Oct 12 09:42 UTC
+Output:
+----------------------------------------------------------
+Running main() from /opt/vcpkg/buildtrees/gtest/src/v1.18.0-e6987f02b9.clean/googletest/src/gtest_main.cc
+Note: Google Test filter = AuthenticatorTest.DelegatesTokenValidation
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from AuthenticatorTest
+[ RUN      ] AuthenticatorTest.DelegatesTokenValidation
+[       OK ] AuthenticatorTest.DelegatesTokenValidation (0 ms)
+[----------] 1 test from AuthenticatorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"AuthenticatorTest.DelegatesTokenValidation" end time: Oct 12 09:42 UTC
+"AuthenticatorTest.DelegatesTokenValidation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 12 09:42 UTC

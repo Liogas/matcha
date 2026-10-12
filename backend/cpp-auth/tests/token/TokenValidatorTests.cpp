@@ -206,6 +206,13 @@ namespace
 		buffer << file.rdbuf();
 		return buffer.str();
 	}
+
+    std::int64_t futureExpiration()
+    {
+        return std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count() + 3600;
+    }
 }
 
 TEST(TokenValidatorTest, AcceptsValidToken)
@@ -312,7 +319,8 @@ TEST(TokenValidatorTest, RejectsWrongIssuer)
     const std::string token = createTestToken(
         "https://wrong-issuer.example.com",
         TEST_KEY_ID,
-        Audience{std::string(TEST_AUDIENCE)}
+        Audience{std::string(TEST_AUDIENCE)},
+        futureExpiration()
     );
 
     const auto result = validateTestToken(
@@ -336,7 +344,8 @@ TEST(TokenValidatorTest, RejectsWrongAudience)
     const std::string token = createTestToken(
         TEST_ISSUER,
         TEST_KEY_ID,
-        Audience{std::string("another-api")}
+        Audience{std::string("another-api")},
+        futureExpiration()
     );
 
     const auto result = validateTestToken(
@@ -411,7 +420,8 @@ TEST(TokenValidatorTest, RejectsAudienceArrayWithoutExpectedAudience)
         Audience{std::set<std::string>{
             "another-api",
             "some-other-api"
-        }}
+        }},
+        futureExpiration()
     );
 
     const auto result = validateTestToken(
@@ -488,7 +498,8 @@ TEST(TokenValidatorTest, RejectsTokenWithoutKeyId)
     const std::string token = createTestToken(
         TEST_ISSUER,
         std::nullopt,
-        Audience{std::string(TEST_AUDIENCE)}
+        Audience{std::string(TEST_AUDIENCE)},
+        futureExpiration()
     );
 
     const auto result = validateTestToken(
@@ -512,7 +523,8 @@ TEST(TokenValidatorTest, RejectsWrongConfiguredAlgorithm)
     const std::string token = createTestToken(
         TEST_ISSUER,
         TEST_KEY_ID,
-        Audience{std::string(TEST_AUDIENCE)}
+        Audience{std::string(TEST_AUDIENCE)},
+        futureExpiration()
     );
 
     const auth::TokenValidatorConfig config{

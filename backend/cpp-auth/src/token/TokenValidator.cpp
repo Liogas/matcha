@@ -1,5 +1,6 @@
 #include <auth/token/TokenValidator.hpp>
 #include <iostream>
+#include <exception>
 
 namespace auth
 {
@@ -21,9 +22,7 @@ namespace auth
 		std::optional<DecodedJwt> decoded;
 		try {
 			decoded.emplace(jwt::decode(token));
-		} catch (const std::invalid_argument &) {
-			return this->invalidToken();
-		} catch (const std::runtime_error &) {
+		} catch (const std::exception &) {
 			return this->invalidToken();
 		}
 		if (!this->validateAlgorithm(*decoded))
@@ -36,7 +35,14 @@ namespace auth
 			return this->invalidToken();
 		if (!this->validateExpiration(*decoded))
 			return this->invalidToken();
-		const auto jwksResult = this->getJwk(*decoded);
+		JwksResult jwksResult; 
+		try
+		{
+			jwksResult = this->getJwk(*decoded);
+		} catch (const std::exception &)
+		{
+			return this->verifUnavailable();
+		}
 		if (jwksResult.status == JwksResult::Status::Unavailable)
 			return this->verifUnavailable();
 		if (jwksResult.status == JwksResult::Status::KeyNotFound)
@@ -45,8 +51,14 @@ namespace auth
 			return this->invalidToken();
 		if (jwksResult.key->alg != decoded->get_algorithm())
 			return this->invalidToken();
-		if (!this->verifSignature(*decoded, jwksResult.key.value()))
-			return this->invalidToken();
+		try
+		{
+			if (!this->verifSignature(*decoded, jwksResult.key.value()))
+				return this->invalidToken();
+		} catch (const std::exception &)
+		{
+			return this->verifUnavailable();
+		}
 		return this->validToken(*decoded);
 	}
 
@@ -54,10 +66,14 @@ namespace auth
 		const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 	)
 	{
-		const std::string algo = decoded.get_algorithm();
-		if (algo != this->_config.algorithm)
+		try
+		{
+			const std::string algo = decoded.get_algorithm();
+			return !algo.empty() && algo == this->_config.algorithm;
+		} catch (const std::exception &)
+		{
 			return false;
-		return true;
+		}
 	}
 
 	bool	TokenValidator::validateIssuer(
@@ -66,9 +82,15 @@ namespace auth
 	{
 		if (!decoded.has_payload_claim("iss"))
 			return false;
-		const std::string issuer =
-			decoded.get_payload_claim("iss").as_string();
-		return issuer == this->_config.issuer;
+		try
+		{
+			const std::string issuer =
+				decoded.get_payload_claim("iss").as_string();
+			return issuer == this->_config.issuer;
+		} catch (const std::exception &)
+		{
+			return false;
+		}
 	}
 
 	bool	TokenValidator::validateAudience(
@@ -77,48 +99,36 @@ namespace auth
 	{
 		if (!decoded.has_payload_claim("aud"))
 			return false;
-		const auto audienceClaim =
-			decoded.get_payload_claim("aud");
 		try
 		{
-			const std::string audience =
-				audienceClaim.as_string();
-
-			if (
-				audience.empty()
-				|| audience != this->_config.audience
-			)
-				return false;
-		}
-		catch (...)
-		{
+			const auto audienceClaim =
+				decoded.get_payload_claim("aud");
 			try
 			{
-				const auto audiences =
-					audienceClaim.as_array();
-				bool audienceFound = false;
-				for (const auto& audience : audiences)
-				{
-					if (!audience.is<std::string>())
-						return false;
-					const std::string value =
-						audience.get<std::string>();
-					if (!value.empty() && value == this->_config.audience)
-					{
-						audienceFound = true;
-						break;
-					}
-				}
-
-				if (!audienceFound)
-					return false;
-			}
-			catch (...)
+				const std::string audience =
+					audienceClaim.as_string();
+				return !audience.empty() &&
+					audience == this->_config.audience;
+			} catch (const std::exception &)
 			{
-				return false;
+
 			}
+			const auto audiences = audienceClaim.as_array();
+			for (const auto &audience : audiences)
+			{
+				if (!audience.is<std::string>())
+					return false;
+				const std::string value = 
+					audience.get<std::string>();
+				if (!value.empty() && value == this->_config.audience)
+					return true;
+			}
+			return false;
 		}
-		return true;
+		catch (const std::exception &)
+		{
+			return false;
+		}
 	}
 
 	bool	TokenValidator::validateExpiration(
@@ -127,9 +137,15 @@ namespace auth
 	{
 		if (!decoded.has_payload_claim("exp"))
 			return false;
-		const auto expiration =
-			decoded.get_payload_claim("exp").as_date();
-		return expiration > jwt::date::clock::now();
+		try
+		{
+			const auto expiration =
+				decoded.get_payload_claim("exp").as_date();
+			return expiration > jwt::date::clock::now();
+		} catch (const std::exception &)
+		{
+			return false;
+		}
 	}
 
 	bool	TokenValidator::validateSubject(
@@ -138,17 +154,42 @@ namespace auth
 	{
 		if (!decoded.has_payload_claim("sub"))
 			return false;
-		const std::string subject =
-			decoded.get_payload_claim("sub").as_string();
-		return !subject.empty();
+		try
+		{
+			const std::string subject =
+				decoded.get_payload_claim("sub").as_string();
+			return !subject.empty();
+		} catch (const std::exception &)
+		{
+			return false;
+		}
 	}
 
 	JwksResult	TokenValidator::getJwk(
 		const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 	)
 	{
-		const std::string kid =
-			decoded.get_header_claim("kid").as_string();
+		if (!decoded.has_header_claim("kid"))
+			return {
+				JwksResult::Status::KeyNotFound,
+				std::nullopt
+			};
+		std::string kid;
+		try
+		{
+			kid = decoded.get_header_claim("kid").as_string();
+		} catch (const std::exception &)
+		{
+			return {
+				JwksResult::Status::KeyNotFound,
+				std::nullopt
+			};
+		}
+		if (kid.empty())
+			return {
+				JwksResult::Status::KeyNotFound,
+				std::nullopt
+			};
 		return this->_jwksProvider.getKey(kid);
 	}
 
@@ -181,10 +222,12 @@ namespace auth
 		const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 	)
 	{
-		
+		auto claims = this->extractClaims(decoded);
+		if (!claims.has_value())
+			return this->invalidToken();
 		return {
 			TokenValidationResult::Status::Valid,
-			this->extractClaims(decoded)
+			std::move(claims.value())
 		};
 	}
 
@@ -197,29 +240,61 @@ namespace auth
 	}
 
 
-	AuthenticatedIdentity	TokenValidator::extractClaims(
+	std::optional<AuthenticatedIdentity>	TokenValidator::extractClaims(
 		const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 	)
 	{
-		AuthenticatedIdentity claims;
-		claims.issuer = decoded.get_payload_claim("iss").as_string();
-		claims.subject = decoded.get_payload_claim("sub").as_string();
-		const auto audienceClaim = decoded.get_payload_claim("aud");
+		if (!decoded.has_payload_claim("iss")
+			|| !decoded.has_payload_claim("sub")
+			|| !decoded.has_payload_claim("aud"))
+			return std::nullopt;
 		try
 		{
-			claims.audience.push_back(audienceClaim.as_string());
-		} catch (...)
-		{
-			const auto audiences =
-				audienceClaim.as_array();
-
-			for (const auto &audience : audiences)
+			AuthenticatedIdentity claims;
+			const auto issuer = decoded.get_payload_claim("iss");
+			const auto sub = decoded.get_payload_claim("sub");
+			const auto aud = decoded.get_payload_claim("aud");
+			if (issuer.get_type() != jwt::json::type::string
+				|| sub.get_type() != jwt::json::type::string)
+				return std::nullopt;
+			claims.issuer = issuer.as_string();
+			claims.subject = sub.as_string();
+			if (claims.subject.empty())
+				return std::nullopt;
+			switch(aud.get_type())
 			{
-				claims.audience.push_back(
-					audience.get<std::string>()
-				);
+				case jwt::json::type::string:
+				{
+					const auto audience = aud.as_string();
+					if (audience.empty())
+						return std::nullopt;
+					claims.audience.push_back(audience);
+					break;
+				}
+				case jwt::json::type::array:
+				{
+					const auto audiences = aud.as_array();
+					for (const auto &audience : audiences)
+					{
+						if (!audience.is<std::string>())
+							return std::nullopt;
+						const auto value = audience.get<std::string>();
+						if (value.empty())
+							return std::nullopt;
+						claims.audience.push_back(value);
+					}
+					if (claims.audience.empty())
+						return std::nullopt;
+					break;
+				}
+				default:
+					return std::nullopt;
 			}
+			return claims;
+		} catch (const std::exception &)
+		{
+			return std::nullopt;
 		}
-		return claims;
+		return std::nullopt;
 	}
 }
