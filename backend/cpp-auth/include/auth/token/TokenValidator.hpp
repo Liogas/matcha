@@ -4,6 +4,7 @@
 #include <auth/jwks/JwksProvider.hpp>
 #include <auth/token/TokenValidatorConfig.hpp>
 #include <auth/token/ITokenSignatureVerifier.hpp>
+#include <auth/time/IWallClock.hpp>
 #include <jwt-cpp/jwt.h>
 
 namespace auth
@@ -14,7 +15,8 @@ namespace auth
 			TokenValidator(
 				const TokenValidatorConfig 	&config,
 				JwksProvider				&jwksProvider,
-				ITokenSignatureVerifier		&signatureVerifier
+				ITokenSignatureVerifier		&signatureVerifier,
+				IWallClock					&clock
 			);
 			TokenValidationResult	validate(
 				const std::string &token
@@ -23,6 +25,7 @@ namespace auth
 			TokenValidatorConfig	_config;
 			JwksProvider			&_jwksProvider;
 			ITokenSignatureVerifier	&_signatureVerifier;
+			IWallClock				&_clock;
 
 			bool	validateAlgorithm(
 				const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
@@ -33,7 +36,7 @@ namespace auth
 			bool	validateAudience(
 				const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 			);
-			bool	validateExpiration(
+			bool	validateTemporalClaims(
 				const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 			);
 			bool	validateSubject(

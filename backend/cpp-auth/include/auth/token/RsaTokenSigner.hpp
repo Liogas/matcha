@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <openssl/evp.h>
+
 #include <auth/token/TokenSigner.hpp>
 
 namespace auth
@@ -16,7 +19,7 @@ namespace auth
 			) override;
 			std::string	keyId() const override;
 		private:
-			std::string	_privateKeyPath;
 			std::string	_keyId;
+			std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> _privateKey;
 	};
 }

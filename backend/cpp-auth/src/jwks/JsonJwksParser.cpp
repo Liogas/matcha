@@ -1,6 +1,8 @@
 #include <nlohmann/json.hpp>
 #include <jwt-cpp/base.h>
 
+#include <unordered_set>
+
 #include <auth/jwks/JsonJwksParser.hpp>
 
 using json = nlohmann::json;
@@ -19,6 +21,7 @@ auth::JwksParseResult	auth::JsonJwksParser::parse(
 				{}
 			};
 		std::vector<auth::Jwk> result;
+		std::unordered_set<std::string> keyIds;
 		for (const auto &key : keys)
 		{
 			if (!key.is_object())
@@ -26,14 +29,18 @@ auth::JwksParseResult	auth::JsonJwksParser::parse(
 					JwksParseResult::Status::InvalidJwks,
 					{}
 				};
-			const auto kid = key.at("kid").get<std::string>();
 			const auto kty = key.at("kty").get<std::string>();
-			const auto alg = key.at("alg").get<std::string>();
+			const auto alg = key.contains("alg")
+				? key.at("alg").get<std::string>()
+				: "RS256";
+			if (kty != "RSA" || alg != "RS256")
+				continue;
+
+			const auto kid = key.at("kid").get<std::string>();
 			const auto n = key.at("n").get<std::string>();
 			const auto e = key.at("e").get<std::string>();
 			if (kid.empty() ||
-				kty != "RSA" ||
-				alg != "RS256" ||
+				!keyIds.insert(kid).second ||
 				n.empty() ||
 				e.empty() ||
 				!isValidBase64Url(n) ||
@@ -60,6 +67,11 @@ auth::JwksParseResult	auth::JsonJwksParser::parse(
 			};
 			result.push_back(std::move(jwk));
 		}
+		if (result.empty())
+			return {
+				JwksParseResult::Status::InvalidJwks,
+				{}
+			};
 		return {
 			auth::JwksParseResult::Status::Success,
 			result

@@ -1,6 +1,7 @@
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(httplib CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(jwt-cpp CONFIG REQUIRED)
 
 message(STATUS "HTTPLIB_IS_USING_OPENSSL=${HTTPLIB_IS_USING_OPENSSL}")
 message(STATUS "HTTPLIB_IS_COMPILED=${HTTPLIB_IS_COMPILED}")
@@ -32,6 +33,7 @@ target_link_libraries(cpp-auth PRIVATE
     nlohmann_json::nlohmann_json
     httplib::httplib
     OpenSSL::Crypto
+    jwt-cpp::jwt-cpp
 )
 
 target_include_directories(cpp-auth

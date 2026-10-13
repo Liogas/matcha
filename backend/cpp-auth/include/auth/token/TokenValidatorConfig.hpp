@@ -1,6 +1,8 @@
 #pragma once
 
+#include <chrono>
 #include <string>
+#include <auth/token/TokenPolicy.hpp>
 
 namespace auth
 {
@@ -9,5 +11,7 @@ namespace auth
 		std::string issuer;
 		std::string audience;
 		std::string algorithm;
+		std::chrono::seconds maxLifetime{TOKEN_MAX_LIFETIME};
+		std::chrono::seconds clockSkew{60};
 	};
 }

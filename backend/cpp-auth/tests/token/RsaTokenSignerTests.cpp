@@ -208,3 +208,51 @@ TEST(RsaTokenSignerTest, SignatureIsInvalidForModifiedData)
 
     EVP_PKEY_free(publicKey);
 }
+
+TEST(RsaTokenSignerTest, RejectsMissingPrivateKeyDuringConstruction)
+{
+    const auto privateKeyPath =
+        std::string(CPP_AUTH_SOURCE_DIR)
+        + "/tests/fixtures/missing_private_key.pem";
+
+    EXPECT_THROW(
+        auth::RsaTokenSigner signer(privateKeyPath, "key-123"),
+        std::runtime_error
+    );
+}
+
+TEST(RsaTokenSignerTest, RejectsPublicKeyAsPrivateKeyDuringConstruction)
+{
+    const auto publicKeyPath =
+        std::string(CPP_AUTH_SOURCE_DIR)
+        + "/tests/fixtures/rsa_public_test.pem";
+
+    EXPECT_THROW(
+        auth::RsaTokenSigner signer(publicKeyPath, "key-123"),
+        std::runtime_error
+    );
+}
+
+TEST(RsaTokenSignerTest, RejectsEcPrivateKeyDuringConstruction)
+{
+    const auto privateKeyPath =
+        std::string(CPP_AUTH_SOURCE_DIR)
+        + "/tests/fixtures/ec_private_test.pem";
+
+    EXPECT_THROW(
+        auth::RsaTokenSigner signer(privateKeyPath, "key-123"),
+        std::runtime_error
+    );
+}
+
+TEST(RsaTokenSignerTest, RejectsRsaPrivateKeyBelow2048BitsDuringConstruction)
+{
+    const auto privateKeyPath =
+        std::string(CPP_AUTH_SOURCE_DIR)
+        + "/tests/fixtures/rsa_1024_private_test.pem";
+
+    EXPECT_THROW(
+        auth::RsaTokenSigner signer(privateKeyPath, "key-123"),
+        std::runtime_error
+    );
+}

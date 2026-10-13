@@ -7,6 +7,7 @@
 #include <thread>
 #include <filesystem>
 #include <chrono>
+#include <stdexcept>
 
 namespace
 {
@@ -191,6 +192,69 @@ TEST(CppHttpClientTests, GetsHttpsResponse)
     );
 }
 
+TEST(CppHttpClientTests, RejectsUntrustedHttpsCertificate)
+{
+    const std::filesystem::path certPath =
+        std::filesystem::absolute(
+            CPP_AUTH_SOURCE_DIR
+        ) / "tests/certs/test-cert.pem";
+
+    const std::filesystem::path keyPath =
+        std::filesystem::absolute(
+            CPP_AUTH_SOURCE_DIR
+        ) / "tests/certs/test-key.pem";
+
+    httplib::SSLServer server(
+        certPath.c_str(),
+        keyPath.c_str()
+    );
+
+    ASSERT_TRUE(server.is_valid());
+
+    server.Get(
+        "/test",
+        [](const httplib::Request&, httplib::Response& response)
+        {
+            response.set_content("must not be trusted", "text/plain");
+        }
+    );
+
+    const int port = server.bind_to_any_port("127.0.0.1");
+    ASSERT_GT(port, 0);
+
+    std::thread serverThread(
+        [&server]()
+        {
+            server.listen_after_bind();
+        }
+    );
+
+    while (!server.is_running())
+    {
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(10)
+        );
+    }
+
+    auth::CppHttpClient client({
+        std::nullopt
+    });
+    const auto result = client.get(
+        "https://127.0.0.1:"
+        + std::to_string(port)
+        + "/test"
+    );
+
+    server.stop();
+    serverThread.join();
+
+    EXPECT_EQ(
+        result.status,
+        auth::HttpResult::Status::NetworkError
+    );
+    EXPECT_FALSE(result.response.has_value());
+}
+
 TEST(CppHttpClientTests, ReturnsHttpErrorResponse)
 {
     const std::filesystem::path certPath =
@@ -273,5 +337,160 @@ TEST(CppHttpClientTests, ReturnsHttpErrorResponse)
     EXPECT_EQ(
         result.response->body,
         "not found"
+    );
+}
+
+TEST(CppHttpClientTests, RejectsResponseLargerThanConfiguredLimit)
+{
+    const std::filesystem::path certPath =
+        std::filesystem::absolute(
+            CPP_AUTH_SOURCE_DIR
+        ) / "tests/certs/test-cert.pem";
+
+    const std::filesystem::path keyPath =
+        std::filesystem::absolute(
+            CPP_AUTH_SOURCE_DIR
+        ) / "tests/certs/test-key.pem";
+
+    httplib::SSLServer server(
+        certPath.c_str(),
+        keyPath.c_str()
+    );
+
+    ASSERT_TRUE(server.is_valid());
+
+    server.Get(
+        "/large",
+        [](const httplib::Request&, httplib::Response& response)
+        {
+            response.set_content(
+                std::string(1024, 'x'),
+                "text/plain"
+            );
+        }
+    );
+
+    const int port =
+        server.bind_to_any_port("127.0.0.1");
+
+    ASSERT_GT(port, 0);
+
+    std::thread serverThread(
+        [&server]()
+        {
+            server.listen_after_bind();
+        }
+    );
+
+    while (!server.is_running())
+    {
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(10)
+        );
+    }
+
+    auth::HttpClientConfig config{
+        certPath.string()
+    };
+    config.maxResponseSize = 128;
+    auth::CppHttpClient client(config);
+
+    const auto result = client.get(
+        "https://127.0.0.1:"
+        + std::to_string(port)
+        + "/large"
+    );
+
+    server.stop();
+    serverThread.join();
+
+    EXPECT_EQ(
+        result.status,
+        auth::HttpResult::Status::NetworkError
+    );
+    EXPECT_FALSE(result.response.has_value());
+}
+
+TEST(CppHttpClientTests, StopsReadingAfterConfiguredTimeout)
+{
+    const std::filesystem::path certPath =
+        std::filesystem::absolute(
+            CPP_AUTH_SOURCE_DIR
+        ) / "tests/certs/test-cert.pem";
+
+    const std::filesystem::path keyPath =
+        std::filesystem::absolute(
+            CPP_AUTH_SOURCE_DIR
+        ) / "tests/certs/test-key.pem";
+
+    httplib::SSLServer server(
+        certPath.c_str(),
+        keyPath.c_str()
+    );
+
+    ASSERT_TRUE(server.is_valid());
+
+    server.Get(
+        "/slow",
+        [](const httplib::Request&, httplib::Response& response)
+        {
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(150)
+            );
+            response.set_content("finished", "text/plain");
+        }
+    );
+
+    const int port =
+        server.bind_to_any_port("127.0.0.1");
+
+    ASSERT_GT(port, 0);
+
+    std::thread serverThread(
+        [&server]()
+        {
+            server.listen_after_bind();
+        }
+    );
+
+    while (!server.is_running())
+    {
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(10)
+        );
+    }
+
+    auth::HttpClientConfig config{
+        certPath.string()
+    };
+    config.readTimeout = std::chrono::milliseconds(25);
+    auth::CppHttpClient client(config);
+
+    const auto result = client.get(
+        "https://127.0.0.1:"
+        + std::to_string(port)
+        + "/slow"
+    );
+
+    server.stop();
+    serverThread.join();
+
+    EXPECT_EQ(
+        result.status,
+        auth::HttpResult::Status::NetworkError
+    );
+    EXPECT_FALSE(result.response.has_value());
+}
+
+TEST(CppHttpClientTests, RejectsNonPositiveTimeoutConfiguration)
+{
+    auth::HttpClientConfig config{
+        std::nullopt
+    };
+    config.connectionTimeout = std::chrono::milliseconds::zero();
+
+    EXPECT_THROW(
+        auth::CppHttpClient client(config),
+        std::invalid_argument
     );
 }

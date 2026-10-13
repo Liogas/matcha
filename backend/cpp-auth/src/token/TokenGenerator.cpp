@@ -1,6 +1,8 @@
 #include <auth/token/TokenGenerator.hpp>
+#include <auth/token/TokenPolicy.hpp>
 #include <nlohmann/json.hpp>
 #include <jwt-cpp/jwt.h>
+#include <stdexcept>
 
 namespace auth
 {
@@ -12,16 +14,40 @@ namespace auth
 		_config(config),
 		_signer(signer),
 		_clock(clock)
-	{}
+	{
+		if (this->_config.issuer.empty())
+			throw std::invalid_argument(
+				"Token issuer cannot be empty"
+			);
+		if (this->_config.audience.empty())
+			throw std::invalid_argument(
+				"Token audience cannot be empty"
+			);
+		if (this->_config.lifetime <= std::chrono::seconds::zero()
+			|| this->_config.lifetime > TOKEN_MAX_LIFETIME)
+			throw std::invalid_argument(
+				"Token lifetime must be positive and at most one hour"
+			);
+	}
 
 	std::string	TokenGenerator::generate(
 		const AuthenticatedIdentity &identity
 	)
 	{
+		if (identity.subject.empty())
+			throw std::invalid_argument(
+				"Token subject cannot be empty"
+			);
+		const std::string keyId = this->_signer.keyId();
+		if (keyId.empty())
+			throw std::invalid_argument(
+				"Token signing key ID cannot be empty"
+			);
+
 		const nlohmann::json header{
-			{"alg", "RS256"},
+			{"alg", std::string(TOKEN_ALGORITHM)},
 			{"typ", "JWT"},
-			{"kid", this->_signer.keyId()}
+			{"kid", keyId}
 		};
 
 		const auto now = this->_clock.now();
@@ -50,6 +76,10 @@ namespace auth
 		const auto signingInput =
 			encodedHeader + "." + encodedPayload;
 		const auto signature = this->_signer.sign(signingInput);
+		if (signature.empty())
+			throw std::runtime_error(
+				"Token signer returned an empty signature"
+			);
 		return signingInput + "." + signature;
 	}
 }

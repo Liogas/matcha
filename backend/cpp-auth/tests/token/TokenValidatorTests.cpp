@@ -1,6 +1,9 @@
 #include <auth/token/RsaTokenSignatureVerifier.hpp>
+#include <auth/token/RsaTokenSigner.hpp>
+#include <auth/token/TokenGenerator.hpp>
 #include <auth/token/TokenValidator.hpp>
 #include <auth/jwks/JwksProvider.hpp>
+#include <auth/time/SystemWallClock.hpp>
 
 #include <gtest/gtest.h>
 #include <jwt-cpp/jwt.h>
@@ -64,7 +67,10 @@ namespace
 		const std::string& issuer,
 		const std::optional<std::string>& kid = std::nullopt,
 		const Audience& audience = std::string(TEST_AUDIENCE),
-		const std::optional<std::int64_t>& expiration = std::nullopt
+		const std::optional<std::int64_t>& expiration = std::nullopt,
+		const std::optional<std::int64_t>& issuedAt = std::nullopt,
+		const std::optional<std::int64_t>& notBefore = std::nullopt,
+		bool includeIssuedAt = true
 	)
 	{
 		const std::string privateKey = loadPrivateKey();
@@ -113,6 +119,29 @@ namespace
 				);
 			}
 		}
+		if (includeIssuedAt)
+		{
+			const auto issuedAtSeconds = issuedAt.value_or(
+				std::chrono::duration_cast<std::chrono::seconds>(
+					std::chrono::system_clock::now().time_since_epoch()
+				).count()
+			);
+			builder.set_payload_claim(
+				"iat",
+				jwt::claim(jwt::date(
+					std::chrono::seconds(issuedAtSeconds)
+				))
+			);
+		}
+		if (notBefore.has_value())
+		{
+			builder.set_payload_claim(
+				"nbf",
+				jwt::claim(jwt::date(
+					std::chrono::seconds(notBefore.value())
+				))
+			);
+		}
 		if (expiration.has_value())
 		{
 			const auto expirationDate = jwt::date(
@@ -150,6 +179,23 @@ namespace
 		auth::JwksResult _result;
 	};
 
+	class FakeWallClock : public auth::IWallClock
+	{
+	public:
+		explicit FakeWallClock(std::int64_t nowSeconds)
+			: _now(std::chrono::seconds(nowSeconds))
+		{
+		}
+
+		std::chrono::system_clock::time_point now() const override
+		{
+			return _now;
+		}
+
+	private:
+		std::chrono::system_clock::time_point _now;
+	};
+
 	auth::TokenValidationResult validateTestToken(
 		const std::string& token,
 		auth::JwksResult jwksResult,
@@ -162,13 +208,45 @@ namespace
 	{
 		FakeJwksProvider provider{std::move(jwksResult)};
 		auth::RsaTokenSignatureVerifier signatureVerifier;
+		auth::SystemWallClock clock;
 
 		auth::TokenValidator validator(
 			config,
 			provider,
-			signatureVerifier
+			signatureVerifier,
+			clock
 		);
 
+		return validator.validate(token);
+	}
+
+	auth::TokenValidationResult validateTestTokenAt(
+		const std::string& token,
+		auth::IWallClock& clock,
+		auth::TokenValidatorConfig config = {
+			TEST_ISSUER,
+			TEST_AUDIENCE,
+			"RS256"
+		}
+	)
+	{
+		const auth::Jwk jwk{
+			TEST_KEY_ID,
+			"RSA",
+			"RS256",
+			TEST_RSA_MODULUS,
+			TEST_RSA_EXPONENT
+		};
+		FakeJwksProvider provider{
+			{auth::JwksResult::Status::Success, jwk}
+		};
+		auth::RsaTokenSignatureVerifier signatureVerifier;
+		auth::TokenValidator validator(
+			config,
+			provider,
+			signatureVerifier,
+			clock
+		);
 		return validator.validate(token);
 	}
 
@@ -213,6 +291,8 @@ namespace
             std::chrono::system_clock::now().time_since_epoch()
         ).count() + 3600;
     }
+
+    constexpr std::int64_t FIXED_TEST_NOW = 1'700'000'000;
 }
 
 TEST(TokenValidatorTest, AcceptsValidToken)
@@ -236,11 +316,13 @@ TEST(TokenValidatorTest, AcceptsValidToken)
     };
 
     auth::RsaTokenSignatureVerifier signatureVerifier;
+    auth::SystemWallClock clock;
 
     auth::TokenValidator validator(
         config,
         provider,
-        signatureVerifier
+        signatureVerifier,
+        clock
     );
 
     const auto now = std::chrono::duration_cast<std::chrono::seconds>(
@@ -271,6 +353,78 @@ TEST(TokenValidatorTest, AcceptsValidToken)
 
     EXPECT_EQ(provider.callCount, 1);
     EXPECT_EQ(provider.requestedKid, TEST_KEY_ID);
+}
+
+TEST(TokenFlowIntegrationTest, GeneratesAndValidatesRsaToken)
+{
+    const std::string privateKeyPath =
+        std::string(CPP_AUTH_SOURCE_DIR)
+        + "/tests/certs/test-key.pem";
+    auth::RsaTokenSigner signer(privateKeyPath, TEST_KEY_ID);
+    auth::SystemWallClock clock;
+    const auth::TokenGeneratorConfig generatorConfig{
+        TEST_ISSUER,
+        TEST_AUDIENCE,
+        std::chrono::seconds{3600}
+    };
+    auth::TokenGenerator generator(generatorConfig, signer, clock);
+
+    const auth::AuthenticatedIdentity identity{
+        TEST_SUBJECT,
+        "",
+        {}
+    };
+    const std::string token = generator.generate(identity);
+
+    const auth::Jwk jwk{
+        TEST_KEY_ID,
+        "RSA",
+        "RS256",
+        TEST_RSA_MODULUS,
+        TEST_RSA_EXPONENT
+    };
+    FakeJwksProvider provider{
+        {auth::JwksResult::Status::Success, jwk}
+    };
+    auth::RsaTokenSignatureVerifier signatureVerifier;
+    const auth::TokenValidatorConfig validatorConfig{
+        TEST_ISSUER,
+        TEST_AUDIENCE,
+        "RS256"
+    };
+    auth::TokenValidator validator(
+        validatorConfig,
+        provider,
+        signatureVerifier,
+        clock
+    );
+
+    const auto result = validator.validate(token);
+
+    ASSERT_EQ(
+        result.status,
+        auth::TokenValidationResult::Status::Valid
+    );
+    ASSERT_TRUE(result.claims.has_value());
+    EXPECT_EQ(result.claims->issuer, TEST_ISSUER);
+    EXPECT_EQ(result.claims->subject, TEST_SUBJECT);
+    ASSERT_EQ(result.claims->audience.size(), 1);
+    EXPECT_EQ(result.claims->audience[0], TEST_AUDIENCE);
+
+    std::string tamperedToken = token;
+    const auto signatureSeparator = tamperedToken.rfind('.');
+    ASSERT_NE(signatureSeparator, std::string::npos);
+    const auto signatureStart = signatureSeparator + 1;
+    ASSERT_LT(signatureStart, tamperedToken.size());
+    tamperedToken[signatureStart] =
+        tamperedToken[signatureStart] == 'A' ? 'B' : 'A';
+
+    const auto tamperedResult = validator.validate(tamperedToken);
+    EXPECT_EQ(
+        tamperedResult.status,
+        auth::TokenValidationResult::Status::InvalidToken
+    );
+    EXPECT_FALSE(tamperedResult.claims.has_value());
 }
 
 TEST(TokenValidatorTest, RejectsEmptyToken)
@@ -464,6 +618,143 @@ TEST(TokenValidatorTest, RejectsExpiredToken)
     );
 }
 
+TEST(TokenValidatorTest, RejectsTokenWithoutIssuedAt)
+{
+    FakeWallClock clock(FIXED_TEST_NOW);
+    const std::string token = createTestToken(
+        TEST_ISSUER,
+        TEST_KEY_ID,
+        Audience{std::string(TEST_AUDIENCE)},
+        FIXED_TEST_NOW + 3600,
+        std::nullopt,
+        std::nullopt,
+        false
+    );
+
+    const auto result = validateTestTokenAt(token, clock);
+
+    EXPECT_EQ(
+        result.status,
+        auth::TokenValidationResult::Status::InvalidToken
+    );
+}
+
+TEST(TokenValidatorTest, AcceptsExpirationWithinClockSkew)
+{
+    FakeWallClock clock(FIXED_TEST_NOW);
+    const std::string token = createTestToken(
+        TEST_ISSUER,
+        TEST_KEY_ID,
+        Audience{std::string(TEST_AUDIENCE)},
+        FIXED_TEST_NOW - 30,
+        FIXED_TEST_NOW - 3600
+    );
+
+    const auto result = validateTestTokenAt(token, clock);
+
+    EXPECT_EQ(
+        result.status,
+        auth::TokenValidationResult::Status::Valid
+    );
+}
+
+TEST(TokenValidatorTest, RejectsExpirationBeyondClockSkew)
+{
+    FakeWallClock clock(FIXED_TEST_NOW);
+    const std::string token = createTestToken(
+        TEST_ISSUER,
+        TEST_KEY_ID,
+        Audience{std::string(TEST_AUDIENCE)},
+        FIXED_TEST_NOW - 61,
+        FIXED_TEST_NOW - 3600
+    );
+
+    const auto result = validateTestTokenAt(token, clock);
+
+    EXPECT_EQ(
+        result.status,
+        auth::TokenValidationResult::Status::InvalidToken
+    );
+}
+
+TEST(TokenValidatorTest, RejectsIssuedAtTooFarInTheFuture)
+{
+    FakeWallClock clock(FIXED_TEST_NOW);
+    const std::string token = createTestToken(
+        TEST_ISSUER,
+        TEST_KEY_ID,
+        Audience{std::string(TEST_AUDIENCE)},
+        FIXED_TEST_NOW + 3600,
+        FIXED_TEST_NOW + 61
+    );
+
+    const auto result = validateTestTokenAt(token, clock);
+
+    EXPECT_EQ(
+        result.status,
+        auth::TokenValidationResult::Status::InvalidToken
+    );
+}
+
+TEST(TokenValidatorTest, RejectsLifetimeLongerThanConfiguredMaximum)
+{
+    FakeWallClock clock(FIXED_TEST_NOW);
+    const std::string token = createTestToken(
+        TEST_ISSUER,
+        TEST_KEY_ID,
+        Audience{std::string(TEST_AUDIENCE)},
+        FIXED_TEST_NOW + 3601,
+        FIXED_TEST_NOW
+    );
+
+    const auto result = validateTestTokenAt(token, clock);
+
+    EXPECT_EQ(
+        result.status,
+        auth::TokenValidationResult::Status::InvalidToken
+    );
+}
+
+TEST(TokenValidatorTest, RejectsTokenNotYetValidBeyondClockSkew)
+{
+    FakeWallClock clock(FIXED_TEST_NOW);
+    const std::string token = createTestToken(
+        TEST_ISSUER,
+        TEST_KEY_ID,
+        Audience{std::string(TEST_AUDIENCE)},
+        FIXED_TEST_NOW + 3600,
+        FIXED_TEST_NOW,
+        FIXED_TEST_NOW + 61
+    );
+
+    const auto result = validateTestTokenAt(token, clock);
+
+    EXPECT_EQ(
+        result.status,
+        auth::TokenValidationResult::Status::InvalidToken
+    );
+}
+
+TEST(TokenValidatorTest, AcceptsNotBeforeWithinClockSkew)
+{
+    FakeWallClock clock(FIXED_TEST_NOW);
+    const std::string token = createTestToken(
+        TEST_ISSUER,
+        TEST_KEY_ID,
+        Audience{std::string(TEST_AUDIENCE)},
+        FIXED_TEST_NOW + 3600,
+        FIXED_TEST_NOW,
+        FIXED_TEST_NOW + 30
+    );
+
+    const auto result = validateTestTokenAt(token, clock);
+
+    EXPECT_EQ(
+        result.status,
+        auth::TokenValidationResult::Status::Valid
+    );
+}
+
 TEST(TokenValidatorTest, RejectsTokenWithoutExpiration)
 {
     const auth::Jwk jwk{
@@ -515,33 +806,26 @@ TEST(TokenValidatorTest, RejectsTokenWithoutKeyId)
 
 TEST(TokenValidatorTest, RejectsWrongConfiguredAlgorithm)
 {
-    const auth::Jwk jwk{
-        TEST_KEY_ID, "RSA", "RS256",
-        TEST_RSA_MODULUS, TEST_RSA_EXPONENT
-    };
-
-    const std::string token = createTestToken(
-        TEST_ISSUER,
-        TEST_KEY_ID,
-        Audience{std::string(TEST_AUDIENCE)},
-        futureExpiration()
-    );
-
     const auth::TokenValidatorConfig config{
         TEST_ISSUER,
         TEST_AUDIENCE,
         "HS256"
     };
 
-    const auto result = validateTestToken(
-        token,
-        {auth::JwksResult::Status::Success, jwk},
-        config
-    );
+    FakeJwksProvider provider{
+        {auth::JwksResult::Status::KeyNotFound, std::nullopt}
+    };
+    auth::RsaTokenSignatureVerifier signatureVerifier;
+    FakeWallClock clock(FIXED_TEST_NOW);
 
-    EXPECT_EQ(
-        result.status,
-        auth::TokenValidationResult::Status::InvalidToken
+    EXPECT_THROW(
+        auth::TokenValidator validator(
+            config,
+            provider,
+            signatureVerifier,
+            clock
+        ),
+        std::invalid_argument
     );
 }
 
@@ -719,6 +1003,7 @@ TEST(TokenValidatorTest, RequestsJwkUsingTokenKeyId)
     };
 
     auth::RsaTokenSignatureVerifier signatureVerifier;
+    auth::SystemWallClock clock;
 
     const auth::TokenValidatorConfig config{
         TEST_ISSUER,
@@ -729,7 +1014,8 @@ TEST(TokenValidatorTest, RequestsJwkUsingTokenKeyId)
     auth::TokenValidator validator(
         config,
         provider,
-        signatureVerifier
+        signatureVerifier,
+        clock
     );
 
     const auto result = validator.validate(token);
@@ -761,6 +1047,10 @@ TEST(TokenValidatorTest, RejectsTokenWithoutIssuer)
     const std::string token = jwt::create()
         .set_header_claim("kid", jwt::claim(std::string(TEST_KEY_ID)))
         .set_payload_claim("sub", jwt::claim(std::string(TEST_SUBJECT)))
+        .set_payload_claim(
+            "iat",
+            jwt::claim(jwt::date(std::chrono::seconds(now)))
+        )
         .set_payload_claim(
             "aud",
             jwt::claim(std::string(TEST_AUDIENCE))
@@ -812,6 +1102,10 @@ TEST(TokenValidatorTest, RejectsTokenWithoutAudience)
         .set_payload_claim("iss", jwt::claim(std::string(TEST_ISSUER)))
         .set_payload_claim("sub", jwt::claim(std::string(TEST_SUBJECT)))
         .set_payload_claim(
+            "iat",
+            jwt::claim(jwt::date(std::chrono::seconds(now)))
+        )
+        .set_payload_claim(
             "exp",
             jwt::claim(jwt::date(std::chrono::seconds(now + 3600)))
         )
@@ -856,6 +1150,10 @@ TEST(TokenValidatorTest, RejectsTokenWithoutSubject)
     const std::string token = jwt::create()
         .set_header_claim("kid", jwt::claim(std::string(TEST_KEY_ID)))
         .set_payload_claim("iss", jwt::claim(std::string(TEST_ISSUER)))
+        .set_payload_claim(
+            "iat",
+            jwt::claim(jwt::date(std::chrono::seconds(now)))
+        )
         .set_payload_claim(
             "aud",
             jwt::claim(std::string(TEST_AUDIENCE))

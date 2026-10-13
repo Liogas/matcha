@@ -20,6 +20,7 @@
 #include <auth/jwks/JwksCache.hpp>
 #include <auth/jwks/JsonJwksParser.hpp>
 #include <auth/time/SystemClock.hpp>
+#include <auth/time/SystemWallClock.hpp>
 #include <auth/token/TokenValidator.hpp>
 #include <auth/token/RsaTokenSignatureVerifier.hpp>
 
@@ -54,7 +55,8 @@ int main()
 
     const auth::HttpJwksConfig jwksConfig{
         "TON_JWKS_URL",
-        std::chrono::seconds{300}
+        std::chrono::seconds{300},
+        std::chrono::seconds{30}
     };
 
     auth::CppHttpClient httpClient(
@@ -74,7 +76,8 @@ int main()
         jwksConfig,
         httpClient,
         jwksParser,
-        jwksCache
+        jwksCache,
+        clock
     );
 
     /*
@@ -87,11 +90,13 @@ int main()
         "RS256"
     };
 
+    auth::SystemWallClock wallClock;
     auth::RsaTokenSignatureVerifier signatureVerifier;
     auth::TokenValidator tokenValidator(
         tokenValidatorConfig,
         jwksProvider,
-        signatureVerifier
+        signatureVerifier,
+        wallClock
     );
 
     auth::Authenticator authenticator(

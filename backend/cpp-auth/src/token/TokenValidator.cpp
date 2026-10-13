@@ -1,18 +1,42 @@
 #include <auth/token/TokenValidator.hpp>
-#include <iostream>
+#include <auth/token/TokenPolicy.hpp>
 #include <exception>
+#include <stdexcept>
 
 namespace auth
 {
 	TokenValidator::TokenValidator(
 		const TokenValidatorConfig 	&config,
 		auth::JwksProvider 			&jwksProvider,
-		ITokenSignatureVerifier		&signatureVerifier
+		ITokenSignatureVerifier		&signatureVerifier,
+		IWallClock					&clock
 	):
 		_config(config),
 		_jwksProvider(jwksProvider),
-		_signatureVerifier(signatureVerifier)
-	{}
+		_signatureVerifier(signatureVerifier),
+		_clock(clock)
+	{
+		if (this->_config.issuer.empty())
+			throw std::invalid_argument(
+				"Token validator issuer cannot be empty"
+			);
+		if (this->_config.audience.empty())
+			throw std::invalid_argument(
+				"Token validator audience cannot be empty"
+			);
+		if (this->_config.algorithm != TOKEN_ALGORITHM)
+			throw std::invalid_argument(
+				"Only RS256 token validation is supported"
+			);
+		if (this->_config.maxLifetime <= std::chrono::seconds::zero())
+			throw std::invalid_argument(
+				"Token maximum lifetime must be positive"
+			);
+		if (this->_config.clockSkew < std::chrono::seconds::zero())
+			throw std::invalid_argument(
+				"Token clock skew cannot be negative"
+			);
+	}
 
 	TokenValidationResult	TokenValidator::validate(
 		const std::string &token
@@ -33,7 +57,7 @@ namespace auth
 			return this->invalidToken();
 		if (!this->validateAudience(*decoded))
 			return this->invalidToken();
-		if (!this->validateExpiration(*decoded))
+		if (!this->validateTemporalClaims(*decoded))
 			return this->invalidToken();
 		JwksResult jwksResult; 
 		try
@@ -131,17 +155,37 @@ namespace auth
 		}
 	}
 
-	bool	TokenValidator::validateExpiration(
+	bool	TokenValidator::validateTemporalClaims(
 		const jwt::decoded_jwt<jwt::traits::kazuho_picojson> &decoded
 	)
 	{
-		if (!decoded.has_payload_claim("exp"))
+		if (!decoded.has_payload_claim("exp")
+			|| !decoded.has_payload_claim("iat"))
 			return false;
 		try
 		{
 			const auto expiration =
 				decoded.get_payload_claim("exp").as_date();
-			return expiration > jwt::date::clock::now();
+			const auto issuedAt =
+				decoded.get_payload_claim("iat").as_date();
+			const auto now = this->_clock.now();
+			const auto skew = this->_config.clockSkew;
+
+			if (expiration <= issuedAt
+				|| expiration - issuedAt > this->_config.maxLifetime
+				|| issuedAt > now + skew
+				|| expiration <= now - skew)
+				return false;
+
+			if (decoded.has_payload_claim("nbf"))
+			{
+				const auto notBefore =
+					decoded.get_payload_claim("nbf").as_date();
+				if (notBefore > now + skew
+					|| notBefore >= expiration)
+					return false;
+			}
+			return true;
 		} catch (const std::exception &)
 		{
 			return false;
