@@ -4,6 +4,8 @@
 
 #include <fstream>
 #include <iterator>
+#include <limits>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -29,9 +31,19 @@ namespace auth
                 std::istreambuf_iterator<char>()
             };
 
-            BIO *bio = BIO_new_mem_buf(
-                pem.data(),
-                static_cast<int>(pem.size())
+            if (pem.size() > static_cast<std::size_t>(
+                    std::numeric_limits<int>::max()
+                ))
+                throw std::runtime_error(
+                    "Private key file is too large"
+                );
+
+            std::unique_ptr<BIO, decltype(&BIO_free)> bio(
+                BIO_new_mem_buf(
+                    pem.data(),
+                    static_cast<int>(pem.size())
+                ),
+                BIO_free
             );
 
             if (!bio)
@@ -41,14 +53,15 @@ namespace auth
                 );
             }
 
-            EVP_PKEY *key = PEM_read_bio_PrivateKey(
-                bio,
-                nullptr,
-                nullptr,
-                nullptr
+            std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> key(
+                PEM_read_bio_PrivateKey(
+                    bio.get(),
+                    nullptr,
+                    nullptr,
+                    nullptr
+                ),
+                EVP_PKEY_free
             );
-
-            BIO_free(bio);
 
             if (!key)
             {
@@ -57,7 +70,23 @@ namespace auth
                 );
             }
 
-            return key;
+            if (EVP_PKEY_is_a(key.get(), "RSA") != 1 ||
+                EVP_PKEY_get_bits(key.get()) < 2048)
+                throw std::runtime_error(
+                    "Private signing key must be RSA with at least 2048 bits"
+                );
+
+            std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>
+                keyContext(
+                    EVP_PKEY_CTX_new(key.get(), nullptr),
+                    EVP_PKEY_CTX_free
+                );
+            if (!keyContext || EVP_PKEY_private_check(keyContext.get()) != 1)
+                throw std::runtime_error(
+                    "Private signing key is invalid"
+                );
+
+            return key.release();
         }
     }
 
@@ -65,24 +94,30 @@ namespace auth
         const std::string &privateKeyPath,
         const std::string &keyId
     ):
-        _privateKeyPath(privateKeyPath),
-        _keyId(keyId)
+        _keyId(keyId),
+        _privateKey(nullptr, EVP_PKEY_free)
     {
+        if (privateKeyPath.empty())
+            throw std::invalid_argument(
+                "Private key path cannot be empty"
+            );
+        if (this->_keyId.empty())
+            throw std::invalid_argument(
+                "Signing key ID cannot be empty"
+            );
+        this->_privateKey.reset(
+            loadPrivateKey(privateKeyPath)
+        );
     }
 
     std::string RsaTokenSigner::sign(
         const std::string &data
     )
     {
-        EVP_PKEY *privateKey =
-            loadPrivateKey(_privateKeyPath);
-
         EVP_MD_CTX *context = EVP_MD_CTX_new();
 
         if (!context)
         {
-            EVP_PKEY_free(privateKey);
-
             throw std::runtime_error(
                 "Unable to create EVP_MD_CTX"
             );
@@ -93,13 +128,12 @@ namespace auth
             nullptr,
             EVP_sha256(),
             nullptr,
-            privateKey
+            this->_privateKey.get()
         );
 
         if (initResult != 1)
         {
             EVP_MD_CTX_free(context);
-            EVP_PKEY_free(privateKey);
 
             throw std::runtime_error(
                 "Unable to initialize RSA-SHA256 signing"
@@ -115,7 +149,6 @@ namespace auth
         if (updateResult != 1)
         {
             EVP_MD_CTX_free(context);
-            EVP_PKEY_free(privateKey);
 
             throw std::runtime_error(
                 "Unable to update RSA-SHA256 signing"
@@ -133,7 +166,6 @@ namespace auth
         if (sizeResult != 1)
         {
             EVP_MD_CTX_free(context);
-            EVP_PKEY_free(privateKey);
 
             throw std::runtime_error(
                 "Unable to determine signature size"
@@ -153,7 +185,6 @@ namespace auth
         if (signResult != 1)
         {
             EVP_MD_CTX_free(context);
-            EVP_PKEY_free(privateKey);
 
             throw std::runtime_error(
                 "Unable to generate signature"
@@ -161,7 +192,6 @@ namespace auth
         }
 
         EVP_MD_CTX_free(context);
-        EVP_PKEY_free(privateKey);
 
         return jwt::base::encode<jwt::alphabet::base64url>(
             std::string(

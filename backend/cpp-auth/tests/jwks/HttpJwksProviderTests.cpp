@@ -87,7 +87,8 @@ TEST(HttpJwksProviderTest, ReturnsCachedKey)
         config,
         httpClient,
         parser,
-        cache
+        cache,
+        clock
     );
 
     const auto result = provider.getKey("key-123");
@@ -145,7 +146,8 @@ TEST(HttpJwksProviderTest, RefreshesExpiredCache)
         config,
         httpClient,
         parser,
-        cache
+        cache,
+        clock
     );
 
     const auto result = provider.getKey("key-123");
@@ -160,6 +162,140 @@ TEST(HttpJwksProviderTest, RefreshesExpiredCache)
         result.key->kid,
         "key-123"
     );
+}
+
+TEST(HttpJwksProviderTest, RefreshesCacheWhenKidIsUnknown)
+{
+    auth::Jwk oldKey{
+        "key-old",
+        "RSA",
+        "RS256",
+        "old-modulus",
+        "AQAB"
+    };
+    FakeClock clock;
+    auth::JwksCache cache(std::chrono::seconds(60), clock);
+    cache.replace({oldKey});
+
+    FakeHttpClient httpClient({
+        auth::HttpResult::Status::Success,
+        auth::HttpResponse{
+            200,
+            makeTestJwks("key-new", validTestModulus())
+        }
+    });
+    auth::JsonJwksParser parser;
+    auth::HttpJwksConfig config{
+        "https://example.com/.well-known/jwks.json",
+        std::chrono::seconds(60),
+        std::chrono::seconds(30)
+    };
+    auth::HttpJwksProvider provider(
+        config,
+        httpClient,
+        parser,
+        cache,
+        clock
+    );
+
+    const auto result = provider.getKey("key-new");
+
+    EXPECT_EQ(result.status, auth::JwksResult::Status::Success);
+    ASSERT_TRUE(result.key.has_value());
+    EXPECT_EQ(result.key->kid, "key-new");
+    EXPECT_EQ(httpClient.callCount, 1);
+}
+
+TEST(HttpJwksProviderTest, ThrottlesRefreshesForUnknownKids)
+{
+    auth::Jwk knownKey{
+        "key-known",
+        "RSA",
+        "RS256",
+        "old-modulus",
+        "AQAB"
+    };
+    FakeClock clock;
+    auth::JwksCache cache(std::chrono::seconds(60), clock);
+    cache.replace({knownKey});
+
+    FakeHttpClient httpClient({
+        auth::HttpResult::Status::Success,
+        auth::HttpResponse{
+            200,
+            makeTestJwks("key-known", validTestModulus())
+        }
+    });
+    auth::JsonJwksParser parser;
+    auth::HttpJwksConfig config{
+        "https://example.com/.well-known/jwks.json",
+        std::chrono::seconds(60),
+        std::chrono::seconds(30)
+    };
+    auth::HttpJwksProvider provider(
+        config,
+        httpClient,
+        parser,
+        cache,
+        clock
+    );
+
+    const auto firstResult = provider.getKey("unknown-key");
+    const auto secondResult = provider.getKey("another-unknown-key");
+
+    EXPECT_EQ(firstResult.status, auth::JwksResult::Status::KeyNotFound);
+    EXPECT_EQ(secondResult.status, auth::JwksResult::Status::KeyNotFound);
+    EXPECT_EQ(httpClient.callCount, 1);
+
+    clock.advance(std::chrono::seconds(30));
+
+    const auto afterIntervalResult = provider.getKey("unknown-key");
+
+    EXPECT_EQ(
+        afterIntervalResult.status,
+        auth::JwksResult::Status::KeyNotFound
+    );
+    EXPECT_EQ(httpClient.callCount, 2);
+}
+
+TEST(HttpJwksProviderTest, ThrottlesRepeatedRefreshesWhenHttpRequestFails)
+{
+    FakeClock clock;
+    auth::JwksCache cache(std::chrono::seconds(60), clock);
+    auth::JsonJwksParser parser;
+    FakeHttpClient httpClient({
+        auth::HttpResult::Status::NetworkError,
+        std::nullopt
+    });
+    auth::HttpJwksConfig config{
+        "https://example.com/.well-known/jwks.json",
+        std::chrono::seconds(60),
+        std::chrono::seconds(30)
+    };
+    auth::HttpJwksProvider provider(
+        config,
+        httpClient,
+        parser,
+        cache,
+        clock
+    );
+
+    const auto firstResult = provider.getKey("key-123");
+    const auto throttledResult = provider.getKey("key-123");
+
+    EXPECT_EQ(firstResult.status, auth::JwksResult::Status::Unavailable);
+    EXPECT_EQ(throttledResult.status, auth::JwksResult::Status::Unavailable);
+    EXPECT_EQ(httpClient.callCount, 1);
+
+    clock.advance(std::chrono::seconds(30));
+
+    const auto afterIntervalResult = provider.getKey("key-123");
+
+    EXPECT_EQ(
+        afterIntervalResult.status,
+        auth::JwksResult::Status::Unavailable
+    );
+    EXPECT_EQ(httpClient.callCount, 2);
 }
 
 TEST(HttpJwksProviderTest, ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid)
@@ -197,7 +333,8 @@ TEST(HttpJwksProviderTest, ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid)
         config,
         httpClient,
         parser,
-        cache
+        cache,
+        clock
     );
 
     const auto result = provider.getKey("key-123");
@@ -234,7 +371,8 @@ TEST(HttpJwksProviderTest, ReturnsUnavailableWhenHttpRequestFails)
         config,
         httpClient,
         parser,
-        cache
+        cache,
+        clock
     );
 
     const auto result = provider.getKey("key-123");
@@ -276,7 +414,8 @@ TEST(HttpJwksProviderTest, ReturnsUnavailableWhenHttpResponseIsNotSuccessful)
         config,
         httpClient,
         parser,
-        cache
+        cache,
+        clock
     );
 
     const auto result = provider.getKey("key-123");
@@ -320,7 +459,8 @@ TEST(HttpJwksProviderTest, ReturnsUnavailableWhenJwksResponseIsInvalid)
         config,
         httpClient,
         parser,
-        cache
+        cache,
+        clock
     );
 
     const auto result = provider.getKey("key-123");
@@ -373,7 +513,8 @@ TEST(HttpJwksProviderTest, RefreshReplacesOldKeys)
         config,
         httpClient,
         parser,
-        cache
+        cache,
+        clock
     );
 
     const auto result = provider.getKey("key-new");
@@ -447,7 +588,8 @@ TEST(HttpJwksProviderTest, RefreshesOnlyOnceWhenMultipleThreadsRequestSameKey)
         config,
         httpClient,
         parser,
-        cache
+        cache,
+        clock
     );
 
     auth::JwksResult resultA;

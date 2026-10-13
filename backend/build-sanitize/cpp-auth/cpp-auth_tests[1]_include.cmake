@@ -1,0 +1,5 @@
+if(EXISTS "/app/build-sanitize/cpp-auth/cpp-auth_tests[1]_tests.cmake")
+  include("/app/build-sanitize/cpp-auth/cpp-auth_tests[1]_tests.cmake")
+else()
+  add_test(cpp-auth_tests_NOT_BUILT cpp-auth_tests_NOT_BUILT)
+endif()

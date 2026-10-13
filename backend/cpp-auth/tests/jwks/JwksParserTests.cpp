@@ -30,6 +30,16 @@ namespace
             + R"(","e":")" + exponent + R"("})";
     }
 
+    std::string makeRsaKeyWithoutAlgorithm(
+        const std::string &kid,
+        const std::string &modulus
+    )
+    {
+        return R"({"kid":")" + kid
+            + R"(","kty":"RSA","n":")" + modulus
+            + R"(","e":"AQAB"})";
+    }
+
     std::string makeJwks(const std::string &keys)
     {
         return R"({"keys":[)" + keys + R"(]})";
@@ -57,6 +67,24 @@ TEST(JsonJwksParserTest, ParsesSingleRsaKey)
     EXPECT_EQ(result.keys[0].alg, "RS256");
     EXPECT_EQ(result.keys[0].n, modulus);
     EXPECT_EQ(result.keys[0].e, "AQAB");
+}
+
+TEST(JsonJwksParserTest, AcceptsRsaKeyWithoutAlgorithmAndAppliesPolicy)
+{
+    const std::string jwks = makeJwks(
+        makeRsaKeyWithoutAlgorithm("key-1", validRsaModulus())
+    );
+
+    auth::JsonJwksParser parser;
+    const auto result = parser.parse(jwks);
+
+    ASSERT_EQ(
+        result.status,
+        auth::JwksParseResult::Status::Success
+    );
+    ASSERT_EQ(result.keys.size(), 1);
+    EXPECT_EQ(result.keys[0].kid, "key-1");
+    EXPECT_EQ(result.keys[0].alg, "RS256");
 }
 
 TEST(JsonJwksParserTest, RejectsJwksWithoutKeys)
@@ -87,7 +115,7 @@ TEST(JsonJwksParserTest, RejectsEmptyKeys)
     EXPECT_TRUE(result.keys.empty());
 }
 
-TEST(JsonJwksParserTest, RejectsNonRsaKey)
+TEST(JsonJwksParserTest, RejectsJwksWithNoSupportedKeys)
 {
     const std::string jwks = makeJwks(
         makeRsaKey(
@@ -107,6 +135,45 @@ TEST(JsonJwksParserTest, RejectsNonRsaKey)
         auth::JwksParseResult::Status::InvalidJwks
     );
     EXPECT_TRUE(result.keys.empty());
+}
+
+TEST(JsonJwksParserTest, KeepsSupportedKeyAlongsideUnsupportedKeys)
+{
+    const std::string supportedKey = makeRsaKey(
+        "key-rs256",
+        validRsaModulus()
+    );
+    const std::string unsupportedEcKey = makeRsaKey(
+        "key-es256",
+        "not-an-rsa-modulus",
+        "not-an-exponent",
+        "ES256",
+        "EC"
+    );
+    const std::string unsupportedRsaAlgorithmKey = makeRsaKey(
+        "key-ps256",
+        "not-an-rsa-modulus",
+        "not-an-exponent",
+        "PS256"
+    );
+    const std::string jwks = makeJwks(
+        unsupportedEcKey
+        + ","
+        + unsupportedRsaAlgorithmKey
+        + ","
+        + supportedKey
+    );
+
+    auth::JsonJwksParser parser;
+    const auto result = parser.parse(jwks);
+
+    ASSERT_EQ(
+        result.status,
+        auth::JwksParseResult::Status::Success
+    );
+    ASSERT_EQ(result.keys.size(), 1);
+    EXPECT_EQ(result.keys[0].kid, "key-rs256");
+    EXPECT_EQ(result.keys[0].alg, "RS256");
 }
 
 TEST(JsonJwksParserTest, RejectsKeyWithEmptyKid)
@@ -249,6 +316,49 @@ TEST(JsonJwksParserTest, ParsesMultipleRsaKeys)
 
     EXPECT_EQ(result.keys[1].kid, "key-2");
     EXPECT_EQ(result.keys[1].n, modulus2);
+}
+
+TEST(JsonJwksParserTest, RejectsDuplicateKeyIds)
+{
+    const std::string jwks = makeJwks(
+        makeRsaKey("duplicate-kid", validRsaModulus())
+        + ","
+        + makeRsaKey("duplicate-kid", validRsaModulus())
+    );
+
+    auth::JsonJwksParser parser;
+    const auto result = parser.parse(jwks);
+
+    EXPECT_EQ(
+        result.status,
+        auth::JwksParseResult::Status::InvalidJwks
+    );
+    EXPECT_TRUE(result.keys.empty());
+}
+
+TEST(JsonJwksParserTest, IgnoresDuplicateIdOnUnsupportedKey)
+{
+    const std::string jwks = makeJwks(
+        makeRsaKey(
+            "same-kid",
+            "invalid-modulus",
+            "invalid-exponent",
+            "PS256"
+        )
+        + ","
+        + makeRsaKey("same-kid", validRsaModulus())
+    );
+
+    auth::JsonJwksParser parser;
+    const auto result = parser.parse(jwks);
+
+    ASSERT_EQ(
+        result.status,
+        auth::JwksParseResult::Status::Success
+    );
+    ASSERT_EQ(result.keys.size(), 1);
+    EXPECT_EQ(result.keys[0].kid, "same-kid");
+    EXPECT_EQ(result.keys[0].alg, "RS256");
 }
 
 TEST(JsonJwksParserTest, RejectsNonObjectKey)

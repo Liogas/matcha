@@ -2,6 +2,7 @@
 #include <jwt-cpp/jwt.h>
 #include <nlohmann/json.hpp>
 
+#include <stdexcept>
 #include <string>
 
 #include <auth/token/TokenGenerator.hpp>
@@ -16,13 +17,15 @@ namespace
 			) override
 			{
 				signedData = data;
-				return "fake-signature";
+				return signature;
 			}
-			std::string	keyId() const
+			std::string	keyId() const override
 			{
-				return "key-123";
+				return id;
 			}
 			std::string signedData;
+			std::string signature = "fake-signature";
+			std::string id = "key-123";
 	};
 
 	class FakeWallClock : public auth::IWallClock
@@ -120,3 +123,116 @@ TEST(TokenGeneratorTest, GeneratesTokenWithExpectedClaims)
     EXPECT_EQ(token, signer.signedData + ".fake-signature");
 }
 
+TEST(TokenGeneratorTest, RejectsEmptyIssuer)
+{
+    const auth::TokenGeneratorConfig config{
+        "",
+        "my-api",
+        std::chrono::seconds{900}
+    };
+    FakeWallClock clock(std::chrono::system_clock::now());
+    FakeTokenSigner signer;
+
+    EXPECT_THROW(
+        auth::TokenGenerator generator(config, signer, clock),
+        std::invalid_argument
+    );
+}
+
+TEST(TokenGeneratorTest, RejectsEmptyAudience)
+{
+    const auth::TokenGeneratorConfig config{
+        "https://auth.cpp.local",
+        "",
+        std::chrono::seconds{900}
+    };
+    FakeWallClock clock(std::chrono::system_clock::now());
+    FakeTokenSigner signer;
+
+    EXPECT_THROW(
+        auth::TokenGenerator generator(config, signer, clock),
+        std::invalid_argument
+    );
+}
+
+TEST(TokenGeneratorTest, RejectsNonPositiveLifetime)
+{
+    const auth::TokenGeneratorConfig config{
+        "https://auth.cpp.local",
+        "my-api",
+        std::chrono::seconds{0}
+    };
+    FakeWallClock clock(std::chrono::system_clock::now());
+    FakeTokenSigner signer;
+
+    EXPECT_THROW(
+        auth::TokenGenerator generator(config, signer, clock),
+        std::invalid_argument
+    );
+}
+
+TEST(TokenGeneratorTest, RejectsLifetimeLongerThanOneHour)
+{
+    const auth::TokenGeneratorConfig config{
+        "https://auth.cpp.local",
+        "my-api",
+        std::chrono::seconds{3601}
+    };
+    FakeWallClock clock(std::chrono::system_clock::now());
+    FakeTokenSigner signer;
+
+    EXPECT_THROW(
+        auth::TokenGenerator generator(config, signer, clock),
+        std::invalid_argument
+    );
+}
+
+TEST(TokenGeneratorTest, RejectsEmptySubject)
+{
+    const auth::TokenGeneratorConfig config{
+        "https://auth.cpp.local",
+        "my-api",
+        std::chrono::seconds{900}
+    };
+    FakeWallClock clock(std::chrono::system_clock::now());
+    FakeTokenSigner signer;
+    auth::TokenGenerator generator(config, signer, clock);
+
+    const auth::AuthenticatedIdentity identity{"", "", {}};
+
+    EXPECT_THROW(generator.generate(identity), std::invalid_argument);
+}
+
+TEST(TokenGeneratorTest, RejectsEmptySigningKeyId)
+{
+    const auth::TokenGeneratorConfig config{
+        "https://auth.cpp.local",
+        "my-api",
+        std::chrono::seconds{900}
+    };
+    FakeWallClock clock(std::chrono::system_clock::now());
+    FakeTokenSigner signer;
+    signer.id.clear();
+    auth::TokenGenerator generator(config, signer, clock);
+
+    const auth::AuthenticatedIdentity identity{"user-42", "", {}};
+
+    EXPECT_THROW(generator.generate(identity), std::invalid_argument);
+}
+
+TEST(TokenGeneratorTest, RejectsEmptySignature)
+{
+    const auth::TokenGeneratorConfig config{
+        "https://auth.cpp.local",
+        "my-api",
+        std::chrono::seconds{900}
+    };
+    FakeWallClock clock(std::chrono::system_clock::now());
+    FakeTokenSigner signer;
+    signer.signature.clear();
+    auth::TokenGenerator generator(config, signer, clock);
+
+    const auth::AuthenticatedIdentity identity{"user-42", "", {}};
+
+    EXPECT_THROW(generator.generate(identity), std::runtime_error);
+}

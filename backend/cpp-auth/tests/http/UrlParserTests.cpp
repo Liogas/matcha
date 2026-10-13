@@ -62,6 +62,31 @@ TEST(UrlParserTests, UsesRootPathWhenPathIsMissing)
     EXPECT_EQ(result->path, "/");
 }
 
+TEST(UrlParserTests, ParsesQueryWhenPathIsMissing)
+{
+    const auto result =
+        auth::UrlParser::parse(
+            "https://example.com?version=1"
+        );
+
+    ASSERT_TRUE(result.has_value());
+
+    EXPECT_EQ(result->host, "example.com");
+    EXPECT_EQ(result->path, "/?version=1");
+}
+
+TEST(UrlParserTests, ParsesQueryAndOmitsFragment)
+{
+    const auto result =
+        auth::UrlParser::parse(
+            "https://example.com/keys?version=1#section"
+        );
+
+    ASSERT_TRUE(result.has_value());
+
+    EXPECT_EQ(result->path, "/keys?version=1");
+}
+
 TEST(UrlParserTests, RejectsUnsupportedScheme)
 {
     const auto result =
@@ -70,6 +95,48 @@ TEST(UrlParserTests, RejectsUnsupportedScheme)
         );
 
     EXPECT_FALSE(result.has_value());
+}
+
+TEST(UrlParserTests, RejectsNonNumericPort)
+{
+    EXPECT_FALSE(
+        auth::UrlParser::parse("https://example.com:abc/keys").has_value()
+    );
+}
+
+TEST(UrlParserTests, RejectsPortOutsideValidRange)
+{
+    EXPECT_FALSE(
+        auth::UrlParser::parse("https://example.com:65536/keys").has_value()
+    );
+    EXPECT_FALSE(
+        auth::UrlParser::parse("https://example.com:0/keys").has_value()
+    );
+}
+
+TEST(UrlParserTests, RejectsMalformedAuthorityWithMultiplePorts)
+{
+    EXPECT_FALSE(
+        auth::UrlParser::parse(
+            "https://example.com:8443:443/keys"
+        ).has_value()
+    );
+}
+
+TEST(UrlParserTests, RejectsUserInfo)
+{
+    EXPECT_FALSE(
+        auth::UrlParser::parse(
+            "https://user@example.com/keys"
+        ).has_value()
+    );
+}
+
+TEST(UrlParserTests, RejectsIpv6Literals)
+{
+    EXPECT_FALSE(
+        auth::UrlParser::parse("https://[::1]/keys").has_value()
+    );
 }
 
 TEST(UrlParserTests, RejectsUrlWithoutScheme)

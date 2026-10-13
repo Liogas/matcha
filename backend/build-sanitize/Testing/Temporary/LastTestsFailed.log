@@ -1,0 +1,6 @@
+94:RsaPublicKeyBuilderTest.RejectsExponentEqualToOne
+95:RsaPublicKeyBuilderTest.RejectsZeroModulus
+96:RsaPublicKeyBuilderTest.RejectsModulusSmallerThan2048Bits
+97:RsaPublicKeyBuilderTest.RejectsEvenExponent
+98:RsaPublicKeyBuilderTest.RejectsEvenModulus
+105:RsaTokenSignatureVerifierTest.RejectsMalformedJwk

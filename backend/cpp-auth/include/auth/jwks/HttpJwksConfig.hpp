@@ -9,5 +9,6 @@ namespace	auth
 	{
 		std::string jwksUrl;
 		std::chrono::seconds cacheTtl;
+		std::chrono::seconds refreshCooldown{30};
 	};
 }
