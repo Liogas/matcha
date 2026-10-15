@@ -68,6 +68,11 @@ namespace auth
 			};
 		} else if (parsedUrl->scheme == "http")
 		{
+			if (!this->_config.allowInsecureHttp)
+				return {
+					HttpResult::Status::NetworkError,
+					std::nullopt
+				};
 			httplib::Client client(
 				parsedUrl->host,
 				parsedUrl->port.empty() 

@@ -2,6 +2,21 @@
 #include <auth/jwks/JwksCache.hpp>
 #include "FakeClock.hpp"
 
+#include <stdexcept>
+
+TEST(JwksCacheTest, RejectsNonPositiveTtl)
+{
+	FakeClock clock;
+	EXPECT_THROW(
+		auth::JwksCache(std::chrono::seconds::zero(), clock),
+		std::invalid_argument
+	);
+	EXPECT_THROW(
+		auth::JwksCache(std::chrono::seconds{-1}, clock),
+		std::invalid_argument
+	);
+}
+
 
 TEST(JwksCacheTest, FindsExistingKey)
 {
@@ -52,7 +67,7 @@ TEST(JwksCacheTest, ReturnsNotFoundForUnknownKey)
 TEST(JwksCacheTest, ReturnsExpiredWhenCacheIsExpired)
 {
     FakeClock clock;
-    auth::JwksCache cache(std::chrono::seconds(0), clock);
+    auth::JwksCache cache(std::chrono::seconds(1), clock);
 
     auth::Jwk key{
         .kid = "key-1",
@@ -63,6 +78,7 @@ TEST(JwksCacheTest, ReturnsExpiredWhenCacheIsExpired)
     };
 
     cache.replace({key});
+    clock.advance(std::chrono::seconds(1));
 
     const auto result = cache.get("key-1");
 

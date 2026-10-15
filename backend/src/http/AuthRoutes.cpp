@@ -1,7 +1,15 @@
 #include "AuthRoutes.hpp"
 
+#include <cctype>
+#include <iostream>
+#include <optional>
+#include <string>
+#include <string_view>
+
 namespace
 {
+	constexpr std::string_view BEARER_PREFIX = "Bearer ";
+
 	crow::response jsonError(
 		int status,
 		const std::string &message
@@ -21,12 +29,34 @@ namespace
 		body["message"] = message;
 		return crow::response(status, body);
 	}
+
+	std::optional<std::string> bearerToken(const crow::request &request)
+	{
+		const std::string authorization =
+			request.get_header_value("Authorization");
+		if (authorization.size() <= BEARER_PREFIX.size())
+			return std::nullopt;
+
+		for (std::size_t index = 0; index < BEARER_PREFIX.size(); ++index)
+		{
+			const auto character = static_cast<unsigned char>(authorization[index]);
+			if (std::tolower(character) !=
+				std::tolower(static_cast<unsigned char>(BEARER_PREFIX[index])))
+				return std::nullopt;
+		}
+
+		const std::string token = authorization.substr(BEARER_PREFIX.size());
+		if (token.find_first_of(" \t\r\n") != std::string::npos)
+			return std::nullopt;
+		return token;
+	}
 }
 
 void	registerAuthRoutes(
 	crow::SimpleApp &app,
 	auth::AuthService &authService,
-	auth::Authenticator	&authenticator
+	auth::Authenticator	&authenticator,
+	auth::TokenGenerator &tokenGenerator
 )
 {
 	CROW_ROUTE(app, "/api/auth/register")
@@ -82,7 +112,7 @@ void	registerAuthRoutes(
 	CROW_ROUTE(app, "/api/auth/login")
 		.methods(crow::HTTPMethod::POST)
 	(
-		[&authService](const crow::request &req)
+		[&authService, &tokenGenerator](const crow::request &req)
 		{
 			const auto body = crow::json::load(req.body);
 			if (!body)
@@ -113,8 +143,34 @@ void	registerAuthRoutes(
 			{
 				case auth::LoginResult::Status::Success:
 				{
+					if (!result.user.has_value())
+						return jsonError(
+							500,
+							"Internal server error"
+						);
+					std::string token;
+					try
+					{
+						token = tokenGenerator.generate({
+							std::to_string(result.user->id),
+							{},
+							{}
+						});
+					}
+					catch (const std::exception &error)
+					{
+						std::cerr << "[AUTH ERROR] JWT signing failed: "
+							<< error.what() << std::endl;
+						return jsonError(
+							500,
+							"Internal server error"
+						);
+					}
+
 					crow::json::wvalue bodyA;
 					bodyA["message"] = "Login successful";
+					bodyA["access_token"] = token;
+					bodyA["token_type"] = "Bearer";
 					bodyA["user"]["id"] = result.user->id;
 					bodyA["user"]["email"] = result.user->email;
 					return crow::response(
@@ -137,6 +193,35 @@ void	registerAuthRoutes(
 				500,
 				"Unknown authentification result"
 			);
+		}
+	);
+
+	CROW_ROUTE(app, "/api/auth/me")
+		.methods(crow::HTTPMethod::GET)
+	(
+		[&authenticator](const crow::request &req)
+		{
+			const auto token = bearerToken(req);
+			if (!token.has_value())
+				return jsonError(401, "Missing or invalid bearer token");
+
+			const auto result = authenticator.authenticate(*token);
+			if (result.status ==
+				auth::TokenValidationResult::Status::VerificationUnavailable)
+				return jsonError(
+					503,
+					"Token verification temporarily unavailable"
+				);
+			if (result.status != auth::TokenValidationResult::Status::Valid)
+				return jsonError(401, "Invalid token");
+			if (!result.claims.has_value())
+				return jsonError(500, "Internal server error");
+
+			crow::json::wvalue body;
+			body["user"]["id"] = result.claims->subject;
+			body["issuer"] = result.claims->issuer;
+			body["audience"] = result.claims->audience;
+			return crow::response(200, body);
 		}
 	);
 }

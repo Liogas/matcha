@@ -1,5 +1,6 @@
 #include <auth/credentials/AuthService.hpp>
 #include <cctype>
+#include <exception>
 
 namespace auth
 {
@@ -45,13 +46,18 @@ namespace auth
 			pwdHash
 		);
 
-		if (createResult.status == CreateUserResult::Status::DatabaseError)
-			return RegisterResult::InternalError;
-		if (createResult.status == CreateUserResult::Status::EmailAlreadyExists)
-			return RegisterResult::EmailAlreadyExists;
-		else if (createResult.status != CreateUserResult::Status::Success)
-			return RegisterResult::InvalidEmail;
-		return RegisterResult::Success;
+		switch (createResult.status)
+		{
+			case CreateUserResult::Status::Success:
+				return createResult.userId.has_value()
+					? RegisterResult::Success
+					: RegisterResult::InternalError;
+			case CreateUserResult::Status::EmailAlreadyExists:
+				return RegisterResult::EmailAlreadyExists;
+			case CreateUserResult::Status::DatabaseError:
+				return RegisterResult::InternalError;
+		}
+		return RegisterResult::InternalError;
 	}
 
 	bool	AuthService::isValidEmail(const std::string &email) const
@@ -87,10 +93,28 @@ namespace auth
 				LoginResult::Status::InvalidCredentials,
 				std::nullopt
 			};
-		if (!this->_pwdHasher.verify(
-			pwd,
-			result.user->passwordHash
-		))
+		if (result.status != UserLookupResult::Status::Found ||
+			!result.user.has_value())
+			return {
+				LoginResult::Status::InternalError,
+				std::nullopt
+			};
+		bool passwordMatches = false;
+		try
+		{
+			passwordMatches = this->_pwdHasher.verify(
+				pwd,
+				result.user->passwordHash
+			);
+		}
+		catch (const std::exception &)
+		{
+			return {
+				LoginResult::Status::InternalError,
+				std::nullopt
+			};
+		}
+		if (!passwordMatches)
 		{
 			return {
 				LoginResult::Status::InvalidCredentials,

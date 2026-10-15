@@ -8,6 +8,7 @@ class FakePasswordHasher : public auth::IPasswordHasher
 	public:
 		std::string lastPwd;
 		bool		failHash = false;
+		bool		failVerify = false;
 		std::string	hash(const std::string &pwd) override
 		{
 			if (failHash)
@@ -20,6 +21,8 @@ class FakePasswordHasher : public auth::IPasswordHasher
 			const std::string &passwordHash
 		)
 		{
+			if (failVerify)
+				throw std::runtime_error("fake verification failure");
 			return passwordHash == "hashed_" + password;
 		}
 };

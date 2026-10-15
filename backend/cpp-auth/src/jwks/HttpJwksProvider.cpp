@@ -1,4 +1,6 @@
 #include <auth/jwks/HttpJwksProvider.hpp>
+
+#include <stdexcept>
 #include <utility>
 
 namespace auth
@@ -15,7 +17,17 @@ namespace auth
 		_parser(parser),
 		_cache(cache),
 		_clock(clock)
-	{}
+	{
+		if (this->_config.jwksUrl.empty())
+			throw std::invalid_argument(
+				"JWKS URL cannot be empty"
+			);
+		if (this->_config.refreshCooldown <=
+			std::chrono::seconds::zero())
+			throw std::invalid_argument(
+				"JWKS refresh cooldown must be positive"
+			);
+	}
 
 	JwksResult	HttpJwksProvider::getKey(
 		const std::string &kid

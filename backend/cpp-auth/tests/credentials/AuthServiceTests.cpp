@@ -231,6 +231,20 @@ TEST(AuthServiceTest, LoginReturnsInternalErrorWhenRepositoryFails)
 	EXPECT_FALSE(result.user.has_value());
 }
 
+TEST(AuthServiceTest, LoginReturnsInternalErrorWhenVerificationThrows)
+{
+	FakeUserRepository repository;
+	FakePasswordHasher pwdHasher;
+	repository.createUser("user@example.com", "hashed_password");
+	pwdHasher.failVerify = true;
+	auth::AuthService service(repository, pwdHasher);
+
+	const auto result = service.login("user@example.com", "password");
+
+	EXPECT_EQ(result.status, auth::LoginResult::Status::InternalError);
+	EXPECT_FALSE(result.user.has_value());
+}
+
 // TEST 13
 TEST(AuthServiceTest, RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDuplicate)
 {
@@ -247,6 +261,21 @@ TEST(AuthServiceTest, RegisterUserReturnsEmailAlreadyExistsWhenCreationReportsDu
 		result,
 		auth::RegisterResult::EmailAlreadyExists
 	);
+}
+
+TEST(AuthServiceTest, RegisterUserReturnsInternalErrorWhenRepositoryOmitsCreatedId)
+{
+	FakeUserRepository repository;
+	FakePasswordHasher pwdHasher;
+	repository.forcedStatus = auth::CreateUserResult::Status::Success;
+	auth::AuthService service(repository, pwdHasher);
+
+	const auto result = service.registerUser(
+		"test@example.com",
+		"Abcdefg1!"
+	);
+
+	EXPECT_EQ(result, auth::RegisterResult::InternalError);
 }
 
 // TEST 14

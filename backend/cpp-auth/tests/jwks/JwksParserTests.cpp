@@ -69,6 +69,42 @@ TEST(JsonJwksParserTest, ParsesSingleRsaKey)
     EXPECT_EQ(result.keys[0].e, "AQAB");
 }
 
+TEST(JsonJwksParserTest, IgnoresRsaKeysNotMarkedForSignatureVerification)
+{
+    const std::string modulus = validRsaModulus();
+    const std::string encryptionKey =
+        R"({"kid":"encryption","kty":"RSA","alg":"RS256","use":"enc","n":")" +
+        modulus + R"(","e":"AQAB"})";
+    const std::string signOnlyKey =
+        R"({"kid":"sign-only","kty":"RSA","alg":"RS256","key_ops":["sign"],"n":")" +
+        modulus + R"(","e":"AQAB"})";
+    const std::string verificationKey =
+        R"({"kid":"verify","kty":"RSA","alg":"RS256","key_ops":["verify"],"n":")" +
+        modulus + R"(","e":"AQAB"})";
+
+    auth::JsonJwksParser parser;
+    const auto result = parser.parse(makeJwks(
+        encryptionKey + "," + signOnlyKey + "," + verificationKey
+    ));
+
+    ASSERT_EQ(result.status, auth::JwksParseResult::Status::Success);
+    ASSERT_EQ(result.keys.size(), 1);
+    EXPECT_EQ(result.keys[0].kid, "verify");
+}
+
+TEST(JsonJwksParserTest, RejectsMalformedKeyOperations)
+{
+    const std::string malformedKey =
+        R"({"kid":"key-1","kty":"RSA","alg":"RS256","key_ops":"verify","n":")" +
+        validRsaModulus() + R"(","e":"AQAB"})";
+
+    auth::JsonJwksParser parser;
+    const auto result = parser.parse(makeJwks(malformedKey));
+
+    EXPECT_EQ(result.status, auth::JwksParseResult::Status::InvalidJwks);
+    EXPECT_TRUE(result.keys.empty());
+}
+
 TEST(JsonJwksParserTest, AcceptsRsaKeyWithoutAlgorithmAndAppliesPolicy)
 {
     const std::string jwks = makeJwks(
