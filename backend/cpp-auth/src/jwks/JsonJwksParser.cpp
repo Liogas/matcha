@@ -35,6 +35,34 @@ auth::JwksParseResult	auth::JsonJwksParser::parse(
 				: "RS256";
 			if (kty != "RSA" || alg != "RS256")
 				continue;
+			if (key.contains("use"))
+			{
+				const auto use = key.at("use").get<std::string>();
+				if (use != "sig")
+					continue;
+			}
+			if (key.contains("key_ops"))
+			{
+				const auto &keyOperations = key.at("key_ops");
+				if (!keyOperations.is_array())
+					return {
+						JwksParseResult::Status::InvalidJwks,
+						{}
+					};
+				bool canVerify = false;
+				for (const auto &operation : keyOperations)
+				{
+					if (!operation.is_string())
+						return {
+							JwksParseResult::Status::InvalidJwks,
+							{}
+						};
+					if (operation.get<std::string>() == "verify")
+						canVerify = true;
+				}
+				if (!canVerify)
+					continue;
+			}
 
 			const auto kid = key.at("kid").get<std::string>();
 			const auto n = key.at("n").get<std::string>();

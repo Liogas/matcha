@@ -7,6 +7,7 @@
 #include "FakeClock.hpp"
 
 #include <atomic>
+#include <stdexcept>
 #include <thread>
 #include <string>
 
@@ -56,6 +57,39 @@ namespace
             ]
         })";
     }
+}
+
+TEST(HttpJwksProviderTest, RejectsInvalidRefreshConfiguration)
+{
+    FakeClock clock;
+    auth::JwksCache cache(std::chrono::seconds{60}, clock);
+    FakeHttpClient httpClient({
+        auth::HttpResult::Status::NetworkError,
+        std::nullopt
+    });
+    auth::JsonJwksParser parser;
+
+    EXPECT_THROW(
+        auth::HttpJwksProvider(
+            {"", std::chrono::seconds{60}},
+            httpClient,
+            parser,
+            cache,
+            clock
+        ),
+        std::invalid_argument
+    );
+    EXPECT_THROW(
+        auth::HttpJwksProvider(
+            {"https://example.com/jwks", std::chrono::seconds{60},
+                std::chrono::seconds::zero()},
+            httpClient,
+            parser,
+            cache,
+            clock
+        ),
+        std::invalid_argument
+    );
 }
 
 TEST(HttpJwksProviderTest, ReturnsCachedKey)
@@ -308,8 +342,9 @@ TEST(HttpJwksProviderTest, ReturnsKeyNotFoundWhenRefreshedJwksDoesNotContainKid)
         "AQAB"
     };
 	FakeClock clock;
-    auth::JwksCache cache(std::chrono::seconds(0), clock);
+    auth::JwksCache cache(std::chrono::seconds(1), clock);
     cache.replace({oldKey});
+    clock.advance(std::chrono::seconds(1));
 
     auth::HttpResponse response{
         200,

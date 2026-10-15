@@ -255,6 +255,51 @@ TEST(CppHttpClientTests, RejectsUntrustedHttpsCertificate)
     EXPECT_FALSE(result.response.has_value());
 }
 
+TEST(CppHttpClientTests, RejectsHttpByDefault)
+{
+    auth::CppHttpClient client({});
+
+    const auto result = client.get("http://127.0.0.1:1/jwks");
+
+    EXPECT_EQ(
+        result.status,
+        auth::HttpResult::Status::NetworkError
+    );
+    EXPECT_FALSE(result.response.has_value());
+}
+
+TEST(CppHttpClientTests, AllowsHttpWhenExplicitlyEnabled)
+{
+    httplib::Server server;
+    server.Get(
+        "/test",
+        [](const httplib::Request&, httplib::Response& response)
+        {
+            response.set_content("local test", "text/plain");
+        }
+    );
+    const int port = server.bind_to_any_port("127.0.0.1");
+    ASSERT_GT(port, 0);
+
+    std::thread serverThread([&server]() { server.listen_after_bind(); });
+    while (!server.is_running())
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    auth::HttpClientConfig config{};
+    config.allowInsecureHttp = true;
+    auth::CppHttpClient client(config);
+    const auto result = client.get(
+        "http://127.0.0.1:" + std::to_string(port) + "/test"
+    );
+
+    server.stop();
+    serverThread.join();
+
+    ASSERT_EQ(result.status, auth::HttpResult::Status::Success);
+    ASSERT_TRUE(result.response.has_value());
+    EXPECT_EQ(result.response->body, "local test");
+}
+
 TEST(CppHttpClientTests, ReturnsHttpErrorResponse)
 {
     const std::filesystem::path certPath =

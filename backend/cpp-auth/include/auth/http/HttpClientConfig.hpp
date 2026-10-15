@@ -14,5 +14,6 @@ namespace	auth
 		std::chrono::milliseconds	readTimeout{5000};
 		std::chrono::milliseconds	writeTimeout{5000};
 		std::size_t					maxResponseSize{64 * 1024};
+		bool						allowInsecureHttp{false};
 	};
 }

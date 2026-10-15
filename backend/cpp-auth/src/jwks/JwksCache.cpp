@@ -1,11 +1,17 @@
 #include <auth/jwks/JwksCache.hpp>
 
+#include <stdexcept>
+
 namespace	auth
 {
 	JwksCache::JwksCache(std::chrono::seconds ttl, IClock &clock):
 		_ttl(ttl),
 		_clock(clock)
 	{
+		if (this->_ttl <= std::chrono::seconds::zero())
+			throw std::invalid_argument(
+				"JWKS cache TTL must be positive"
+			);
 	}
 
 	void	JwksCache::replace(const std::vector<Jwk> &keys)

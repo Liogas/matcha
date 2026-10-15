@@ -32,7 +32,7 @@ add_executable(matcha_backend
 )
 
 target_link_libraries(matcha_backend
-    PRIVATE cpp-auth
+    PRIVATE cpp-auth::cpp-auth
     PRIVATE Crow::Crow
     PRIVATE PostgreSQL::PostgreSQL
     PRIVATE unofficial-sodium::sodium
@@ -51,7 +51,7 @@ target_include_directories(user_repository_integration_tests
 
 target_link_libraries(user_repository_integration_tests
     PRIVATE
-        cpp-auth
+        cpp-auth::cpp-auth
         PostgreSQL::PostgreSQL
         GTest::gtest_main
 )
@@ -67,7 +67,7 @@ target_include_directories(password_hasher_tests
 
 target_link_libraries(password_hasher_tests
     PRIVATE
-        cpp-auth
+        cpp-auth::cpp-auth
         unofficial-sodium::sodium
         GTest::gtest_main
 )
@@ -90,7 +90,7 @@ target_include_directories(auth_integration_tests
 
 target_link_libraries(auth_integration_tests
     PRIVATE
-        cpp-auth
+        cpp-auth::cpp-auth
         PostgreSQL::PostgreSQL
         unofficial-sodium::sodium
         GTest::gtest_main

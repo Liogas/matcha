@@ -26,12 +26,19 @@ services:
       DB_NAME: matcha
       DB_USER: admin
       DB_PASSWORD: admin
+      JWT_ISSUER: ${JWT_ISSUER:?Set JWT_ISSUER in the environment or .env}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:?Set JWT_AUDIENCE in the environment or .env}
+      JWT_JWKS_URL: ${JWT_JWKS_URL:?Set JWT_JWKS_URL in the environment or .env}
+      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private_key
+      JWT_KEY_ID: ${JWT_KEY_ID:?Set JWT_KEY_ID in the environment or .env}
     ports:
       - "18080:18080"
     volumes:
       - ./backend:/app
       - backend_build:/app/build
       - backend_vcpkg:/app/vcpkg_installed
+    secrets:
+      - jwt_private_key
 
   # frontend:
   #   build:
@@ -49,4 +56,8 @@ volumes:
   postgres_data:
   backend_build:
   backend_vcpkg:
+
+secrets:
+  jwt_private_key:
+    file: ${JWT_PRIVATE_KEY_FILE:?Set JWT_PRIVATE_KEY_FILE to the private PEM path}
     

@@ -3,8 +3,11 @@
 #include <libpq-fe.h>
 
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <optional>
+#include <stdexcept>
+#include <string>
 
 #include "database/Database.hpp"
 #include "database/DatabaseInitializer.hpp"
@@ -23,9 +26,37 @@
 #include <auth/time/SystemWallClock.hpp>
 #include <auth/token/TokenValidator.hpp>
 #include <auth/token/RsaTokenSignatureVerifier.hpp>
+#include <auth/token/TokenGenerator.hpp>
+#include <auth/token/RsaTokenSigner.hpp>
+
+namespace
+{
+    std::string requiredEnvironmentVariable(const char *name)
+    {
+        const char *value = std::getenv(name);
+        if (value == nullptr || *value == '\0')
+            throw std::runtime_error(
+                std::string("Required environment variable is not set: ") +
+                name
+            );
+        return value;
+    }
+}
 
 int main()
+try
 {
+    const std::string issuer =
+        requiredEnvironmentVariable("JWT_ISSUER");
+    const std::string audience =
+        requiredEnvironmentVariable("JWT_AUDIENCE");
+    const std::string jwksUrl =
+        requiredEnvironmentVariable("JWT_JWKS_URL");
+    const std::string privateKeyPath =
+        requiredEnvironmentVariable("JWT_PRIVATE_KEY_PATH");
+    const std::string keyId =
+        requiredEnvironmentVariable("JWT_KEY_ID");
+
     Database database;
     DatabaseInitializer databaseInitializer(database);
 
@@ -54,7 +85,7 @@ int main()
     };
 
     const auth::HttpJwksConfig jwksConfig{
-        "TON_JWKS_URL",
+        jwksUrl,
         std::chrono::seconds{300},
         std::chrono::seconds{30}
     };
@@ -85,8 +116,8 @@ int main()
      */
 
     const auth::TokenValidatorConfig tokenValidatorConfig{
-        "TON_ISSUER",
-        "TON_AUDIENCE",
+        issuer,
+        audience,
         "RS256"
     };
 
@@ -103,6 +134,16 @@ int main()
         tokenValidator
     );
 
+    auth::RsaTokenSigner tokenSigner(
+        privateKeyPath,
+        keyId
+    );
+    auth::TokenGenerator tokenGenerator(
+        {issuer, audience, std::chrono::minutes{15}},
+        tokenSigner,
+        wallClock
+    );
+
     /*
      * HTTP server
      */
@@ -112,11 +153,17 @@ int main()
     registerAuthRoutes(
         app,
         authService,
-        authenticator
+        authenticator,
+        tokenGenerator
     );
 
     app
         .port(18080)
         .multithreaded()
         .run();
+}
+catch (const std::exception &error)
+{
+    std::cerr << "[STARTUP ERROR] " << error.what() << std::endl;
+    return 1;
 }
