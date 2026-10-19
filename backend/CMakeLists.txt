@@ -12,8 +12,10 @@ enable_testing()
 
 find_package(Crow CONFIG REQUIRED)
 find_package(PostgreSQL REQUIRED)
+find_package(OpenSSL REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(unofficial-sodium CONFIG REQUIRED)
+find_package(redis++ CONFIG REQUIRED)
 
 add_subdirectory(cpp-auth)
 
@@ -27,6 +29,7 @@ add_executable(matcha_backend
     src/repositories/UserRepository.cpp
 
     src/security/PasswordHasher.cpp
+    src/security/RedisLoginAttemptLimiter.cpp
 
     src/http/AuthRoutes.cpp
 )
@@ -35,7 +38,22 @@ target_link_libraries(matcha_backend
     PRIVATE cpp-auth::cpp-auth
     PRIVATE Crow::Crow
     PRIVATE PostgreSQL::PostgreSQL
+    PRIVATE OpenSSL::Crypto
     PRIVATE unofficial-sodium::sodium
+    PRIVATE redis++::redis++_static
+)
+
+add_executable(login_rate_limiter_tests
+    tests/security/RedisLoginAttemptLimiterTests.cpp
+    src/security/RedisLoginAttemptLimiter.cpp
+)
+
+target_include_directories(login_rate_limiter_tests
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(login_rate_limiter_tests
+    PRIVATE redis++::redis++_static GTest::gtest_main OpenSSL::Crypto
 )
 
 add_executable(user_repository_integration_tests
@@ -100,3 +118,4 @@ include(GoogleTest)
 gtest_discover_tests(auth_integration_tests)
 gtest_discover_tests(password_hasher_tests)
 gtest_discover_tests(user_repository_integration_tests)
+gtest_discover_tests(login_rate_limiter_tests)

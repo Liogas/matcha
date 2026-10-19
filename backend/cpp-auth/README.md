@@ -17,7 +17,8 @@ routes.
   lifetime of no more than 3600 seconds.
 - The validator requires `exp` and `iat`; `nbf` is optional. The default
   maximum lifetime is one hour and the default clock skew allowance is 60
-  seconds. Issuer, audience, timestamps, algorithm, key ID, and signature are
+  seconds. Tokens larger than 8 KiB are rejected before decoding or JWKS
+  lookup. Issuer, audience, timestamps, algorithm, key ID, and signature are
   validated before claims are returned.
 - JWT payloads are **signed, not encrypted**. Their claims can be read by
   anyone who has the token; do not put secrets in them.

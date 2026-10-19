@@ -1,4 +1,6 @@
 #include <openssl/evp.h>
+#include <openssl/core_names.h>
+#include <openssl/bn.h>
 #include <jwt-cpp/jwt.h> 
 #include <openssl/pem.h>
 
@@ -10,11 +12,39 @@
 #include <vector>
 
 #include <auth/token/RsaTokenSigner.hpp>
+#include <auth/crypto/Base64Url.hpp>
 
 namespace auth
 {
     namespace
     {
+        using BIGNUMPtr =
+            std::unique_ptr<BIGNUM, decltype(&BN_free)>;
+
+        std::string encodeBase64Url(const BIGNUM &number)
+        {
+            const int byteCount = BN_num_bytes(&number);
+            if (byteCount <= 0)
+                throw std::runtime_error(
+                    "Unable to encode an empty RSA public parameter"
+                );
+
+            std::vector<unsigned char> bytes(
+                static_cast<std::size_t>(byteCount)
+            );
+            if (BN_bn2bin(&number, bytes.data()) != byteCount)
+                throw std::runtime_error(
+                    "Unable to encode an RSA public parameter"
+                );
+
+            return auth::encodeBase64Url(
+                std::string(
+                    reinterpret_cast<const char *>(bytes.data()),
+                    bytes.size()
+                )
+            );
+        }
+
         EVP_PKEY *loadPrivateKey(const std::string &path)
         {
             std::ifstream file(path);
@@ -193,7 +223,7 @@ namespace auth
 
         EVP_MD_CTX_free(context);
 
-        return jwt::base::encode<jwt::alphabet::base64url>(
+        return auth::encodeBase64Url(
             std::string(
                 reinterpret_cast<const char *>(signature.data()),
                 signatureSize
@@ -204,5 +234,38 @@ namespace auth
     std::string RsaTokenSigner::keyId() const
     {
         return this->_keyId;
+    }
+
+    Jwk RsaTokenSigner::publicJwk() const
+    {
+        BIGNUM *rawModulus = nullptr;
+        if (EVP_PKEY_get_bn_param(
+                this->_privateKey.get(),
+                OSSL_PKEY_PARAM_RSA_N,
+                &rawModulus
+            ) != 1)
+            throw std::runtime_error(
+                "Unable to read RSA public modulus"
+            );
+        BIGNUMPtr modulus(rawModulus, BN_free);
+
+        BIGNUM *rawExponent = nullptr;
+        if (EVP_PKEY_get_bn_param(
+                this->_privateKey.get(),
+                OSSL_PKEY_PARAM_RSA_E,
+                &rawExponent
+            ) != 1)
+            throw std::runtime_error(
+                "Unable to read RSA public exponent"
+            );
+        BIGNUMPtr exponent(rawExponent, BN_free);
+
+        return {
+            this->_keyId,
+            "RSA",
+            "RS256",
+            encodeBase64Url(*modulus),
+            encodeBase64Url(*exponent)
+        };
     }
 }

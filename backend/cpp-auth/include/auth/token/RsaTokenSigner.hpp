@@ -3,6 +3,7 @@
 #include <memory>
 #include <openssl/evp.h>
 
+#include <auth/jwks/Jwk.hpp>
 #include <auth/token/TokenSigner.hpp>
 
 namespace auth
@@ -18,6 +19,7 @@ namespace auth
 				const std::string &data
 			) override;
 			std::string	keyId() const override;
+			Jwk publicJwk() const;
 		private:
 			std::string	_keyId;
 			std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> _privateKey;

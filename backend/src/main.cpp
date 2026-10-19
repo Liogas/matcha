@@ -4,15 +4,19 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <sw/redis++/redis++.h>
 
 #include "database/Database.hpp"
 #include "database/DatabaseInitializer.hpp"
 #include "repositories/UserRepository.hpp"
 #include "security/PasswordHasher.hpp"
+#include "security/RedisLoginAttemptLimiter.hpp"
 #include "http/AuthRoutes.hpp"
 
 #include <auth/auth/Authenticator.hpp>
@@ -41,6 +45,51 @@ namespace
             );
         return value;
     }
+
+    bool optionalBooleanEnvironmentVariable(
+        const char *name,
+        bool defaultValue
+    )
+    {
+        const char *value = std::getenv(name);
+        if (value == nullptr)
+            return defaultValue;
+
+        const std::string setting(value);
+        if (setting == "true")
+            return true;
+        if (setting == "false")
+            return false;
+
+        throw std::invalid_argument(
+            std::string(name) + " must be either 'true' or 'false'"
+        );
+    }
+
+    std::string requiredSecretFileEnvironmentVariable(const char *name)
+    {
+        const std::string path = requiredEnvironmentVariable(name);
+        std::ifstream file(path, std::ios::binary);
+        if (!file)
+            throw std::runtime_error(
+                std::string("Unable to read secret file configured by ") +
+                name
+            );
+
+        std::string secret{
+            std::istreambuf_iterator<char>(file),
+            std::istreambuf_iterator<char>()
+        };
+        while (!secret.empty() &&
+            (secret.back() == '\n' || secret.back() == '\r'))
+            secret.pop_back();
+        if (secret.empty())
+            throw std::runtime_error(
+                std::string("Secret file configured by ") +
+                name + " is empty"
+            );
+        return secret;
+    }
 }
 
 int main()
@@ -56,6 +105,8 @@ try
         requiredEnvironmentVariable("JWT_PRIVATE_KEY_PATH");
     const std::string keyId =
         requiredEnvironmentVariable("JWT_KEY_ID");
+    const std::string redisPassword =
+        requiredSecretFileEnvironmentVariable("REDIS_PASSWORD_FILE");
 
     Database database;
     DatabaseInitializer databaseInitializer(database);
@@ -76,13 +127,43 @@ try
         passwordHasher
     );
 
+    sw::redis::ConnectionOptions redisConnectionOptions;
+    redisConnectionOptions.host =
+        requiredEnvironmentVariable("REDIS_HOST");
+    redisConnectionOptions.port = std::stoi(
+        requiredEnvironmentVariable("REDIS_PORT")
+    );
+    redisConnectionOptions.password = redisPassword;
+    redisConnectionOptions.connect_timeout =
+        std::chrono::milliseconds{500};
+    redisConnectionOptions.socket_timeout =
+        std::chrono::milliseconds{1000};
+
+    sw::redis::ConnectionPoolOptions redisPoolOptions;
+    redisPoolOptions.size = 16;
+    redisPoolOptions.wait_timeout =
+        std::chrono::milliseconds{1000};
+    sw::redis::Redis redis(
+        redisConnectionOptions,
+        redisPoolOptions
+    );
+    redis.ping();
+    RedisLoginAttemptLimiter loginAttemptLimiter(
+        redis,
+        5,
+        std::chrono::minutes{15}
+    );
+
     /*
      * JWKS
      */
 
-    const auth::HttpClientConfig httpClientConfig{
-        std::nullopt
-    };
+    auth::HttpClientConfig httpClientConfig{std::nullopt};
+    httpClientConfig.allowInsecureHttp =
+        optionalBooleanEnvironmentVariable(
+            "JWT_ALLOW_INSECURE_HTTP",
+            false
+        );
 
     const auth::HttpJwksConfig jwksConfig{
         jwksUrl,
@@ -150,11 +231,13 @@ try
 
     crow::SimpleApp app;
 
+    registerJwksRoute(app, tokenSigner);
     registerAuthRoutes(
         app,
         authService,
         authenticator,
-        tokenGenerator
+        tokenGenerator,
+        loginAttemptLimiter
     );
 
     app

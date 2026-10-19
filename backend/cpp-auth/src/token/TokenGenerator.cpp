@@ -1,5 +1,6 @@
 #include <auth/token/TokenGenerator.hpp>
 #include <auth/token/TokenPolicy.hpp>
+#include <auth/crypto/Base64Url.hpp>
 #include <nlohmann/json.hpp>
 #include <jwt-cpp/jwt.h>
 #include <stdexcept>
@@ -65,14 +66,8 @@ namespace auth
 			{"iat", issuedAt},
 			{"exp", expiredAt}
 		};
-		const auto encodedHeader =
-			jwt::base::encode<jwt::alphabet::base64url>(
-				header.dump()
-			);
-		const auto encodedPayload =
-			jwt::base::encode<jwt::alphabet::base64url>(
-				payload.dump()
-			);
+		const auto encodedHeader = encodeBase64Url(header.dump());
+		const auto encodedPayload = encodeBase64Url(payload.dump());
 		const auto signingInput =
 			encodedHeader + "." + encodedPayload;
 		const auto signature = this->_signer.sign(signingInput);

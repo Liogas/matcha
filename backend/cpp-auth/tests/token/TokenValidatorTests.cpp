@@ -445,6 +445,34 @@ TEST(TokenValidatorTest, RejectsEmptyToken)
     );
 }
 
+TEST(TokenValidatorTest, RejectsOversizedTokenBeforeJwksLookup)
+{
+    const auth::Jwk jwk{
+        TEST_KEY_ID, "RSA", "RS256",
+        TEST_RSA_MODULUS, TEST_RSA_EXPONENT
+    };
+    FakeJwksProvider provider{
+        {auth::JwksResult::Status::Success, jwk}
+    };
+    auth::RsaTokenSignatureVerifier signatureVerifier;
+    auth::SystemWallClock clock;
+    auth::TokenValidator validator(
+        {TEST_ISSUER, TEST_AUDIENCE, "RS256"},
+        provider,
+        signatureVerifier,
+        clock
+    );
+
+    const std::string token(auth::TOKEN_MAX_SIZE_BYTES + 1, 'a');
+    const auto result = validator.validate(token);
+
+    EXPECT_EQ(
+        result.status,
+        auth::TokenValidationResult::Status::InvalidToken
+    );
+    EXPECT_EQ(provider.callCount, 0);
+}
+
 TEST(TokenValidatorTest, RejectsMalformedToken)
 {
     const auth::Jwk jwk{

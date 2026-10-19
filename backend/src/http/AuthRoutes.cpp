@@ -3,8 +3,10 @@
 #include <cctype>
 #include <iostream>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
+#include <sw/redis++/errors.h>
 
 namespace
 {
@@ -50,13 +52,21 @@ namespace
 			return std::nullopt;
 		return token;
 	}
+
+	std::string clientIp(const crow::request &request)
+	{
+		const std::string proxyIp =
+			request.get_header_value("X-Real-IP");
+		return proxyIp.empty() ? request.remote_ip_address : proxyIp;
+	}
 }
 
 void	registerAuthRoutes(
 	crow::SimpleApp &app,
 	auth::AuthService &authService,
 	auth::Authenticator	&authenticator,
-	auth::TokenGenerator &tokenGenerator
+	auth::TokenGenerator &tokenGenerator,
+	RedisLoginAttemptLimiter &loginAttemptLimiter
 )
 {
 	CROW_ROUTE(app, "/api/auth/register")
@@ -83,6 +93,7 @@ void	registerAuthRoutes(
 					"Email and password must be strings"
 				);
 			}
+
 			RegisterRequest request{
 				body["email"].s(),
 				body["password"].s()
@@ -112,7 +123,9 @@ void	registerAuthRoutes(
 	CROW_ROUTE(app, "/api/auth/login")
 		.methods(crow::HTTPMethod::POST)
 	(
-		[&authService, &tokenGenerator](const crow::request &req)
+		[&authService, &tokenGenerator, &loginAttemptLimiter](
+			const crow::request &req
+		)
 		{
 			const auto body = crow::json::load(req.body);
 			if (!body)
@@ -135,6 +148,56 @@ void	registerAuthRoutes(
 				body["email"].s(),
 				body["password"].s()
 			};
+			const std::string ipAddress = clientIp(req);
+			if (ipAddress.empty())
+			{
+				std::cerr << "[AUTH ERROR] Login request has no client IP"
+					<< std::endl;
+				return jsonError(
+					503,
+					"Login temporarily unavailable"
+				);
+			}
+
+			LoginAttemptDecision attempt;
+			try
+			{
+				attempt = loginAttemptLimiter.consume(
+					request.email,
+					ipAddress
+				);
+			}
+			catch (const sw::redis::Error &error)
+			{
+				std::cerr << "[AUTH ERROR] Login limiter unavailable: "
+					<< error.what() << std::endl;
+				return jsonError(
+					503,
+					"Login temporarily unavailable"
+				);
+			}
+			catch (const std::runtime_error &error)
+			{
+				std::cerr << "[AUTH ERROR] Login limiter failed: "
+					<< error.what() << std::endl;
+				return jsonError(
+					503,
+					"Login temporarily unavailable"
+				);
+			}
+			if (!attempt.allowed)
+			{
+				auto response = jsonError(
+					429,
+					"Too many login attempts. Retry later."
+				);
+				response.add_header(
+					"Retry-After",
+					std::to_string(attempt.retryAfterSeconds)
+				);
+				return response;
+			}
+
 			const auto result = authService.login(
 				request.email,
 				request.password
@@ -164,6 +227,23 @@ void	registerAuthRoutes(
 						return jsonError(
 							500,
 							"Internal server error"
+						);
+					}
+					try
+					{
+						loginAttemptLimiter.clear(
+							request.email,
+							ipAddress
+						);
+					}
+					catch (const sw::redis::Error &error)
+					{
+						std::cerr
+							<< "[AUTH ERROR] Unable to clear login limiter: "
+							<< error.what() << std::endl;
+						return jsonError(
+							503,
+							"Login temporarily unavailable"
 						);
 					}
 
@@ -224,4 +304,24 @@ void	registerAuthRoutes(
 			return crow::response(200, body);
 		}
 	);
+}
+
+void registerJwksRoute(
+	crow::SimpleApp &app,
+	const auth::RsaTokenSigner &tokenSigner
+)
+{
+	const auto jwk = tokenSigner.publicJwk();
+	CROW_ROUTE(app, "/.well-known/jwks.json")
+	([jwk]
+	{
+		crow::json::wvalue body;
+		body["keys"][0]["kty"] = jwk.kty;
+		body["keys"][0]["kid"] = jwk.kid;
+		body["keys"][0]["alg"] = jwk.alg;
+		body["keys"][0]["use"] = "sig";
+		body["keys"][0]["n"] = jwk.n;
+		body["keys"][0]["e"] = jwk.e;
+		return crow::response(200, body);
+	});
 }

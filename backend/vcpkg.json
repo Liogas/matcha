@@ -6,6 +6,12 @@
         "libpq", 
         "gtest", 
         "libsodium",
+        {
+            "name": "redis-plus-plus",
+            "features": [
+                "cxx17"
+            ]
+        },
         "nlohmann-json",
         {
             "name": "jwt-cpp",

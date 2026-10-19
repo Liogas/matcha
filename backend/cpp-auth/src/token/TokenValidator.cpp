@@ -42,6 +42,9 @@ namespace auth
 		const std::string &token
 	)
 	{
+		if (token.empty() || token.size() > TOKEN_MAX_SIZE_BYTES)
+			return this->invalidToken();
+
 		using DecodedJwt = jwt::decoded_jwt<jwt::traits::kazuho_picojson>;
 		std::optional<DecodedJwt> decoded;
 		try {

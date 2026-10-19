@@ -10,6 +10,7 @@
 #include <string>
 
 #include <auth/token/RsaTokenSigner.hpp>
+#include <auth/token/RsaTokenSignatureVerifier.hpp>
 
 namespace
 {
@@ -154,7 +155,7 @@ TEST(RsaTokenSignerTest, SignsDataThatCanBeVerifiedWithPublicKey)
 
     const auto decodedSignature =
         jwt::base::decode<jwt::alphabet::base64url>(
-            signature
+            jwt::base::pad<jwt::alphabet::base64url>(signature)
         );
 
     EXPECT_TRUE(
@@ -195,7 +196,7 @@ TEST(RsaTokenSignerTest, SignatureIsInvalidForModifiedData)
 
     const auto decodedSignature =
         jwt::base::decode<jwt::alphabet::base64url>(
-            signature
+            jwt::base::pad<jwt::alphabet::base64url>(signature)
         );
 
     EXPECT_FALSE(
@@ -207,6 +208,32 @@ TEST(RsaTokenSignerTest, SignatureIsInvalidForModifiedData)
     );
 
     EVP_PKEY_free(publicKey);
+}
+
+TEST(RsaTokenSignerTest, ExposesMatchingPublicJwk)
+{
+    const auto privateKeyPath =
+        std::string(CPP_AUTH_SOURCE_DIR)
+        + "/tests/fixtures/rsa_private_test.pem";
+    auth::RsaTokenSigner signer(privateKeyPath, "key-123");
+    const auto jwk = signer.publicJwk();
+    const auto signature = signer.sign("hello");
+    const auto decodedSignature =
+        jwt::base::decode<jwt::alphabet::base64url>(
+            jwt::base::pad<jwt::alphabet::base64url>(signature)
+        );
+
+    EXPECT_EQ(jwk.kid, "key-123");
+    EXPECT_EQ(jwk.kty, "RSA");
+    EXPECT_EQ(jwk.alg, "RS256");
+    EXPECT_FALSE(jwk.n.empty());
+    EXPECT_EQ(jwk.n.find_first_not_of(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    ), std::string::npos);
+    EXPECT_EQ(jwk.e, "AQAB");
+
+    auth::RsaTokenSignatureVerifier verifier;
+    EXPECT_TRUE(verifier.verify("hello", decodedSignature, jwk));
 }
 
 TEST(RsaTokenSignerTest, RejectsMissingPrivateKeyDuringConstruction)

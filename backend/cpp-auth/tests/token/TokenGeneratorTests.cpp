@@ -50,7 +50,9 @@ namespace
 	nlohmann::json decodeJwtPart(const std::string &encoded)
 	{
 		return nlohmann::json::parse(
-			jwt::base::decode<jwt::alphabet::base64url>(encoded)
+			jwt::base::decode<jwt::alphabet::base64url>(
+				jwt::base::pad<jwt::alphabet::base64url>(encoded)
+			)
 		);
 	}
 
@@ -106,6 +108,16 @@ TEST(TokenGeneratorTest, GeneratesTokenWithExpectedClaims)
 
     ASSERT_FALSE(encodedHeader.empty());
     ASSERT_FALSE(encodedPayload.empty());
+    const std::string base64UrlCharacters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    EXPECT_EQ(
+        encodedHeader.find_first_not_of(base64UrlCharacters),
+        std::string::npos
+    );
+    EXPECT_EQ(
+        encodedPayload.find_first_not_of(base64UrlCharacters),
+        std::string::npos
+    );
 
     const auto header = decodeJwtPart(encodedHeader);
     const auto payload = decodeJwtPart(encodedPayload);
