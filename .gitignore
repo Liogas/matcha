@@ -1,1 +1,5 @@
-tests/certs/test-key.pem\n.env\n/secrets/\n
+.env
+.env.*
+!.env.example
+/secrets/
+tests/certs/test-key.pem
