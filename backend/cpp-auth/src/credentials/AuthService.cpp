@@ -8,13 +8,23 @@ namespace auth
 		IUserRepository &repo,
 		IPasswordHasher	&pwdHasher
 	):
-		_userRepository(repo),
+		_userLookupRepository(repo),
+		_userRepository(&repo),
+		_pwdHasher(pwdHasher)
+	{}
+
+	AuthService::AuthService(
+		IUserLookupRepository &repo,
+		IPasswordHasher &pwdHasher
+	):
+		_userLookupRepository(repo),
+		_userRepository(nullptr),
 		_pwdHasher(pwdHasher)
 	{}
 
 	bool	AuthService::userExists(const std::string &email) const
 	{
-		const auto result = this->_userRepository.findByEmail(email);
+		const auto result = this->_userLookupRepository.findByEmail(email);
 		return result.status == UserLookupResult::Status::Found;
 	}
 
@@ -23,11 +33,13 @@ namespace auth
 		const std::string &password
 	)
 	{
+		if (this->_userRepository == nullptr)
+			return RegisterResult::InternalError;
 		if (!isValidEmail(email))
 			return RegisterResult::InvalidEmail;
 		if (!isValidPwd(password))
 			return RegisterResult::InvalidPassword;
-		const auto result = this->_userRepository.findByEmail(email);
+		const auto result = this->_userLookupRepository.findByEmail(email);
 		if (result.status == UserLookupResult::Status::Found)
 			return RegisterResult::EmailAlreadyExists;
 		if (result.status == UserLookupResult::Status::DatabaseError)
@@ -41,7 +53,7 @@ namespace auth
 		{
 			return RegisterResult::InternalError;
 		}
-		const auto createResult = this->_userRepository.createUser(
+		const auto createResult = this->_userRepository->createUser(
 			email,
 			pwdHash
 		);
@@ -82,7 +94,7 @@ namespace auth
 		const std::string &pwd
 	)
 	{
-		const auto result = this->_userRepository.findByEmail(email);
+		const auto result = this->_userLookupRepository.findByEmail(email);
 		if (result.status == UserLookupResult::Status::DatabaseError)
 			return {
 				LoginResult::Status::InternalError,

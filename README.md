@@ -63,3 +63,97 @@ pas être placé dans `.env` ni versionné. Le service Redis est privé au rése
 Compose et n’active pas la persistance, puisque ses compteurs sont temporaires.
 Les tests du limiteur Redis peuvent être lancés après le démarrage des services
 avec `docker compose exec -T backend ctest --test-dir /app/build -R RedisLoginAttemptLimiterTest --output-on-failure`.
+
+## Modèle de données compte et profil
+
+La migration `002_create_account_and_profile_schema.sql` prépare la séparation
+entre `auth_accounts` (email, hash du mot de passe et validation de l’adresse)
+et `matcha_profiles` (identité et données propres à Matcha). Elle ajoute aussi
+les tables de tokens de vérification/réinitialisation, sessions et refresh
+tokens, ainsi que les intérêts et photos. Les tokens sensibles sont représentés
+par leur hash en base.
+
+Cette migration est additive : elle ne supprime pas la table `users` historique
+ni ses données. La remise à zéro complète de la base de développement a été
+retenue, mais sera effectuée lors de la bascule du backend vers le nouveau
+parcours, avec une sauvegarde et une vérification explicite avant exécution.
+
+`AccountRepository::createPendingAccountAndProfile` crée le compte non vérifié,
+son profil Matcha incomplet et le token de vérification dans une seule
+instruction SQL atomique. Ainsi, si l’email ou le nom d’utilisateur est déjà
+pris, aucun compte ni token orphelin n’est conservé. Le token brut est aléatoire
+et seul son hash est stocké en base.
+
+La route `POST /api/auth/register` accepte actuellement `email`, `username`,
+`first_name`, `last_name` et `password`. Elle normalise l’email en minuscules,
+valide les formats convenus, hache le mot de passe avec libsodium, puis crée
+le compte non vérifié, son profil incomplet et un token valable 24 heures. Elle
+envoie le lien par SMTP et répond `409` si l’email ou le nom d’utilisateur est
+déjà pris. Mailpit capture ces emails en local sur `http://localhost:8025`.
+
+Le transport SMTP est configuré avec `EMAIL_SMTP_URL`, `EMAIL_FROM`,
+`EMAIL_SMTP_TLS` et, si une authentification est requise,
+`EMAIL_SMTP_USERNAME` et `EMAIL_SMTP_PASSWORD_FILE`. Hors Mailpit local, le
+transport refuse de démarrer si TLS n’est pas activé. En production, le mot de
+passe SMTP doit être monté comme secret et non enregistré en clair dans `.env`.
+En développement, Mailpit ne délivre pas les messages à de vrais destinataires.
+
+Le lien ouvre la page React `/verify-email`, puis un clic explicite envoie le
+token au endpoint `POST /api/auth/email/verify`. Ce choix évite qu’un robot qui
+analyse les liens dans les emails ne consomme automatiquement le token. Le
+backend vérifie alors son hash, sa date d’expiration et son état non consommé
+avant de marquer le compte vérifié. Une deuxième utilisation est refusée.
+
+Un compte en attente peut demander un nouvel email via
+`POST /api/auth/email/resend` avec `{"email":"..."}`. La réponse ne révèle pas
+si l’adresse existe ou si elle est déjà vérifiée. Un nouvel email n’est émis
+qu’au plus une fois par minute pour le compte, et Nginx limite aussi ce endpoint
+à une requête environ toutes les 30 secondes par IP. Chaque renvoi invalide
+l’ancien lien. Ces limites réduisent les abus mais ne remplacent pas un système
+anti-spam complet pour une mise en production.
+
+Le login utilise maintenant `auth_accounts` via le dépôt de comptes et ne
+retourne que les comptes dont l’adresse a été vérifiée. Les emails sont lus
+sans distinction de casse. Dans `cpp-auth`, `IUserLookupRepository` sépare la
+lecture nécessaire à l’authentification de l’interface de création
+`IUserRepository` ; cela permet de connecter le login au nouveau stockage sans
+réutiliser l’ancien chemin de création de comptes.
+Les comptes conservés uniquement dans l’ancienne table `users` ne peuvent
+donc plus ouvrir de session avec ce flux. Le renvoi d’un email de vérification
+permet de réessayer après un échec de livraison, une fois la limite de renvoi
+écoulée.
+
+Après une connexion réussie, le backend crée une session persistée en base :
+le JWT d’accès dure 15 minutes et le refresh token opaque est envoyé dans un
+cookie `HttpOnly`, `SameSite=Strict`, limité au chemin `/api/auth`. Le serveur
+ne conserve que son hash. Une session expire après 7 jours sans activité ou
+au plus tard après 30 jours. `POST /api/auth/refresh` fait tourner le refresh
+token et renvoie un nouvel access token ; la réutilisation d’un refresh token
+déjà consommé révoque la session concernée.
+
+`POST /api/auth/logout` révoque la session liée au cookie courant. Le endpoint
+`POST /api/auth/logout-all`, authentifié par Bearer JWT, révoque les sessions
+persistantes du compte. Les access tokens JWT déjà émis restent toutefois
+valides jusqu’à leur expiration (15 minutes) ; ils ne sont pas vérifiés contre
+la table des sessions à chaque requête. Pour les appels navigateur aux
+endpoints de cookie, le backend exige l’origine configurée par
+`AUTH_ALLOWED_ORIGIN` (défaut local `http://localhost:5173`). En production,
+configurer `AUTH_REFRESH_COOKIE_SECURE=true` pour n’envoyer le cookie qu’en
+HTTPS. Les appels `fetch` du navigateur vers l’API doivent utiliser
+`credentials: "include"` pour que le cookie soit envoyé et accepté.
+
+La demande de réinitialisation utilise `POST /api/auth/password-reset/request`
+avec `{"email":"..."}`. La réponse reste générique afin de ne pas révéler si
+l’adresse correspond à un compte ; l’envoi est limité à une demande par minute
+et par compte, ainsi qu’à deux requêtes par minute environ par IP via Nginx.
+Le lien React `/reset-password` expire après 30 minutes et demande un nouveau
+mot de passe conforme aux mêmes règles que l’inscription. Après son changement,
+le token est consommé, les autres tokens de réinitialisation sont invalidés et
+toutes les sessions persistantes sont révoquées. Les JWT d’accès déjà émis
+restent valides au plus 15 minutes. Le cookie de refresh courant est également
+supprimé sur la réponse de confirmation.
+
+La liste de mots de passe courants dans le handler est une petite liste initiale,
+pas un dictionnaire de production complet. Elle devra être étendue et versionnée
+avant de considérer la règle comme une protection robuste contre les mots de
+passe compromis.

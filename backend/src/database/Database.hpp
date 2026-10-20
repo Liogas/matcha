@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -17,4 +18,5 @@ class Database
 		);
 	private:
 		PGconn*	_connection;
+		std::mutex _connectionMutex;
 };

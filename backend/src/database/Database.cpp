@@ -60,6 +60,7 @@ Database::~Database()
 
 QueryResult	Database::execute(const std::string &query)
 {
+	std::lock_guard<std::mutex> lock(this->_connectionMutex);
 	if (!this->_connection)
 	{
 		std::cerr << "[ERROR BDD] No connection with BDD" << std::endl;
@@ -75,6 +76,7 @@ QueryResult	Database::executeParams(
 	const std::vector<std::string>& params
 )
 {
+	std::lock_guard<std::mutex> lock(this->_connectionMutex);
 	if (!this->_connection)
 	{
 		std::cerr << "[ERROR BDD] No connection with BDD" << std::endl;

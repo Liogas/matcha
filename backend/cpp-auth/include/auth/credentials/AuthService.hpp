@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IUserRepository.hpp"
+#include "IUserLookupRepository.hpp"
 #include "IPasswordHasher.hpp"
 #include "RegisterResult.hpp"
 #include "LoginResult.hpp"
@@ -16,6 +17,10 @@ namespace auth
 				IUserRepository &repo,
 				IPasswordHasher	&pwdHasher
 			);
+			explicit AuthService(
+				IUserLookupRepository &repo,
+				IPasswordHasher &pwdHasher
+			);
 			bool	userExists(const std::string &email) const;
 			RegisterResult	registerUser(
 				const std::string &email,
@@ -27,7 +32,8 @@ namespace auth
 			);
 			bool	isValidPwd(const std::string &pwd) const;
 		private:
-			IUserRepository	&_userRepository;
+			IUserLookupRepository &_userLookupRepository;
+			IUserRepository *_userRepository;
 			IPasswordHasher	&_pwdHasher;
 			bool	isValidEmail(const std::string &email) const;
 	};

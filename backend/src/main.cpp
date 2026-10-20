@@ -14,7 +14,7 @@
 
 #include "database/Database.hpp"
 #include "database/DatabaseInitializer.hpp"
-#include "repositories/UserRepository.hpp"
+#include "repositories/AccountRepository.hpp"
 #include "security/PasswordHasher.hpp"
 #include "security/RedisLoginAttemptLimiter.hpp"
 #include "http/AuthRoutes.hpp"
@@ -44,6 +44,15 @@ namespace
                 name
             );
         return value;
+    }
+
+    std::string optionalEnvironmentVariable(
+        const char *name,
+        const std::string &defaultValue
+    )
+    {
+        const char *value = std::getenv(name);
+        return value == nullptr ? defaultValue : value;
     }
 
     bool optionalBooleanEnvironmentVariable(
@@ -107,6 +116,32 @@ try
         requiredEnvironmentVariable("JWT_KEY_ID");
     const std::string redisPassword =
         requiredSecretFileEnvironmentVariable("REDIS_PASSWORD_FILE");
+    const std::string smtpUsername =
+        optionalEnvironmentVariable("EMAIL_SMTP_USERNAME", "");
+    const std::string smtpPassword =
+        smtpUsername.empty()
+            ? ""
+            : requiredSecretFileEnvironmentVariable(
+                "EMAIL_SMTP_PASSWORD_FILE"
+            );
+    const SmtpEmailSender emailSender({
+        requiredEnvironmentVariable("EMAIL_SMTP_URL"),
+        requiredEnvironmentVariable("EMAIL_FROM"),
+        smtpUsername,
+        smtpPassword,
+        optionalBooleanEnvironmentVariable("EMAIL_SMTP_TLS", false)
+    });
+    const std::string emailVerificationUrl =
+        requiredEnvironmentVariable("EMAIL_VERIFICATION_URL");
+    const std::string passwordResetUrl =
+        requiredEnvironmentVariable("EMAIL_PASSWORD_RESET_URL");
+    const std::string allowedBrowserOrigin =
+        requiredEnvironmentVariable("AUTH_ALLOWED_ORIGIN");
+    const bool secureRefreshCookie =
+        optionalBooleanEnvironmentVariable(
+            "AUTH_REFRESH_COOKIE_SECURE",
+            false
+        );
 
     Database database;
     DatabaseInitializer databaseInitializer(database);
@@ -119,11 +154,11 @@ try
         return 1;
     }
 
-    UserRepository userRepository(database);
+    AccountRepository accountRepository(database);
     auth::PasswordHasher passwordHasher;
 
     auth::AuthService authService(
-        userRepository,
+        accountRepository,
         passwordHasher
     );
 
@@ -229,7 +264,19 @@ try
      * HTTP server
      */
 
-    crow::SimpleApp app;
+    AuthApp app;
+    auto &cors = app.get_middleware<AuthCorsHandler>();
+    cors.allowedOrigin = allowedBrowserOrigin;
+    cors
+        .global()
+        .origin(allowedBrowserOrigin)
+        .methods(
+            crow::HTTPMethod::Get,
+            crow::HTTPMethod::Post,
+            crow::HTTPMethod::Options
+        )
+        .headers("Authorization", "Content-Type")
+        .allow_credentials();
 
     registerJwksRoute(app, tokenSigner);
     registerAuthRoutes(
@@ -237,7 +284,14 @@ try
         authService,
         authenticator,
         tokenGenerator,
-        loginAttemptLimiter
+        loginAttemptLimiter,
+        accountRepository,
+        passwordHasher,
+        emailSender,
+        emailVerificationUrl,
+        passwordResetUrl,
+        allowedBrowserOrigin,
+        secureRefreshCookie
     );
 
     app

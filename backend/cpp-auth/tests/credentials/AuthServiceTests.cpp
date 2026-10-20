@@ -3,6 +3,36 @@
 #include "FakeUserRepository.hpp"
 #include "FakePasswordHasher.hpp"
 
+namespace
+{
+	class ReadOnlyUserRepository : public auth::IUserLookupRepository
+	{
+		public:
+			auth::UserLookupResult findByEmail(
+				const std::string &email
+			) override
+			{
+				if (email != "verified@example.com")
+					return {
+						auth::UserLookupResult::Status::NotFound,
+						std::nullopt
+					};
+				return {
+					auth::UserLookupResult::Status::Found,
+					auth::User{42, email, "hashed_password"}
+				};
+			}
+
+			auth::UserLookupResult findById(std::int64_t) override
+			{
+				return {
+					auth::UserLookupResult::Status::NotFound,
+					std::nullopt
+				};
+			}
+	};
+}
+
 // TEST 1
 TEST(AuthServiceTest, UserExistsReturnsTrueForExistingEmail)
 {
@@ -207,6 +237,26 @@ TEST(AuthServiceTests, LoginSucceedsWithCorrectCredentials)
 	EXPECT_EQ(
 		result.user->email,
 		"user@example.com"
+	);
+}
+
+TEST(AuthServiceTest, ReadOnlyRepositoryCanAuthenticateWithoutRegistering)
+{
+	ReadOnlyUserRepository repository;
+	FakePasswordHasher pwdHasher;
+	auth::AuthService authService(repository, pwdHasher);
+
+	const auto login = authService.login(
+		"verified@example.com",
+		"password"
+	);
+	ASSERT_EQ(login.status, auth::LoginResult::Status::Success);
+	ASSERT_TRUE(login.user.has_value());
+	EXPECT_EQ(login.user->id, 42);
+
+	EXPECT_EQ(
+		authService.registerUser("other@example.com", "Password1!"),
+		auth::RegisterResult::InternalError
 	);
 }
 

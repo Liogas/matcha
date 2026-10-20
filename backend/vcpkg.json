@@ -7,6 +7,12 @@
         "gtest", 
         "libsodium",
         {
+            "name": "curl",
+            "features": [
+                "openssl"
+            ]
+        },
+        {
             "name": "redis-plus-plus",
             "features": [
                 "cxx17"

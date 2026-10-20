@@ -1,75 +1,37 @@
-# React + TypeScript + Vite
+# Matcha frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The frontend is a React and TypeScript application. It uses React Three Fiber
+for an optional, decorative Three.js avatar and Motion for page transitions.
+Navigation and forms remain standard, responsive React controls.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Start the full local stack from the repository root:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```sh
+docker compose up -d --build
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+The frontend container runs Vite at `http://localhost:5173`. Authentication
+requests go to `http://localhost:18080` by default. Override that API origin
+with `VITE_AUTH_API_URL` in a local, untracked `.env` file if needed. For
+frontend-only work, run `docker compose up -d --build frontend`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The backend's default Compose email URLs open the React pages at
+`/verify-email` and `/reset-password`. The verification page only consumes its
+token after an explicit click. Both pages submit tokens to the existing backend
+endpoints; the refresh token remains in the backend's HttpOnly cookie, and the
+short-lived access token is kept in memory by the frontend.
+The frontend web server must serve the application entry point for these
+client-side routes in production as well.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+For the browser flow to work, the backend's `AUTH_ALLOWED_ORIGIN` must match
+the frontend origin (the local default is `http://localhost:5173`). Mailpit is
+available at `http://localhost:8025` when the Compose services are running.
 
+## Checks
+
+```sh
+npm run lint
+npm run build
 ```
