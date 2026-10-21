@@ -5,6 +5,37 @@
 #include <regex>
 #include <set>
 #include <sstream>
+#include <cstdint>
+
+namespace
+{
+	constexpr std::int64_t MIGRATION_LOCK_KEY = 0x4D4154434841;
+
+	class MigrationLock
+	{
+		public:
+			explicit MigrationLock(Database &database):
+				_database(database),
+				_acquired(!_database.execute(
+					"SELECT pg_advisory_lock(" +
+					std::to_string(MIGRATION_LOCK_KEY) + ")").isError())
+			{}
+
+			~MigrationLock()
+			{
+				if (_acquired)
+					_database.execute(
+						"SELECT pg_advisory_unlock(" +
+						std::to_string(MIGRATION_LOCK_KEY) + ")");
+			}
+
+			bool acquired() const { return _acquired; }
+
+		private:
+			Database &_database;
+			bool _acquired;
+	};
+}
 
 DatabaseInitializer::DatabaseInitializer(Database &database):
 	_database(database)
@@ -14,6 +45,13 @@ DatabaseInitializer::DatabaseInitializer(Database &database):
 bool DatabaseInitializer::run()
 {
 	std::cout << "[INFO BDD] Initializing database..." << std::endl;
+	MigrationLock migrationLock(_database);
+	if (!migrationLock.acquired())
+	{
+		std::cerr << "[ERROR BDD] Could not acquire migration lock"
+			<< std::endl;
+		return false;
+	}
 	if (!this->createMigrationTable())
 		return (false);
 	if (!this->runMigrations())
@@ -98,11 +136,14 @@ bool	DatabaseInitializer::runMigrations()
 		const std::string sql = buffer.str();
 		std::cout	<< "[INFO BDD] Executing migration: "
 					<< migration.filename() << std::endl;
+		if (this->_database.execute("BEGIN").isError())
+			return (false);
 		QueryResult migrationResult = this->_database.execute(sql);
 		if (migrationResult.isError())
 		{
 			std::cerr	<< "[ERROR BDD] Migration failed: "
 						<< migration.filename() << std::endl;
+			this->_database.execute("ROLLBACK");
 			return (false);
 		}
 		const std::string insertQuery =
@@ -113,6 +154,14 @@ bool	DatabaseInitializer::runMigrations()
 		{
 			std::cerr	<< "[ERROR BDD] Could not record migration: "
 						<< version << std::endl;
+			this->_database.execute("ROLLBACK");
+			return (false);
+		}
+		if (this->_database.execute("COMMIT").isError())
+		{
+			std::cerr	<< "[ERROR BDD] Could not commit migration: "
+						<< version << std::endl;
+			this->_database.execute("ROLLBACK");
 			return (false);
 		}
 	}

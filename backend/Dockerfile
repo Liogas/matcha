@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	automake \
 	libtool \
 	valgrind \
+	libvips-dev \
 	&& update-ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -41,5 +42,4 @@ RUN find /app/vcpkg_installed -name "crow.h" -o -name "CrowConfig.cmake"
 
 EXPOSE 18080
 
-CMD ["sleep", "infinity"]
-# CMD ["./build/matcha_backend"]
+CMD ["sh", "/app/docker-entrypoint.sh"]

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <stdexcept>
 
 Database::Database():
 	_connection(nullptr)
@@ -13,6 +14,8 @@ Database::Database():
 	const char *dbname = std::getenv("DB_NAME");
 	const char *user = std::getenv("DB_USER");
 	const char *pwd = std::getenv("DB_PASSWORD");
+	if (!host || !port || !dbname || !user || !pwd)
+		throw std::runtime_error("Database environment is incomplete");
 
 	std::string info =
 		"host=" + std::string(host) +
@@ -66,8 +69,6 @@ QueryResult	Database::execute(const std::string &query)
 		std::cerr << "[ERROR BDD] No connection with BDD" << std::endl;
 		return QueryResult();
 	}
-	std::cout 	<< "[INFO BDD] Query sended : "
-				<< query << std::endl;
 	return QueryResult(PQexec(this->_connection, query.c_str()));
 }
 
@@ -86,8 +87,6 @@ QueryResult	Database::executeParams(
 	values.reserve(params.size());
 	for (const std::string &param : params)
 		values.push_back(param.c_str());
-	std::cout 	<< "[INFO BDD] parameterized query sended : "
-				<< query << std::endl;
 	PGresult *result = PQexecParams(
 		this->_connection,
 		query.c_str(),

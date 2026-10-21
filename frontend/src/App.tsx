@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, useReducedMotion } from 'motion/react'
 import { lazy, Suspense, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
@@ -19,6 +19,7 @@ import {
   ResetPasswordPage,
   VerifyEmailPage,
 } from './pages/AuthPages'
+import { ProfilePage } from './pages/ProfilePage'
 import './App.css'
 
 const AvatarScene = lazy(() =>
@@ -37,68 +38,12 @@ function RequireSession({ children }: { children: ReactNode }) {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
 }
 
-function SessionPage() {
-  const { logout, logoutAll, user } = useAuth()
-  const shouldReduceMotion = useReducedMotion()
-  const [message, setMessage] = useState('')
-
-  async function handleLogout() {
-    setMessage('')
-    try {
-      await logout()
-    } catch {
-      setMessage('La déconnexion a échoué. Réessayez.')
-    }
-  }
-
-  async function handleLogoutAll() {
-    setMessage('')
-    try {
-      await logoutAll()
-    } catch {
-      setMessage('La révocation des sessions a échoué. Réessayez.')
-    }
-  }
-
-  return (
-    <motion.section
-      className="auth-panel session-panel"
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 18, filter: 'blur(8px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      exit={shouldReduceMotion ? undefined : { opacity: 0, y: -12, filter: 'blur(8px)' }}
-      transition={{ duration: shouldReduceMotion ? 0 : 0.3, ease: 'easeOut' }}
-    >
-      <p className="eyebrow">ESPACE PERSONNEL</p>
-      <h1>Vous voilà.</h1>
-      <p className="panel-description">
-        Votre session est active. Le profil Matcha et son avatar personnalisable
-        arriveront dans une prochaine étape.
-      </p>
-      <div className="session-card">
-        <span className="status-dot" />
-        <div>
-          <strong>Session sécurisée</strong>
-          <span>{user?.email ?? 'Compte connecté'}</span>
-        </div>
-      </div>
-      {message && <p className="form-message error-message">{message}</p>}
-      <div className="session-actions">
-        <button className="button button-primary" onClick={handleLogout}>
-          Se déconnecter
-        </button>
-        <button className="button button-secondary" onClick={handleLogoutAll}>
-          Déconnecter tous les appareils
-        </button>
-      </div>
-    </motion.section>
-  )
-}
-
 function AnimatedRoutes() {
   const location = useLocation()
-  const { bootstrapError, isAuthenticated, isReady } = useAuth()
+  const { bootstrapError, isAuthenticated, isReady, logout } = useAuth()
   const shouldReduceMotion = useReducedMotion()
   const [avatarReaction, setAvatarReaction] = useState(0)
+  const [logoutError, setLogoutError] = useState('')
   const avatarMood = location.pathname.includes('register')
     ? 'welcoming'
     : location.pathname.includes('password')
@@ -126,7 +71,21 @@ function AnimatedRoutes() {
         </Link>
         <nav aria-label="Navigation principale">
           {isReady && isAuthenticated ? (
-            <Link className="header-link" to="/app">Mon espace</Link>
+            <>
+              <Link className="header-link" to="/app">Mon espace</Link>
+              <button
+                className="header-link header-button"
+                type="button"
+                onClick={() => {
+                  setLogoutError('')
+                  void logout().catch(() => {
+                    setLogoutError('La déconnexion a échoué.')
+                  })
+                }}
+              >
+                Se déconnecter
+              </button>
+            </>
           ) : (
             <>
               <span className="header-note">Des rencontres, à votre rythme.</span>
@@ -139,6 +98,9 @@ function AnimatedRoutes() {
       <main className="main-content">
         {bootstrapError && (
           <p className="global-notice" role="status">{bootstrapError}</p>
+        )}
+        {logoutError && (
+          <p className="global-notice error-message" role="alert">{logoutError}</p>
         )}
         <AnimatePresence mode="wait" initial={false}>
           <Routes location={location} key={location.pathname}>
@@ -159,7 +121,7 @@ function AnimatedRoutes() {
               path="/app"
               element={
                 <RequireSession>
-                  <SessionPage />
+                  <ProfilePage />
                 </RequireSession>
               }
             />

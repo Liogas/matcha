@@ -3,9 +3,14 @@
 #include <crow.h>
 
 #include <chrono>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
+
+namespace auth {
+class Authenticator;
+}
 
 namespace auth_routes {
 std::string trim(const std::string &value);
@@ -18,6 +23,8 @@ bool validPassword(const std::string &password);
 crow::response jsonError(int status, const std::string &message);
 crow::response jsonMessage(int status, const std::string &message);
 std::optional<std::string> bearerToken(const crow::request &request);
+std::optional<std::int64_t> authenticatedAccountId(
+	const crow::request &request, auth::Authenticator &authenticator);
 std::string clientIp(const crow::request &request);
 std::string refreshCookie(const std::string &value, bool secure,
 						  std::chrono::seconds maxAge);

@@ -9,15 +9,11 @@
 
 QueryResult::QueryResult():
 	_result(nullptr)
-{
-	std::cout << "[LOG BDD] Result nullptr created" << std::endl;
-}
+{}
 
 QueryResult::QueryResult(PGresult *r):
 	_result(r)
-{
-	std::cout << "[LOG BDD] Result created" << std::endl;
-}
+{}
 
 QueryResult::QueryResult(QueryResult &&other) noexcept:
 	_result(other._result)
@@ -28,10 +24,7 @@ QueryResult::QueryResult(QueryResult &&other) noexcept:
 QueryResult::~QueryResult()
 {
 	if (this->_result)
-	{
 		PQclear(this->_result);
-		std::cout << "[LOG BDD] Result destroyed" << std::endl;
-	}
 }
 
 QueryResult	&QueryResult::operator=(QueryResult &&other) noexcept

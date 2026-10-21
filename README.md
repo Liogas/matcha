@@ -123,13 +123,92 @@ donc plus ouvrir de session avec ce flux. Le renvoi d’un email de vérificatio
 permet de réessayer après un échec de livraison, une fois la limite de renvoi
 écoulée.
 
+### Profils de développement
+
+Le seed `backend/seeds/development_profiles.sql` ajoute dix profils vérifiés
+avec des villes, âges, genres, orientations, descriptions et intérêts variés.
+Elle est destinée à la base locale de développement et ne doit pas être
+appliquée à une base de production. Tous ces comptes utilisent le mot de passe
+`MatchaTest123!` ; leurs adresses utilisent le domaine réservé
+`example.test`.
+Il n’est pas exécuté automatiquement. Pour le charger explicitement, depuis la
+racine du projet, utiliser :
+
+```sh
+sh backend/seeds/seed-development.sh
+```
+
 Après une connexion réussie, le backend crée une session persistée en base :
 le JWT d’accès dure 15 minutes et le refresh token opaque est envoyé dans un
 cookie `HttpOnly`, `SameSite=Strict`, limité au chemin `/api/auth`. Le serveur
 ne conserve que son hash. Une session expire après 7 jours sans activité ou
 au plus tard après 30 jours. `POST /api/auth/refresh` fait tourner le refresh
+
+### Likes et matchs
+
+Le backend expose les actions de découverte suivantes pour les profils complets :
+
+```http
+POST   /api/profiles/{accountId}/like
+DELETE /api/profiles/{accountId}/like
+GET    /api/likes
+GET    /api/likes/received
+GET    /api/matches
+```
+
+Toutes ces routes nécessitent un JWT valide. Un utilisateur ne peut pas se
+liker lui-même, liker un profil incomplet ou créer un doublon. Un like
+réciproque crée automatiquement un match unique, identifié par `match_id`
+dans la réponse du `POST`. La suppression d'un like supprime également le
+match associé entre les deux comptes.
+
+### Nettoyage des images orphelines
+
+Les opérations de remplacement et de suppression nettoient normalement les
+fichiers associés. Pour supprimer explicitement les fichiers présents dans le
+volume mais absents des métadonnées PostgreSQL, activez temporairement :
+
+```sh
+docker compose exec -e MATCHA_CLEANUP_ORPHANED_IMAGES=true \
+  backend /app/build/matcha_backend
+```
+
+Cette opération parcourt uniquement le volume d'uploads dédié et doit être
+effectuée après le chargement éventuel des seeds.
 token et renvoie un nouvel access token ; la réutilisation d’un refresh token
 déjà consommé révoque la session concernée.
+
+### Module de messagerie
+
+La messagerie est isolée dans `backend/src/messaging` et ne dépend pas du
+domaine Matcha. Elle manipule uniquement des conversations, des participants
+et des messages. Matcha l’intègre en créant une conversation directe lorsqu’un
+match est créé et en la supprimant lorsqu’un match est retiré.
+
+Les routes génériques exposées sont :
+
+```http
+GET  /api/conversations
+GET  /api/conversations/{conversationId}/messages?limit=50&before={messageId}
+POST /api/conversations/{conversationId}/messages
+POST /api/conversations/{conversationId}/read
+```
+
+L’accès est limité aux participants de la conversation. Les messages sont
+limités à 2 000 caractères, paginés par curseur et soumis à une limite de
+30 messages par minute et par expéditeur.
+
+Les notifications temps réel utilisent également :
+
+```text
+WebSocket /api/messaging/ws?access_token={accessToken}
+```
+
+Après l’ouverture, le client peut envoyer un objet JSON contenant
+`conversation_id` et `body`. Les nouveaux messages sont poussés sous la forme
+`{"type":"message", ...}`. Le WebSocket ne remplace pas PostgreSQL ni les
+routes HTTP : celles-ci restent nécessaires pour recharger l’historique après
+une reconnexion. En production, le transport doit être servi en `wss://`.
 
 `POST /api/auth/logout` révoque la session liée au cookie courant. Le endpoint
 `POST /api/auth/logout-all`, authentifié par Bearer JWT, révoque les sessions

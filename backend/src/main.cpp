@@ -18,6 +18,16 @@
 #include "security/PasswordHasher.hpp"
 #include "security/RedisLoginAttemptLimiter.hpp"
 #include "http/AuthRoutes.hpp"
+#include "http/ProfileRoutes.hpp"
+#include "http/LikeRoutes.hpp"
+#include "images/ImageProcessor.hpp"
+#include "images/LocalImageStorage.hpp"
+#include "repositories/ProfileRepository.hpp"
+#include "repositories/LikeRepository.hpp"
+#include "services/ProfilePhotoService.hpp"
+#include "messaging/MessagingRepository.hpp"
+#include "messaging/MessagingRoutes.hpp"
+#include "messaging/MessagingWebSocket.hpp"
 
 #include <auth/auth/Authenticator.hpp>
 #include <auth/http/CppHttpClient.hpp>
@@ -155,6 +165,38 @@ try
     }
 
     AccountRepository accountRepository(database);
+    ProfileRepository profileRepository(database);
+    LikeRepository likeRepository(database);
+    MessagingRepository messagingRepository(database);
+    for (const auto &[firstAccountId, secondAccountId] :
+        likeRepository.listAllMatches())
+    {
+        if (!messagingRepository.ensureDirectConversation(
+                firstAccountId, secondAccountId))
+        {
+            throw std::runtime_error(
+                "Unable to synchronize a match conversation");
+        }
+    }
+    MessagingWebSocketHub messagingWebSocketHub;
+    ImageProcessor imageProcessor(
+        10 * 1024 * 1024,
+        2048,
+        82
+    );
+    LocalImageStorage imageStorage("/var/lib/matcha/uploads");
+    ProfilePhotoService profilePhotoService(
+        profileRepository,
+        imageProcessor,
+        imageStorage
+    );
+    if (optionalBooleanEnvironmentVariable(
+            "MATCHA_CLEANUP_ORPHANED_IMAGES", false))
+    {
+        profilePhotoService.cleanupOrphanedFiles();
+        std::cout << "[INFO STORAGE] Orphaned profile images cleaned"
+            << std::endl;
+    }
     auth::PasswordHasher passwordHasher;
 
     auth::AuthService authService(
@@ -273,6 +315,9 @@ try
         .methods(
             crow::HTTPMethod::Get,
             crow::HTTPMethod::Post,
+            crow::HTTPMethod::Put,
+            crow::HTTPMethod::Patch,
+            crow::HTTPMethod::Delete,
             crow::HTTPMethod::Options
         )
         .headers("Authorization", "Content-Type")
@@ -292,6 +337,30 @@ try
         passwordResetUrl,
         allowedBrowserOrigin,
         secureRefreshCookie
+    );
+    registerProfileRoutes(
+        app,
+        authenticator,
+        profileRepository,
+        profilePhotoService
+    );
+    registerLikeRoutes(
+        app,
+        authenticator,
+        likeRepository,
+        profileRepository,
+        messagingRepository
+    );
+    registerMessagingRoutes(
+        app,
+        authenticator,
+        messagingRepository
+    );
+    registerMessagingWebSocket(
+        app,
+        authenticator,
+        messagingRepository,
+        messagingWebSocketHub
     );
 
     app

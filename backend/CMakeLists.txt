@@ -17,6 +17,8 @@ find_package(CURL CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(unofficial-sodium CONFIG REQUIRED)
 find_package(redis++ CONFIG REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 
 add_subdirectory(cpp-auth)
 
@@ -34,12 +36,22 @@ add_executable(matcha_backend
     src/security/EmailVerificationToken.cpp
     src/services/SmtpEmailSender.cpp
     src/security/RedisLoginAttemptLimiter.cpp
+    src/images/ImageProcessor.cpp
+    src/images/LocalImageStorage.cpp
+    src/services/ProfilePhotoService.cpp
+    src/repositories/ProfileRepository.cpp
+    src/repositories/LikeRepository.cpp
+    src/messaging/MessagingRepository.cpp
+    src/messaging/MessagingWebSocket.cpp
 
     src/http/AuthRoutes.cpp
     src/http/AuthRouteSupport.cpp
     src/http/AuthEmailRoutes.cpp
     src/http/AuthPasswordResetRoutes.cpp
     src/http/AuthSessionRoutes.cpp
+    src/http/ProfileRoutes.cpp
+    src/http/LikeRoutes.cpp
+    src/messaging/MessagingRoutes.cpp
 )
 
 target_link_libraries(matcha_backend
@@ -50,6 +62,7 @@ target_link_libraries(matcha_backend
     PRIVATE CURL::libcurl
     PRIVATE unofficial-sodium::sodium
     PRIVATE redis++::redis++_static
+    PRIVATE PkgConfig::VIPS
 )
 
 add_executable(login_rate_limiter_tests
@@ -112,6 +125,19 @@ add_executable(email_verification_token_tests
     src/security/EmailVerificationToken.cpp
 )
 
+add_executable(local_image_storage_tests
+    tests/images/LocalImageStorageTests.cpp
+    src/images/LocalImageStorage.cpp
+)
+
+target_include_directories(local_image_storage_tests
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(local_image_storage_tests
+    PRIVATE GTest::gtest_main
+)
+
 target_include_directories(email_verification_token_tests
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
@@ -162,3 +188,4 @@ gtest_discover_tests(user_repository_integration_tests)
 gtest_discover_tests(account_repository_integration_tests)
 gtest_discover_tests(login_rate_limiter_tests)
 gtest_discover_tests(email_verification_token_tests)
+gtest_discover_tests(local_image_storage_tests)

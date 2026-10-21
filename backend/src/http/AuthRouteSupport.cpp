@@ -1,6 +1,8 @@
 #include "AuthRouteSupport.hpp"
 
+#include <auth/auth/Authenticator.hpp>
 #include <cctype>
+#include <charconv>
 #include <unordered_set>
 
 namespace auth_routes {
@@ -135,10 +137,29 @@ std::optional<std::string> bearerToken(const crow::request &request) {
 			return std::nullopt;
 	}
 
-	const std::string token = authorization.substr(BEARER_PREFIX.size());
+		const std::string token = authorization.substr(BEARER_PREFIX.size());
 	if (token.find_first_of(" \t\r\n") != std::string::npos)
 		return std::nullopt;
 	return token;
+}
+
+std::optional<std::int64_t> authenticatedAccountId(
+	const crow::request &request, auth::Authenticator &authenticator) {
+	const auto token = bearerToken(request);
+	if (!token)
+		return std::nullopt;
+	const auto result = authenticator.authenticate(*token);
+	if (result.status != auth::TokenValidationResult::Status::Valid ||
+		!result.claims)
+		return std::nullopt;
+	std::int64_t id = 0;
+	const auto &subject = result.claims->subject;
+	const auto parsed = std::from_chars(
+		subject.data(), subject.data() + subject.size(), id);
+	if (parsed.ec != std::errc{} ||
+		parsed.ptr != subject.data() + subject.size() || id <= 0)
+		return std::nullopt;
+	return id;
 }
 
 std::string clientIp(const crow::request &request) {

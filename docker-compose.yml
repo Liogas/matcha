@@ -47,10 +47,12 @@ services:
       EMAIL_PASSWORD_RESET_URL: ${EMAIL_PASSWORD_RESET_URL:-http://localhost:5173/reset-password}
       AUTH_ALLOWED_ORIGIN: ${AUTH_ALLOWED_ORIGIN:-http://localhost:5173}
       AUTH_REFRESH_COOKIE_SECURE: ${AUTH_REFRESH_COOKIE_SECURE:-false}
+      MATCHA_CLEANUP_ORPHANED_IMAGES: ${MATCHA_CLEANUP_ORPHANED_IMAGES:-false}
     volumes:
       - ./backend:/app
       - backend_build:/app/build
       - backend_vcpkg:/app/vcpkg_installed
+      - profile_uploads:/var/lib/matcha/uploads
     secrets:
       - jwt_private_key
       - redis_password
@@ -108,6 +110,7 @@ volumes:
   postgres_data:
   backend_build:
   backend_vcpkg:
+  profile_uploads:
 
 secrets:
   jwt_private_key:
