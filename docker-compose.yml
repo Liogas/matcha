@@ -1,95 +1,95 @@
 services:
-  database:
-    image: postgres:17
-    userns_mode: "keep-id:uid=999,gid=999"
-    sysctls:
-      net.ipv4.ping_group_range: "999 999"
-    container_name: matcha_database
-    environment: # NE PAS LAISSER LES VALEURS BRUTS
-      POSTGRES_DB: matcha
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+#   database:
+#     image: postgres:17
+#     userns_mode: "keep-id:uid=999,gid=999"
+#     sysctls:
+#       net.ipv4.ping_group_range: "999 999"
+#     container_name: matcha_database
+#     environment: # NE PAS LAISSER LES VALEURS BRUTS
+#       POSTGRES_DB: matcha
+#       POSTGRES_USER: admin
+#       POSTGRES_PASSWORD: admin
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
     
-  backend:
-    build:
-      context: ./backend
-    container_name: matcha_backend
-    depends_on:
-      database:
-        condition: service_started
-      redis:
-        condition: service_healthy
-      mailpit:
-        condition: service_started
-    environment: # NE PAS LAISSER LES VALEURS BRUTS
-      DB_HOST: database
-      DB_PORT: 5432
-      DB_NAME: matcha
-      DB_USER: admin
-      DB_PASSWORD: admin
-      JWT_ISSUER: ${JWT_ISSUER:?Set JWT_ISSUER in the environment or .env}
-      JWT_AUDIENCE: ${JWT_AUDIENCE:?Set JWT_AUDIENCE in the environment or .env}
-      JWT_JWKS_URL: ${JWT_JWKS_URL:?Set JWT_JWKS_URL in the environment or .env}
-      JWT_ALLOW_INSECURE_HTTP: ${JWT_ALLOW_INSECURE_HTTP:-false}
-      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private_key
-      JWT_KEY_ID: ${JWT_KEY_ID:?Set JWT_KEY_ID in the environment or .env}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD_FILE: /run/secrets/redis_password
-      EMAIL_SMTP_URL: smtp://mailpit:1025
-      EMAIL_FROM: ${EMAIL_FROM:-noreply@matcha.local}
-      EMAIL_SMTP_TLS: "false"
-      EMAIL_VERIFICATION_URL: ${EMAIL_VERIFICATION_URL:-http://localhost:5173/verify-email}
-      EMAIL_PASSWORD_RESET_URL: ${EMAIL_PASSWORD_RESET_URL:-http://localhost:5173/reset-password}
-      AUTH_ALLOWED_ORIGIN: ${AUTH_ALLOWED_ORIGIN:-http://localhost:5173}
-      AUTH_REFRESH_COOKIE_SECURE: ${AUTH_REFRESH_COOKIE_SECURE:-false}
-      MATCHA_CLEANUP_ORPHANED_IMAGES: ${MATCHA_CLEANUP_ORPHANED_IMAGES:-false}
-    volumes:
-      - ./backend:/app
-      - backend_build:/app/build
-      - backend_vcpkg:/app/vcpkg_installed
-      - profile_uploads:/var/lib/matcha/uploads
-    secrets:
-      - jwt_private_key
-      - redis_password
+#   backend:
+#     build:
+#       context: ./backend
+#     container_name: matcha_backend
+#     depends_on:
+#       database:
+#         condition: service_started
+#       redis:
+#         condition: service_healthy
+#       mailpit:
+#         condition: service_started
+#     environment: # NE PAS LAISSER LES VALEURS BRUTS
+#       DB_HOST: database
+#       DB_PORT: 5432
+#       DB_NAME: matcha
+#       DB_USER: admin
+#       DB_PASSWORD: admin
+#       JWT_ISSUER: ${JWT_ISSUER:?Set JWT_ISSUER in the environment or .env}
+#       JWT_AUDIENCE: ${JWT_AUDIENCE:?Set JWT_AUDIENCE in the environment or .env}
+#       JWT_JWKS_URL: ${JWT_JWKS_URL:?Set JWT_JWKS_URL in the environment or .env}
+#       JWT_ALLOW_INSECURE_HTTP: ${JWT_ALLOW_INSECURE_HTTP:-false}
+#       JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private_key
+#       JWT_KEY_ID: ${JWT_KEY_ID:?Set JWT_KEY_ID in the environment or .env}
+#       REDIS_HOST: redis
+#       REDIS_PORT: 6379
+#       REDIS_PASSWORD_FILE: /run/secrets/redis_password
+#       EMAIL_SMTP_URL: smtp://mailpit:1025
+#       EMAIL_FROM: ${EMAIL_FROM:-noreply@matcha.local}
+#       EMAIL_SMTP_TLS: "false"
+#       EMAIL_VERIFICATION_URL: ${EMAIL_VERIFICATION_URL:-http://localhost:5173/verify-email}
+#       EMAIL_PASSWORD_RESET_URL: ${EMAIL_PASSWORD_RESET_URL:-http://localhost:5173/reset-password}
+#       AUTH_ALLOWED_ORIGIN: ${AUTH_ALLOWED_ORIGIN:-http://localhost:5173}
+#       AUTH_REFRESH_COOKIE_SECURE: ${AUTH_REFRESH_COOKIE_SECURE:-false}
+#       MATCHA_CLEANUP_ORPHANED_IMAGES: ${MATCHA_CLEANUP_ORPHANED_IMAGES:-false}
+#     volumes:
+#       - ./backend:/app
+#       - backend_build:/app/build
+#       - backend_vcpkg:/app/vcpkg_installed
+#       - profile_uploads:/var/lib/matcha/uploads
+#     secrets:
+#       - jwt_private_key
+#       - redis_password
 
-  redis:
-    image: redis:7-alpine
-    container_name: matcha_redis
-    entrypoint:
-      - /bin/sh
-      - /usr/local/bin/redis-entrypoint.sh
-    volumes:
-      - ./docker/redis-entrypoint.sh:/usr/local/bin/redis-entrypoint.sh:ro
-    secrets:
-      - redis_password
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli --user default ping | grep -q PONG
-      interval: 5s
-      timeout: 3s
-      retries: 10
+#   redis:
+#     image: redis:7-alpine
+#     container_name: matcha_redis
+#     entrypoint:
+#       - /bin/sh
+#       - /usr/local/bin/redis-entrypoint.sh
+#     volumes:
+#       - ./docker/redis-entrypoint.sh:/usr/local/bin/redis-entrypoint.sh:ro
+#     secrets:
+#       - redis_password
+#     healthcheck:
+#       test:
+#         - CMD-SHELL
+#         - REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli --user default ping | grep -q PONG
+#       interval: 5s
+#       timeout: 3s
+#       retries: 10
 
-  mailpit:
-    image: docker.io/axllent/mailpit:latest
-    container_name: matcha_mailpit
-    ports:
-      - "127.0.0.1:8025:8025"
+#   mailpit:
+#     image: docker.io/axllent/mailpit:latest
+#     container_name: matcha_mailpit
+#     ports:
+#       - "127.0.0.1:8025:8025"
 
-  nginx:
-    image: nginx:stable-alpine
-    container_name: matcha_nginx
-    depends_on:
-      - backend
-    ports:
-      - "18080:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+#   nginx:
+#     image: nginx:stable-alpine
+#     container_name: matcha_nginx
+#     depends_on:
+#       - backend
+#     ports:
+#       - "18080:80"
+#     volumes:
+#       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
 
   frontend:
     build:
@@ -102,19 +102,19 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    depends_on:
-      backend:
-        condition: service_started
+    # depends_on:
+      # backend:
+        # condition: service_started
 
 volumes:
-  postgres_data:
-  backend_build:
-  backend_vcpkg:
-  profile_uploads:
+  # postgres_data:
+  # backend_build:
+  # backend_vcpkg:
+  # profile_uploads:
 
-secrets:
-  jwt_private_key:
-    file: ${JWT_PRIVATE_KEY_FILE:?Set JWT_PRIVATE_KEY_FILE to the private PEM path}
-  redis_password:
-    file: ${REDIS_PASSWORD_FILE:?Set REDIS_PASSWORD_FILE to the Redis password file path}
+# secrets:
+  # jwt_private_key:
+    # file: ${JWT_PRIVATE_KEY_FILE:?Set JWT_PRIVATE_KEY_FILE to the private PEM path}
+  # redis_password:
+    # file: ${REDIS_PASSWORD_FILE:?Set REDIS_PASSWORD_FILE to the Redis password file path}
     

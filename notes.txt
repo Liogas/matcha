@@ -1,0 +1,96 @@
+« J'ai développé en C++ une bibliothèque permettant de générer et valider des JWT signés, avec vérification de signature RSA, issuer, audience, expiration, algorithme et gestion des clés via JWKS. J'ai conçu les composants en suivant une approche TDD et en séparant la génération, la validation, la récupération et le cache des clés. »
+
+
+
+AMELIORATIONS :
+
+########### Envoi de l'email de confirmation :
+
+Il y a cependant un point opérationnel important dans l'ordre des opérations :
+1. Le compte en attente est créé en base.
+2. L'email est envoyé ensuite.
+3. Si l'envoi échoue, la route retourne 503.
+Donc une réponse 503 ne signifie pas forcément que rien n'a été créé. Le compte peut déjà exister en état non vérifié.
+
+C'est explicitement indiqué dans la réponse :
+return jsonError(
+    503,
+    "Account created, but verification email delivery failed. "
+    "Please try again later."
+);
+
+C'est honnête pour le client, mais cela signifie que l'application doit gérer ce cas. Le renvoi de l'email constitue justement une voie de récupération.
+Une autre conséquence : la création du compte et l'envoi du mail ne forment pas une transaction atomique. La base de données et le serveur SMTP sont deux systèmes distincts. Pour une application plus robuste, on peut plus tard envisager une file d'envoi ou un modèle d'outbox transactionnelle, mais il n'est pas nécessaire de complexifier immédiatement le projet.
+
+Un point de sécurité à surveiller : le token dans le HTML
+Le code incorpore directement le token dans un attribut HTML :
+"<input type=\"hidden\" name=\"token\" value=\"" +
+    std::string(token) +
+    "\">"
+
+
+Un champ caché n'est pas un secret. Le token reste lisible dans le HTML, ce qui est normal puisque le navigateur doit le renvoyer.
+
+En revanche, cette construction concatène une donnée provenant de l'URL dans le HTML sans échappement visible.
+
+Le token semble être soumis à une validation par hashEmailVerificationToken(), mais nous ne connaissons pas encore les contraintes exactes imposées. Il faut vérifier que cette fonction refuse tous les caractères inattendus et que le format autorisé ne permet pas de sortir de l'attribut HTML. Une alternative est d'échapper explicitement la valeur selon les règles du contexte HTML.
+
+Il y a également un risque lié à la présence du token dans l'URL : les URL peuvent apparaître dans l'historique du navigateur, les logs des serveurs ou les systèmes d'analyse. La politique de journalisation et les en-têtes de la page sont donc pertinents pour ce flux.
+
+
+########### validEmail : C'est une validation syntaxique simplifiée, pas une implémentation complète des règles des adresses e-mail. Elle peut rejeter certaines adresses légitimes et en accepter d'autres qui ne sont pas réellement distribuables.
+########### validPassword : Trouver une liste complete de mot de passe jugee trop simple
+
+
+### Cette fonction privilégie l'en-tête X-Real-IP, puis utilise l'adresse de connexion directe si cet en-tête est absent.
+
+Le problème est que X-Real-IP n'est fiable que si ton infrastructure garantit qui peut le définir.
+
+Si le serveur est accessible directement par Internet, un client peut envoyer :
+X-Real-IP: 203.0.113.42
+
+
+Il pourrait alors contourner une limitation de tentatives de connexion basée sur cette valeur, en changeant simplement l'en-tête.
+
+La solution dépend de l'architecture réseau :
+- rendre le backend inaccessible directement depuis Internet ;
+- configurer le proxy de confiance pour remplacer l'en-tête reçu par une valeur calculée à partir de la connexion ;
+- ne faire confiance à cet en-tête que lorsque la requête provient d'un proxy autorisé.
+C'est particulièrement important pour ton limiteur de tentatives de connexion Redis. Une limitation basée sur une adresse falsifiable donne surtout l'impression rassurante d'avoir une protection.
+
+Deux précisions de sécurité :
+- HttpOnly ne protège pas contre toutes les conséquences d'une faille XSS. Un script malveillant peut encore déclencher des requêtes depuis la page.
+- SameSite=Strict est une défense utile contre le CSRF, mais la politique CSRF complète dépend aussi de la façon dont les routes de rafraîchissement sont conçues.
+Autre point : le code concatène directement value dans l'en-tête. Il faut garantir que cette valeur est un jeton au format strictement contrôlé, sans caractères de contrôle, notamment \r et \n. Sinon, on risque une injection d'en-tête HTTP. Le plus propre est de valider le format du jeton à la frontière où il est créé ou reçu.
+
+
+Point critique : l'ordre de la rotation et de la signature JWT
+Dans le code actuel, la rotation en base a lieu avant la génération du nouvel access token :
+const auto session = accountRepository.rotateRefreshToken(...);
+
+// Plus loin :
+accessToken = tokenGenerator.generate(...);
+
+
+Si la rotation réussit mais que la signature du JWT échoue, l'ancien refresh token est déjà invalidé et le nouveau n'a pas été envoyé au client.
+
+Résultat : le navigateur conserve un jeton inutilisable et la session peut devenir irrécupérable par ce mécanisme.
+
+C'est un problème de cohérence entre deux opérations qui ne partagent pas une transaction : la mise à jour de la session en base et la génération du JWT.
+
+Une stratégie possible consiste à générer le JWT avant de consommer l'ancien refresh token, puis à ne renvoyer les deux nouveaux jetons qu'après la rotation réussie. Cela évite ce cas précis d'échec après rotation, même si la gestion des requêtes concurrentes et des réponses réseau perdues demande encore une politique explicite.
+
+. handleGetCurrentUser() : identifier l'utilisateur courant
+Cette route authentifie le Bearer token, puis renvoie certains claims :
+body["user"]["id"] = result.claims->subject;
+body["issuer"] = result.claims->issuer;
+body["audience"] = result.claims->audience;
+
+
+Elle n'interroge pas la base de données pour récupérer le profil complet. Elle expose uniquement des informations issues du JWT validé.
+
+C'est adapté à un endpoint qui veut confirmer l'identité associée au jeton, mais ce n'est pas forcément suffisant pour construire une réponse de profil complète.
+
+Il existe aussi une incohérence à corriger : contrairement à handleLogoutAllSessions(), cette route ne traite pas explicitement VerificationUnavailable. Tout statut différent de Valid est actuellement transformé en 401.
+
+Si le service de vérification est temporairement indisponible, l'utilisateur risque donc de recevoir une erreur d'authentification alors que le serveur n'a pas pu déterminer si le jeton était valide. Une réponse 503 serait plus fidèle à cette situation.
