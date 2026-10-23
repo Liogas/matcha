@@ -1,11 +1,22 @@
 import type { Group } from 'three'
-import { useEffect, useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { LivingEntityModel } from './LivingEntityModel.ts'
 import { LivingEntityController } from './LivingEntityController.ts'
-import EyesView from './EyesView.tsx'
+import type { EntityState } from './LivingEntityModel.ts'
+import HeartBodyView from './HeartBodyView.tsx'
+import HeartFaceView from './HeartFaceView.tsx'
+import {
+	DEFAULT_APPEARANCE,
+} from './LivingEntityAppearance.ts';
+import type {
+	LivingEntityAppearance,
+} from './LivingEntityAppearance.ts';
 
 export default function LivingEntityView() {
+	const [entityState, setEntityState] = useState<EntityState>('idle');
+	const [appearance, setAppearance] = useState<LivingEntityAppearance>(DEFAULT_APPEARANCE);
+
 	const bodyRef = useRef<Group>(null);
 	const eyesRef = useRef<Group>(null);
 
@@ -37,8 +48,8 @@ export default function LivingEntityView() {
 		const eyes = eyesRef.current
 
 		if (eyes) {
-		eyes.position.x = state.gazeX
-		eyes.position.y = state.gazeY
+			eyes.position.x = state.gazeX
+			eyes.position.y = state.gazeY
 		}
 		body.position.y = state.positionY;
 		body.rotation.x = state.rotationX;
@@ -47,23 +58,20 @@ export default function LivingEntityView() {
 	})
 
 	const handleClick = () => {
-		controllerRef.current?.toggleState();
+		const controller = controllerRef.current;
+		if (!controller)
+			return;
+		controller.toggleState();
+		setEntityState(modelRef.current!.state.state);
 	};
 
 	return (
-		<group ref={bodyRef}>
-			<mesh>
-				<sphereGeometry args={[0.8, 32, 32]} />
-				<meshStandardMaterial
-					color="#65d9c0"
-					roughness={0.35}
-				/>
-			</mesh>
-			<EyesView
+		<group ref={bodyRef} onClick={handleClick}>
+			<HeartBodyView appearance={appearance} />
+			<HeartFaceView
 				ref={eyesRef}
-				onClick={handleClick}
-				gazeY={modelRef.current!.state.gazeY}
-				gazeX={modelRef.current!.state.gazeX}
+				state={entityState}
+				appearance={appearance}
 			/>
 		</group>
 	)

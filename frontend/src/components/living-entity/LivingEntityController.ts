@@ -21,19 +21,19 @@ export class LivingEntityController
 		const {time, pointerX, pointerY} = frame;
 		this.model.updatePositionY(Math.sin(time * 1.5) * 0.12);
 		this.model.updateRotation(
-			pointerX * 0.45,
-			-pointerY * 0.3
+			-pointerY * 0.3,
+			pointerX * 0.45
 		);
 		this.model.updateScale(1 + Math.sin(time * 2) * 0.035);
 		this.model.updateGaze(
-			Math.max(-0.08, Math.min(0.08, pointerY * 0.08)),
-			Math.max(-0.05, Math.min(0.05, pointerX * 0.05))
+			Math.max(-0.05, Math.min(0.05, pointerX * 0.05)),
+			Math.max(-0.08, Math.min(0.08, pointerY * 0.08))
 		);
 	}
 
 	toggleState(): void
 	{
-		const currentState = this.model.state;
+		const currentState = this.model.state.state;
 		const nextState = currentState === 'idle'
 			? 'curious'
 			: currentState === 'curious'

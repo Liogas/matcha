@@ -41,7 +41,7 @@ export class LivingEntityModel
 		this._state.positionY = posY;
 	}
 
-	updateRotation(y: number, x: number): void
+	updateRotation(x: number, y: number): void
 	{
 		this._state.rotationY = y;
 		this._state.rotationX = x;
@@ -52,7 +52,7 @@ export class LivingEntityModel
 		this._state.scale = value;
 	}
 
-	updateGaze(y: number, x: number)
+	updateGaze(x: number, y: number)
 	{
 		this._state.gazeX = x;
 		this._state.gazeY = y;
