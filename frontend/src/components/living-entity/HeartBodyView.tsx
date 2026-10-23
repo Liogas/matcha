@@ -1,44 +1,26 @@
 import      { useEffect, useMemo, useRef }  from 'react';
-import      { ExtrudeGeometry, Shape }     from 'three';
-import type { Mesh }                       from 'three';
+import      { Color, ExtrudeGeometry }     from 'three';
+import type { Mesh, MeshPhysicalMaterial }  from 'three';
 import      { useFrame }                   from '@react-three/fiber';
 import      { mergeVertices }              from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { LivingEntityAppearance }     from './LivingEntityAppearance.ts';
+import type { EntityPose }                 from './LivingEntityModel.ts';
+import      { createHeartShape }           from './heartShape.ts';
  
 interface HeartBodyViewProps {
     appearance: LivingEntityAppearance;
-    /** Fait battre le cœur (désactivé par défaut). */
-    heartbeat?: boolean;
+    /** Pose partagée : battement et rougissement. */
+    pose: EntityPose;
 }
- 
-/**
- * Cœur simple et symétrique : même silhouette que l'original,
- * avec la pointe du bas légèrement arrondie pour éviter les artefacts de bevel.
- */
-function createHeartShape(): Shape {
-    const shape = new Shape();
- 
-    // Côté droit : de la pointe jusqu'au creux
-    shape.moveTo(0.05, -0.76);
-    shape.bezierCurveTo(0.25, -0.55, 0.95, -0.05, 0.85, 0.5);
-    shape.bezierCurveTo(0.78, 1.0, 0.2, 1.0, 0, 0.55);
- 
-    // Côté gauche : du creux jusqu'à la pointe
-    shape.bezierCurveTo(-0.2, 1.0, -0.78, 1.0, -0.85, 0.5);
-    shape.bezierCurveTo(-0.95, -0.05, -0.25, -0.55, -0.05, -0.76);
- 
-    // Pointe arrondie
-    shape.quadraticCurveTo(0, -0.84, 0.05, -0.76);
-    shape.closePath();
- 
-    return shape;
-}
+
+const BLUSH_COLOR = new Color('#ff1f5a');
  
 export default function HeartBodyView({
     appearance,
-    heartbeat = false,
+    pose,
 }: HeartBodyViewProps) {
-    const meshRef = useRef<Mesh>(null);
+    const meshRef     = useRef<Mesh>(null);
+    const materialRef = useRef<MeshPhysicalMaterial>(null);
  
     const geometry = useMemo(() => {
         const extruded = new ExtrudeGeometry(createHeartShape(), {
@@ -64,32 +46,30 @@ export default function HeartBodyView({
  
     useEffect(() => () => geometry.dispose(), [geometry]);
  
-    useFrame(({ clock }) => {
-        const mesh = meshRef.current;
-        if (!mesh)
-            return;
- 
-        if (!heartbeat) {
-            mesh.scale.setScalar(1);
-            return;
+    useFrame(() => {
+        meshRef.current?.scale.setScalar(1 + pose.beat);
+
+        const material = materialRef.current;
+        if (material) {
+            // Le cœur s'illumine légèrement à chaque contraction et quand il rougit
+            material.emissive.copy(BLUSH_COLOR);
+            material.emissiveIntensity = pose.blush * 0.22 + pose.beat * 1.2;
         }
- 
-        const period = 1.1;
-        const t      = (clock.elapsedTime % period) / period;
-        const pulse  = (center: number, width: number) =>
-            Math.exp(-((t - center) ** 2) / (2 * width ** 2));
- 
-        mesh.scale.setScalar(1 + 0.07 * pulse(0.08, 0.035) + 0.045 * pulse(0.26, 0.04));
     });
  
     return (
         <mesh ref={meshRef} geometry={geometry} position={[0, -0.05, 0]}>
-            <meshStandardMaterial
+            <meshPhysicalMaterial
+                ref={materialRef}
                 color={appearance.bodyColor}
-                roughness={0.35}
-                metalness={0.05}
+                roughness={0.42}
+                metalness={0}
+                clearcoat={0.35}
+                clearcoatRoughness={0.35}
+                sheen={0.6}
+                sheenRoughness={0.45}
+                sheenColor={appearance.secondaryColor}
             />
         </mesh>
     );
 }
- 

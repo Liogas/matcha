@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'motion/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
@@ -13,6 +13,7 @@ import {
   verifyEmail,
 } from '../api/auth'
 import { useAuth } from '../context/useAuth'
+import { useHeart } from '../context/useHeart'
 
 function PagePanel({
   eyebrow,
@@ -52,6 +53,14 @@ function Feedback({
   message: string
   kind?: 'error' | 'success'
 }) {
+  const { react } = useHeart()
+
+  // Le cœur réagit à chaque nouveau message : tristesse pour une erreur, acquiescement sinon
+  useEffect(() => {
+    if (message)
+      react(kind === 'success' ? 'nod' : 'sad')
+  }, [message, kind, react])
+
   if (!message) return null
   return (
     <p

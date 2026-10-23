@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { CanvasTexture, Color, MathUtils, RepeatWrapping, SRGBColorSpace } from 'three';
-import type { Group } from 'three';
+import { CanvasTexture, Color, DoubleSide, RepeatWrapping, SRGBColorSpace } from 'three';
+import type { Group, Mesh } from 'three';
 import { useFrame } from '@react-three/fiber';
 import type { EyeStyle } from './LivingEntityAppearance.ts';
+import type { EntityPose } from './LivingEntityModel.ts';
 
 interface EyeViewProps {
 	eyeColor: string;
 	eyeStyle: EyeStyle;
 	/** Taille de la pupille par rapport à l'iris (0.2 = contractée, 0.5 = dilatée). */
 	pupilSize?: number;
+	/** Couleur des paupières (la « peau » du cœur). */
+	lidColor: string;
+	/** Pose partagée : orientation du regard et ouverture des paupières. */
+	pose: EntityPose;
 }
 
 /* ------------------------------------------------------------------ */
@@ -166,7 +171,7 @@ function createScleraTexture(): CanvasTexture {
 	// Veines rayonnant depuis l'iris
 	for (let i = 0; i < 90; i++) {
 		const angle = rand() * Math.PI * 2;
-		let r = 80 + rand() * 40;
+		const r = 80 + rand() * 40;
 		let x = cx + Math.cos(angle) * r;
 		let y = cy + Math.sin(angle) * r;
 		let a = angle;
@@ -192,6 +197,16 @@ function createScleraTexture(): CanvasTexture {
 	return tex;
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Paupières                                                           */
+/* ------------------------------------------------------------------ */
+// Coques légèrement plus grandes que le globe, qui pivotent autour de son centre.
+const LID_RADIUS = EYEBALL_RADIUS * 1.05;
+// Angle d'ouverture maximal : bord de paupière relevé (haut) ou abaissé (bas).
+const UPPER_LID_OPEN = 1.3;
+const LOWER_LID_OPEN = 1.15;
+
 /* ------------------------------------------------------------------ */
 /* Composant                                                           */
 /* ------------------------------------------------------------------ */
@@ -199,26 +214,32 @@ export default function EyeView({
 	eyeColor,
 	eyeStyle,
 	pupilSize = 0.32,
+	lidColor,
+	pose,
 }: EyeViewProps) {
 	const eyeballRef = useRef<Group>(null);
+	const upperLidRef = useRef<Mesh>(null);
+	const lowerLidRef = useRef<Mesh>(null);
 
 	const irisTexture = useMemo(() => createIrisTexture(eyeColor, pupilSize), [eyeColor, pupilSize]);
 	const scleraTexture = useMemo(() => createScleraTexture(), []);
+	const lidTint = useMemo(() => new Color(lidColor).multiplyScalar(0.88), [lidColor]);
 
 	useEffect(() => () => irisTexture.dispose(), [irisTexture]);
 	useEffect(() => () => scleraTexture.dispose(), [scleraTexture]);
 
-	// C'est le globe entier qui tourne (et non l'iris qui glisse), comme un vrai œil
-	useFrame((frame, delta) => {
+	// C'est le globe entier qui tourne (et non l'iris qui glisse), comme un vrai œil.
+	// Les paupières, elles, restent attachées au visage.
+	useFrame(() => {
 		const eyeball = eyeballRef.current;
-		if (!eyeball)
-			return;
-
-		const targetYaw = frame.pointer.x * 0.45;
-		const targetPitch = -frame.pointer.y * 0.35;
-
-		eyeball.rotation.y = MathUtils.damp(eyeball.rotation.y, targetYaw, 10, delta);
-		eyeball.rotation.x = MathUtils.damp(eyeball.rotation.x, targetPitch, 10, delta);
+		if (eyeball) {
+			eyeball.rotation.y = pose.eyeYaw;
+			eyeball.rotation.x = pose.eyePitch;
+		}
+		if (upperLidRef.current)
+			upperLidRef.current.rotation.x = -UPPER_LID_OPEN * pose.upperLid;
+		if (lowerLidRef.current)
+			lowerLidRef.current.rotation.x = LOWER_LID_OPEN * pose.lowerLid;
 	});
 
 	const eyeScale =
@@ -284,6 +305,18 @@ export default function EyeView({
 					<meshBasicMaterial color="#ffffff" transparent opacity={0.6} toneMapped={false} />
 				</mesh>
 			</group>
+
+			{/* Paupière supérieure : hémisphère du haut */}
+			<mesh ref={upperLidRef}>
+				<sphereGeometry args={[LID_RADIUS, 48, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+				<meshStandardMaterial color={lidTint} roughness={0.4} side={DoubleSide} />
+			</mesh>
+
+			{/* Paupière inférieure : hémisphère du bas */}
+			<mesh ref={lowerLidRef}>
+				<sphereGeometry args={[LID_RADIUS, 48, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]} />
+				<meshStandardMaterial color={lidTint} roughness={0.4} side={DoubleSide} />
+			</mesh>
 		</group>
 	);
 }

@@ -3,7 +3,7 @@ import { BufferGeometry, Color, ExtrudeGeometry, MathUtils, Shape, ShapeGeometry
 import type { Mesh } from 'three';
 import { useFrame } from '@react-three/fiber';
 
-export type MouthStyle = 'smile' | 'open' | 'smirk';
+export type MouthStyle = 'smile' | 'open' | 'smirk' | 'sad' | 'surprised' | 'flat';
 
 interface MouthViewProps {
 	mouthStyle: MouthStyle;
@@ -36,6 +36,10 @@ const PRESETS: Record<MouthStyle, MouthParams> = {
 	smile: { halfWidth: 0.075, cornerLeft: 0, cornerRight: 0, upperSag: 0.025, lowerSag: 0.029, offsetX: 0 },
 	open: { halfWidth: 0.08, cornerLeft: 0.012, cornerRight: 0.012, upperSag: 0.012, lowerSag: 0.1, offsetX: 0 },
 	smirk: { halfWidth: 0.06, cornerLeft: -0.004, cornerRight: 0.018, upperSag: 0.014, lowerSag: 0.019, offsetX: 0.025 },
+	// Sag négatif : le milieu remonte au-dessus des commissures
+	sad: { halfWidth: 0.06, cornerLeft: -0.012, cornerRight: -0.012, upperSag: -0.02, lowerSag: -0.015, offsetX: 0 },
+	surprised: { halfWidth: 0.034, cornerLeft: 0, cornerRight: 0, upperSag: -0.022, lowerSag: 0.026, offsetX: 0 },
+	flat: { halfWidth: 0.05, cornerLeft: 0, cornerRight: 0, upperSag: 0.004, lowerSag: 0.008, offsetX: 0 },
 };
 
 const PARAM_KEYS = Object.keys(PRESETS.smile) as Array<keyof MouthParams>;

@@ -1,41 +1,61 @@
-/* :root {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  color: #23332b;
-  background: #f6f4ed;
+:root {
+  --font: 'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+  --bg-deep: #0b0a19;
+  --bg-mid: #1a1233;
+  --text: #f7eef6;
+  --text-muted: #b8a8c8;
+  --pink: #f06b91;
+  --pink-strong: #ff4f86;
+  --violet: #8b70f5;
+  --glass: rgba(30, 22, 56, 0.58);
+  --glass-strong: rgba(36, 26, 66, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.11);
+  --field: rgba(255, 255, 255, 0.06);
+  --field-border: rgba(255, 255, 255, 0.15);
+  --danger: #ff8a9b;
+  --success: #8fe0b7;
+  --radius: 22px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  font-family: var(--font);
+  color: var(--text);
+  color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  --heading: 'Segoe UI', system-ui, sans-serif;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html {
-  min-width: 320px;
-  min-height: 100%;
-  background: #f6f4ed;
-}
-
+html,
 body {
   min-width: 320px;
-  min-height: 100vh;
+  height: 100%;
   margin: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 45%, #2a1745 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 85% 100%, #1d1a4a 0%, transparent 70%),
+    linear-gradient(180deg, var(--bg-mid) 0%, var(--bg-deep) 100%);
 }
 
-body,
-button,
-input {
-  font-family: 'Segoe UI', system-ui, sans-serif;
+#root {
+  height: 100%;
 }
 
 button,
-input {
-  font-size: inherit;
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: #ffb3cb;
 }
 
 button,
@@ -45,17 +65,10 @@ input {
 }
 
 ::selection {
-  background: rgba(135, 169, 126, 0.3);
+  background: rgba(240, 107, 145, 0.35);
 }
 
-#root {
-  min-height: 100vh;
-} */
-
-.entity-scene {
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  border-radius: 16px;
-  background: #101923;
+:focus-visible {
+  outline: 2px solid #ffb3cb;
+  outline-offset: 3px;
 }
