@@ -1,0 +1,32 @@
+/*
+ * Point d'entrée des styles globaux.
+ *
+ * Ordre des couches (de la plus faible à la plus forte) :
+ *   reset      → remise à zéro des navigateurs
+ *   settings   → variables : tokens et thèmes (jour / nuit / saison)
+ *   base       → éléments HTML nus : typographie, formulaires
+ *   layout     → squelette de page : en-tête, contenu, pied de page
+ *   ui-kit     → composants réutilisables (src/ui-kit)
+ *   components → petits composants partagés de l'application
+ *   features   → styles propres à une fonctionnalité (à côté de son code)
+ *   utilities  → classes utilitaires, toujours gagnantes
+ *
+ * Règle : un style global vit dans src/styles ; un style propre à un composant
+ * ou à une fonctionnalité vit dans un fichier .css à côté de son code.
+ */
+@layer reset, settings, base, layout, ui-kit, components, features, utilities;
+
+@import './base/reset.css';
+@import './settings/tokens.css';
+@import './settings/themes.css';
+@import './base/typography.css';
+@import './base/forms.css';
+@import './components/button.css';
+@import './components/chip.css';
+@import './components/notice.css';
+@import './components/segmented.css';
+@import './components/avatar.css';
+@import './components/progress.css';
+@import './components/dialog.css';
+@import './components/section.css';
+@import './utilities/utilities.css';

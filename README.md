@@ -1,3 +1,12 @@
+# Matcha
+
+Application de rencontre : backend C++ (Crow, PostgreSQL, Redis) et frontend
+React posé sur une clairière en 3D qui vit au rythme du jour et des saisons.
+Pages, décor, composants et architecture du frontend :
+[`frontend/README.md`](frontend/README.md).
+
+## Bibliothèques du backend
+
 CROW        -> Bibliotheque pour créer un serveur WEB
 LIBPQ       -> Bibliotheque pour communiquer avec une BDD POSTGRESQL
 GTEST       -> Google Test

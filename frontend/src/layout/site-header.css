@@ -1,0 +1,153 @@
+@layer layout {
+  /* Un voile très léger : le texte reste lisible même sous un ciel d'hiver pâle */
+  .site-header {
+    background: linear-gradient(to bottom, rgb(10 16 24 / 0.28), rgb(10 16 24 / 0.08) 70%, transparent);
+    color: var(--color-on-scene);
+    text-shadow: var(--scene-text-shadow);
+  }
+
+  .site-header__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-6);
+    min-height: var(--header-height);
+    padding: var(--space-3) clamp(var(--space-4), 4vw, 4.5rem);
+  }
+
+  .site-header__brand {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    color: inherit;
+    font-family: var(--font-serif);
+    font-size: 1.85rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+
+  .site-header__brand:hover {
+    color: inherit;
+  }
+
+  .site-header__tagline {
+    color: var(--color-on-scene-muted);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: auto;
+  }
+
+  .site-header__logout {
+    padding: 0.4rem 0.8rem;
+    border: 1px solid rgb(255 255 255 / 0.35);
+    border-radius: var(--radius-pill);
+    background: rgb(0 0 0 / 0.12);
+    color: inherit;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-shadow: inherit;
+    backdrop-filter: blur(4px);
+  }
+
+  .site-header__logout:hover {
+    background: rgb(0 0 0 / 0.25);
+  }
+
+  .site-header__alert {
+    width: fit-content;
+    max-width: calc(100% - 2rem);
+    margin: 0 clamp(var(--space-4), 4vw, 4.5rem) var(--space-2);
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-raised);
+    color: var(--color-danger);
+    text-shadow: none;
+  }
+
+  /* — Navigation principale — */
+  .main-nav__list {
+    display: flex;
+    gap: var(--space-1) var(--space-5);
+  }
+
+  .main-nav__link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    color: var(--color-on-scene);
+    font-weight: 700;
+    font-size: var(--text-md);
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+
+  .main-nav__link:hover {
+    color: var(--color-on-scene);
+  }
+
+  /* Trait de pinceau sous la page active, à la couleur de la saison */
+  .main-nav__link::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0.2rem;
+    left: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color-season);
+    box-shadow: 0 0 6px rgb(0 0 0 / 0.25);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 280ms var(--ease-out);
+  }
+
+  .main-nav__link:hover::after {
+    transform: scaleX(0.35);
+  }
+
+  .main-nav__link[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+
+  .main-nav__badge {
+    min-width: 1.25rem;
+    padding: 0 0.35rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-season);
+    color: #fff;
+    font-size: var(--text-xs);
+    line-height: 1.25rem;
+    text-align: center;
+    text-shadow: none;
+  }
+
+  /* Petits écrans : la navigation passe sur sa propre ligne et défile */
+  @media (max-width: 52rem) {
+    .site-header__tagline {
+      display: none;
+    }
+
+    .main-nav {
+      order: 3;
+      width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .main-nav__list {
+      gap: var(--space-4);
+    }
+  }
+}

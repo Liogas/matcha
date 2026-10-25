@@ -209,6 +209,10 @@ export function describeApiError(error: unknown): string {
     return 'Une erreur inattendue est survenue. Vérifiez votre connexion puis réessayez.'
   }
 
+  if (error.status === 404 && /profile not found/i.test(error.message))
+    return 'Ce profil n’est plus disponible.'
+  if (error.status === 403 && /rate limit/i.test(error.message))
+    return 'Message refusé : conversation inaccessible ou trop de messages envoyés.'
   if (error.status === 401)
     return 'Email ou mot de passe incorrect, ou lien expiré.'
   if (error.status === 403)
@@ -347,11 +351,30 @@ export async function getProfile(accessToken: string): Promise<Profile> {
   return { ...body.profile, photos: body.photos ?? [] }
 }
 
-export async function getProfiles(accessToken: string): Promise<Profile[]> {
-  const { body } = await request<{ profiles: Profile[] }>('/api/profiles', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
-  return body.profiles
+export async function getProfiles(
+  accessToken: string,
+  { limit = 24, offset = 0 }: { limit?: number; offset?: number } = {},
+): Promise<Profile[]> {
+  const { body } = await request<{ profiles?: Omit<Profile, 'photos'>[] }>(
+    `/api/profiles?limit=${limit}&offset=${offset}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return Array.isArray(body.profiles)
+    ? body.profiles.map((profile) => ({ ...profile, photos: [] }))
+    : []
+}
+
+export async function getPublicProfile(accessToken: string, accountId: number): Promise<Profile> {
+  const { body } = await request<{ profile: Omit<Profile, 'photos'>; photos?: ProfilePhoto[] }>(
+    `/api/profiles/${accountId}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  const photos = body.photos ?? []
+  return {
+    ...body.profile,
+    photos,
+    photo_url: photos.find((photo) => photo.is_primary)?.url,
+  }
 }
 
 export async function getLikedProfileIds(accessToken: string): Promise<number[]> {

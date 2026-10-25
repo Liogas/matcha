@@ -1,0 +1,54 @@
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: 100%;
+    line-height: var(--leading);
+    color: var(--color-ink);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-size: var(--text-md);
+    /* Fond de secours, visible le temps que le décor 3D se construise */
+    background: #1d2a2c;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.005em;
+  }
+
+  h1 { font-size: var(--text-xl); }
+  h2 { font-size: var(--text-lg); }
+  h3 { font-size: var(--text-md); }
+
+  a {
+    color: var(--color-accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  a:hover {
+    color: var(--color-accent-hover);
+  }
+
+  strong {
+    font-weight: 700;
+  }
+
+  ::selection {
+    background: var(--color-accent-soft);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+}

@@ -1,0 +1,31 @@
+/* Filtres en onglets : un seul choix actif à la fois. */
+@layer components {
+  .segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-sunken);
+  }
+
+  .segmented__option {
+    padding: 0.4rem 0.85rem;
+    border: 0;
+    border-radius: calc(var(--radius-md) - 3px);
+    background: transparent;
+    color: var(--color-ink-muted);
+    font-weight: 700;
+    font-size: var(--text-sm);
+  }
+
+  .segmented__option:hover {
+    color: var(--color-ink);
+  }
+
+  .segmented__option[aria-selected='true'] {
+    background: var(--color-surface-raised);
+    color: var(--color-ink);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  }
+}

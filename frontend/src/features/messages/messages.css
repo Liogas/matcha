@@ -1,0 +1,15 @@
+@layer features {
+  .messages__with {
+    font-family: var(--font-serif);
+    font-size: var(--text-lg);
+  }
+
+  .messages__error {
+    padding: 0 var(--space-3);
+  }
+
+  /* Le fil occupe la hauteur disponible sans faire défiler toute la page */
+  .page-panel .uik-chat {
+    --uik-thread-height: clamp(16rem, 52dvh, 32rem);
+  }
+}

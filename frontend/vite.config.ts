@@ -16,9 +16,8 @@ export default defineConfig({
               priority: 20,
             },
             {
-              name: 'react-three-vendor',
-              test: /node_modules[\\/]@react-three[\\/]/,
-              maxSize: 300_000,
+              name: 'react-vendor',
+              test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|motion|framer-motion|motion-dom|motion-utils|scheduler)[\\/]/,
               priority: 10,
             },
           ],

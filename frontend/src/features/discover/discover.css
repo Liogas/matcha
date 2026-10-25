@@ -1,0 +1,7 @@
+@layer features {
+  .discover__more {
+    display: flex;
+    justify-content: center;
+    min-height: 2.75rem;
+  }
+}

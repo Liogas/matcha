@@ -1,0 +1,39 @@
+/* Messages de formulaire (Feedback), encarts d'information et états vides. */
+@layer components {
+  .feedback {
+    padding: 0.65rem 0.85rem;
+    border-left: 3px solid currentColor;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+  }
+
+  .feedback--error {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+  }
+
+  .feedback--success {
+    background: var(--color-success-soft);
+    color: var(--color-success);
+  }
+
+  .notice {
+    padding: var(--space-3) var(--space-4);
+    border: 1px dashed color-mix(in srgb, var(--color-season) 60%, transparent);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-season) 8%, transparent);
+    font-size: var(--text-sm);
+  }
+
+  .empty-state {
+    padding: var(--space-5) var(--space-4);
+    color: var(--color-ink-muted);
+    font-style: italic;
+    text-align: center;
+  }
+
+  .loading-text {
+    color: var(--color-ink-muted);
+    font-size: var(--text-sm);
+  }
+}

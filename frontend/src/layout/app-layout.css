@@ -1,0 +1,71 @@
+@layer layout {
+  .app-layout {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100dvh;
+  }
+
+  /* Le décor reste immobile pendant que la page défile */
+  .app-layout__scenery {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(180deg, #4a7fb8 0%, #b9cfdf 45%, #5d6b45 46%, #39452c 100%);
+    transition: opacity 1.2s var(--ease-out);
+  }
+
+  :root[data-daylight='night'] .app-layout__scenery {
+    background: linear-gradient(180deg, #070b1a 0%, #1a2340 45%, #10150f 46%, #080a07 100%);
+  }
+
+  .app-layout__scenery canvas {
+    width: 100% !important;
+    height: 100% !important;
+    animation: scenery-in 1.4s var(--ease-out);
+  }
+
+  @keyframes scenery-in {
+    from { opacity: 0; }
+  }
+
+  .app-layout__skip {
+    position: absolute;
+    top: var(--space-2);
+    left: var(--space-2);
+    z-index: 100;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-raised);
+    transform: translateY(-200%);
+  }
+
+  .app-layout__skip:focus {
+    transform: none;
+  }
+
+  /*
+   * Le contenu laisse passer les clics vers le décor là où il est vide :
+   * on peut ainsi caresser le louveteau à côté du panneau.
+   */
+  .app-layout__main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: var(--space-4) var(--space-4) var(--space-7);
+    pointer-events: none;
+    outline: none;
+  }
+
+  .app-layout__main > * {
+    pointer-events: auto;
+  }
+
+  @media (min-width: 64rem) {
+    .app-layout__main {
+      justify-content: flex-end;
+      padding: var(--space-5) clamp(var(--space-5), 4vw, 4.5rem) var(--space-7);
+    }
+  }
+}

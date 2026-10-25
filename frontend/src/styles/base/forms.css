@@ -1,0 +1,79 @@
+/*
+ * Formulaires : un <form class="form"> empile ses champs ;
+ * chaque <label class="field"> contient son intitulé puis le contrôle.
+ */
+@layer base {
+  input:where(:not([type='checkbox'], [type='radio'], [type='file'])),
+  select,
+  textarea {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-sunken);
+    color: var(--color-ink);
+    transition: border-color var(--duration-fast), background-color var(--duration-fast);
+  }
+
+  input:hover,
+  select:hover,
+  textarea:hover {
+    border-color: color-mix(in srgb, var(--color-ink) 30%, transparent);
+  }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 1px;
+    background: var(--color-surface-raised);
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: var(--leading);
+  }
+
+  ::placeholder {
+    color: var(--color-ink-muted);
+    opacity: 0.75;
+  }
+
+  .form {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .form__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: var(--space-4);
+  }
+
+  .field {
+    display: grid;
+    gap: var(--space-1);
+    font-weight: 700;
+    font-size: var(--text-sm);
+  }
+
+  .field > :is(input, select, textarea) {
+    font-weight: 400;
+    font-size: var(--text-md);
+  }
+
+  .form__hint {
+    color: var(--color-ink-muted);
+    font-size: var(--text-xs);
+    font-weight: 400;
+  }
+
+  .form__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+  }
+}

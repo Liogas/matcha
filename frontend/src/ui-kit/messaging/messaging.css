@@ -1,0 +1,312 @@
+/*
+ * ui-kit / messaging
+ * Thème par variables : définir --uik-* sur un ancêtre pour habiller les composants.
+ */
+@layer ui-kit {
+  .uik-chat,
+  .uik-thread,
+  .uik-composer,
+  .uik-conversations,
+  .uik-connection {
+    --_surface: var(--uik-surface, #fbf8f1);
+    --_surface-sunken: var(--uik-surface-sunken, rgb(0 0 0 / 0.04));
+    --_surface-hover: var(--uik-surface-hover, rgb(0 0 0 / 0.05));
+    --_ink: var(--uik-ink, #24231d);
+    --_ink-muted: var(--uik-ink-muted, #66625a);
+    --_line: var(--uik-line, rgb(0 0 0 / 0.1));
+    --_accent: var(--uik-accent, #3f5d3a);
+    --_accent-ink: var(--uik-accent-ink, #fff);
+    --_bubble: var(--uik-bubble, #ece6d8);
+    --_bubble-ink: var(--uik-bubble-ink, var(--_ink));
+    --_bubble-own: var(--uik-bubble-own, var(--_accent));
+    --_bubble-own-ink: var(--uik-bubble-own-ink, var(--_accent-ink));
+    --_highlight: var(--uik-highlight, #c2652a);
+    --_success: var(--uik-success, #4a7a3e);
+    --_radius: var(--uik-radius, 10px);
+    --_thread-height: var(--uik-thread-height, 26rem);
+  }
+
+  /* — Mise en page — */
+  .uik-chat {
+    display: grid;
+    grid-template-columns: minmax(11rem, 15rem) 1fr;
+    min-height: var(--_thread-height);
+    border: 1px solid var(--_line);
+    border-radius: var(--_radius);
+    overflow: hidden;
+    background: var(--_surface-sunken);
+  }
+
+  .uik-chat__sidebar {
+    min-width: 0;
+    overflow-y: auto;
+    max-height: calc(var(--_thread-height) + 4.5rem);
+    border-right: 1px solid var(--_line);
+  }
+
+  .uik-chat__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--_surface);
+  }
+
+  .uik-chat__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3rem;
+    padding: 0.5rem 0.9rem;
+    border-bottom: 1px solid var(--_line);
+  }
+
+  .uik-chat__back {
+    display: none;
+    padding: 0.25rem 0.5rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--_accent);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .uik-chat__empty {
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 2rem 1rem;
+    color: var(--_ink-muted);
+    text-align: center;
+  }
+
+  @media (max-width: 40rem) {
+    .uik-chat {
+      grid-template-columns: 1fr;
+    }
+
+    .uik-chat__sidebar {
+      max-height: none;
+      border-right: 0;
+    }
+
+    .uik-chat[data-selection='true'] .uik-chat__sidebar,
+    .uik-chat[data-selection='false'] .uik-chat__main {
+      display: none;
+    }
+
+    .uik-chat__back {
+      display: inline-flex;
+      gap: 0.35rem;
+    }
+  }
+
+  /* — Liste des conversations — */
+  .uik-conversations {
+    margin: 0;
+    padding: 0.35rem;
+    list-style: none;
+  }
+
+  .uik-conversations__item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.55rem 0.6rem;
+    border: 0;
+    border-radius: calc(var(--_radius) - 3px);
+    background: transparent;
+    color: var(--_ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .uik-conversations__item:hover {
+    background: var(--_surface-hover);
+  }
+
+  .uik-conversations__item[aria-current='true'] {
+    background: var(--_surface);
+    box-shadow: inset 3px 0 0 var(--_accent);
+  }
+
+  .uik-conversations__avatar {
+    flex: none;
+  }
+
+  .uik-conversations__text {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .uik-conversations__title {
+    overflow: hidden;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .uik-conversations__subtitle {
+    overflow: hidden;
+    color: var(--_ink-muted);
+    font-size: 0.82rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .uik-conversations__unread {
+    flex: none;
+    min-width: 1.3rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--_highlight);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  /* — Fil — */
+  .uik-thread {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.4rem;
+    height: var(--_thread-height);
+    padding: 1rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .uik-thread__day {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.75rem 0 0.25rem;
+    color: var(--_ink-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .uik-thread__day::before,
+  .uik-thread__day::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--_line);
+  }
+
+  .uik-bubble {
+    max-width: min(78%, 30rem);
+    padding: 0.5rem 0.8rem 0.35rem;
+    border-radius: 14px 14px 14px 4px;
+    background: var(--_bubble);
+    color: var(--_bubble-ink);
+    align-self: flex-start;
+  }
+
+  .uik-bubble[data-own] {
+    border-radius: 14px 14px 4px 14px;
+    background: var(--_bubble-own);
+    color: var(--_bubble-own-ink);
+    align-self: flex-end;
+  }
+
+  .uik-bubble[data-grouped] {
+    margin-top: -0.2rem;
+  }
+
+  .uik-bubble[data-pending] {
+    opacity: 0.65;
+  }
+
+  .uik-bubble__body {
+    margin: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .uik-bubble__time {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.7rem;
+    opacity: 0.7;
+    text-align: right;
+  }
+
+  /* — Saisie — */
+  .uik-composer {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    padding: 0.65rem;
+    border-top: 1px solid var(--_line);
+  }
+
+  .uik-composer__field {
+    flex: 1;
+    min-height: 2.6rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--_line);
+    border-radius: calc(var(--_radius) - 2px);
+    background: var(--_surface-sunken);
+    color: var(--_ink);
+    font: inherit;
+    line-height: 1.4;
+    resize: none;
+  }
+
+  .uik-composer__field:focus-visible {
+    outline: 2px solid var(--_accent);
+    outline-offset: 1px;
+  }
+
+  .uik-composer__send {
+    flex: none;
+    min-height: 2.6rem;
+    padding: 0 1.1rem;
+    border: 0;
+    border-radius: calc(var(--_radius) - 2px);
+    background: var(--_accent);
+    color: var(--_accent-ink);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .uik-composer__send:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* — État de connexion — */
+  .uik-connection {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    color: var(--_ink-muted);
+    font-size: 0.82rem;
+  }
+
+  .uik-connection__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--_ink-muted);
+  }
+
+  .uik-connection[data-status='online'] .uik-connection__dot {
+    background: var(--_success);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--_success) 25%, transparent);
+  }
+
+  .uik-connection[data-status='offline'] .uik-connection__dot {
+    background: var(--_highlight);
+  }
+}

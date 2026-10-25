@@ -1,0 +1,291 @@
+/*
+ * ui-kit / notifications
+ * Thème par variables : définir --uik-* sur un ancêtre pour habiller les composants.
+ * Toutes les règles sont dans la couche « ui-kit » : l'application peut les surcharger.
+ */
+@layer ui-kit {
+  .uik-notifications,
+  .uik-toaster {
+    --_surface: var(--uik-surface, #fbf8f1);
+    --_surface-hover: var(--uik-surface-hover, rgb(0 0 0 / 0.04));
+    --_ink: var(--uik-ink, #24231d);
+    --_ink-muted: var(--uik-ink-muted, #66625a);
+    --_line: var(--uik-line, rgb(0 0 0 / 0.1));
+    --_accent: var(--uik-accent, #3f5d3a);
+    --_accent-ink: var(--uik-accent-ink, #fff);
+    --_highlight: var(--uik-highlight, #c2652a);
+    --_danger: var(--uik-danger, #a4442b);
+    --_success: var(--uik-success, #4a7a3e);
+    --_radius: var(--uik-radius, 10px);
+    --_shadow: var(--uik-shadow, 0 12px 32px rgb(0 0 0 / 0.18));
+    --_font: var(--uik-font, inherit);
+    font-family: var(--_font);
+  }
+
+  /* — Centre de notifications — */
+  .uik-notifications {
+    position: relative;
+  }
+
+  .uik-notifications__trigger {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .uik-notifications__trigger:hover {
+    background: rgb(255 255 255 / 0.14);
+  }
+
+  .uik-notifications__badge {
+    position: absolute;
+    top: 0.15rem;
+    right: 0.1rem;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: var(--_highlight);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.15rem;
+    text-align: center;
+  }
+
+  .uik-notifications__panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 50;
+    width: min(22rem, calc(100vw - 2rem));
+    max-height: min(28rem, 70dvh);
+    overflow: auto;
+    border: 1px solid var(--_line);
+    border-radius: var(--_radius);
+    background: var(--_surface);
+    box-shadow: var(--_shadow);
+    color: var(--_ink);
+    text-shadow: none;
+  }
+
+  .uik-notifications__head {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem 0.6rem;
+    border-bottom: 1px solid var(--_line);
+    background: var(--_surface);
+  }
+
+  .uik-notifications__title {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .uik-notifications__link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--_accent);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .uik-notifications__empty {
+    margin: 0;
+    padding: 1.5rem 1rem;
+    color: var(--_ink-muted);
+    text-align: center;
+  }
+
+  .uik-notifications__list {
+    margin: 0;
+    padding: 0.35rem 0;
+    list-style: none;
+  }
+
+  .uik-notifications__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .uik-notifications__item:hover {
+    background: var(--_surface-hover);
+  }
+
+  .uik-notifications__item[data-unread]::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0.4rem;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--_highlight);
+    transform: translateY(-50%);
+  }
+
+  .uik-notifications__leading {
+    flex: none;
+  }
+
+  .uik-notifications__text {
+    display: grid;
+    flex: 1;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .uik-notifications__item-title {
+    font-size: 0.92rem;
+  }
+
+  .uik-notifications__item[data-unread] .uik-notifications__item-title {
+    font-weight: 700;
+  }
+
+  .uik-notifications__item-description {
+    overflow: hidden;
+    color: var(--_ink-muted);
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .uik-notifications__time {
+    color: var(--_ink-muted);
+    font-size: 0.75rem;
+  }
+
+  .uik-notifications__action,
+  .uik-toast__action {
+    flex: none;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--_line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--_accent);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .uik-notifications__action:hover,
+  .uik-toast__action:hover {
+    border-color: var(--_accent);
+  }
+
+  /* — Toasts — */
+  .uik-toaster {
+    position: fixed;
+    z-index: 60;
+    width: min(23rem, calc(100vw - 2rem));
+    pointer-events: none;
+  }
+
+  .uik-toaster[data-position^='top'] { top: 1rem; }
+  .uik-toaster[data-position^='bottom'] { bottom: 1rem; }
+  .uik-toaster[data-position$='left'] { left: 1rem; }
+  .uik-toaster[data-position$='right'] { right: 1rem; }
+
+  .uik-toaster__list {
+    display: grid;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .uik-toast {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.6rem 0.75rem 0.9rem;
+    border: 1px solid var(--_line);
+    border-left: 3px solid var(--_accent);
+    border-radius: var(--_radius);
+    background: var(--_surface);
+    box-shadow: var(--_shadow);
+    color: var(--_ink);
+    pointer-events: auto;
+    animation: uik-toast-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .uik-toast[data-tone='highlight'] { border-left-color: var(--_highlight); }
+  .uik-toast[data-tone='danger'] { border-left-color: var(--_danger); }
+  .uik-toast[data-tone='success'] { border-left-color: var(--_success); }
+
+  .uik-toast__leading {
+    flex: none;
+  }
+
+  .uik-toast__text {
+    display: grid;
+    flex: 1;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .uik-toast__title {
+    font-weight: 700;
+    font-size: 0.93rem;
+  }
+
+  .uik-toast__description {
+    overflow: hidden;
+    color: var(--_ink-muted);
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .uik-toast__close {
+    flex: none;
+    width: 1.8rem;
+    height: 1.8rem;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--_ink-muted);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .uik-toast__close:hover {
+    background: var(--_surface-hover);
+    color: var(--_ink);
+  }
+
+  @keyframes uik-toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .uik-toast {
+      animation: none;
+    }
+  }
+}
