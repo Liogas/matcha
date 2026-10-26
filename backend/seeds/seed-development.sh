@@ -1,7 +1,8 @@
 #!/bin/sh
 set -eu
 
-docker compose exec -T database psql -v ON_ERROR_STOP=1 -U admin -d matcha \
+docker compose exec -T database sh -c \
+	'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
 	< backend/seeds/development_profiles.sql
 
 image='UklGRiIAAABXRUJQVlA4IBQAAAAwAQCdASoBAAEALAsAAP7/+P8AAA=='

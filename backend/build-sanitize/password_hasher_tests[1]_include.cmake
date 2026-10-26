@@ -1,5 +1,0 @@
-if(EXISTS "/app/build-sanitize/password_hasher_tests[1]_tests.cmake")
-  include("/app/build-sanitize/password_hasher_tests[1]_tests.cmake")
-else()
-  add_test(password_hasher_tests_NOT_BUILT password_hasher_tests_NOT_BUILT)
-endif()

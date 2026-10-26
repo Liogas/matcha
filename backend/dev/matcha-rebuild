@@ -1,0 +1,13 @@
+#!/bin/sh
+# Recompile puis redemarre le serveur, sans redemarrer le conteneur.
+# Si la compilation echoue, l'ancien serveur continue de tourner.
+set -eu
+
+matcha-build "$@"
+
+pidfile=/tmp/matcha_backend.pid
+if [ -s "$pidfile" ] && kill "$(cat "$pidfile")" 2>/dev/null; then
+	echo "[dev] Serveur arrete, matcha-dev-server le relance avec le nouveau binaire"
+else
+	echo "[dev] Aucun serveur en cours, matcha-dev-server va le lancer"
+fi

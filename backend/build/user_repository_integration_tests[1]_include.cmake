@@ -1,5 +1,0 @@
-if(EXISTS "/app/build/user_repository_integration_tests[1]_tests.cmake")
-  include("/app/build/user_repository_integration_tests[1]_tests.cmake")
-else()
-  add_test(user_repository_integration_tests_NOT_BUILT user_repository_integration_tests_NOT_BUILT)
-endif()

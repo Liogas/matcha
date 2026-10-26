@@ -1,0 +1,31 @@
+#!/bin/sh
+# Processus principal du conteneur de dev : compile au premier lancement,
+# puis lance le serveur et le relance a chaque fois qu'il s'arrete
+# (matcha-rebuild l'arrete apres une compilation reussie).
+set -u
+cd /app
+
+pidfile=/tmp/matcha_backend.pid
+binary=/app/build/matcha_backend
+
+stop() {
+	[ -s "$pidfile" ] && kill "$(cat "$pidfile")" 2>/dev/null
+	exit 0
+}
+trap stop TERM INT
+
+if [ ! -x "$binary" ]; then
+	echo "[dev] Premiere compilation..."
+	matcha-build || echo "[dev] Compilation echouee : corrige puis lance 'make rebuild'"
+fi
+
+while true; do
+	if [ -x "$binary" ]; then
+		echo "[dev] Lancement du serveur"
+		"$binary" &
+		echo $! > "$pidfile"
+		wait $!
+		echo "[dev] Serveur arrete (code $?)"
+	fi
+	sleep 2
+done

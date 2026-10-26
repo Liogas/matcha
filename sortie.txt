@@ -1,0 +1,39 @@
+bash-5.3$ make up
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+>>>> Executing external compose provider "/usr/bin/podman-compose". Please see podman-compose(1) for how to disable this message. <<<<
+
+be0d4ccb6b40920bd7352ba0ab2e39ebc619d05914ac054ca3d4b90dbdb052df
+4df5c34dc41256fc4ed293482cb34281e17d133077e9aa3c6a87fda60a356c65
+88f52f3d58a505b7e1ad96ca6969478517bcccb58418e75a54223271a64da7df
+82903352d6faf8f8a318bc4353d1cb1db67d4a5ff968d2799b2718e2cb00afa2
+46c0b0e9770665f6888a5261c3d9912dce18f4f60d0457a2498680ecf735d640
+e9cfc1b4a64dec6f832201c812e101678a44f9a222ff85ed634881a2cde27410
+2a5fdc18beabfabef4e62d5301d8d7472917c95b27dacb6bf055d6b4d6772abc
+87969af4a9884816bd391c85ed9f1990b80fb65a5be5c359b578230db04daf8f
+49ec151e1f83c0da0272ae2b2153535722a205969e336a02cfac4f3743979898
+82baa7d1b18bd8bd9f3979ffc8aada94b172a222bb78b490539d1291d86efaff
+f7dca92178bff5884b2fbe0657fbd4a3c7241bcbd5a58e285452256a01f5d0a3
+[mailpit]  | time="2026/10/26 12:02:35" level=warning msg="[http] listening on [::]:8025 without --ui-auth-file or --allowed-hosts; the API is reachable from any host that can route to this interface"
+[mailpit]  | time="2026/10/26 12:02:35" level=info msg="[smtpd] starting on [::]:1025 (no encryption)"
+[mailpit]  | time="2026/10/26 12:02:35" level=info msg="[http] starting on [::]:8025"
+[mailpit]  | time="2026/10/26 12:02:35" level=info msg="[http] accessible via http://localhost:8025/"
+[redis]    | 1:C 26 Oct 2026 12:02:35.670 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+[redis]    | 1:C 26 Oct 2026 12:02:35.670 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+[redis]    | 1:C 26 Oct 2026 12:02:35.670 * Redis version=7.4.11, bits=64, commit=00000000, modified=0, pid=1, just started
+[redis]    | 1:C 26 Oct 2026 12:02:35.670 * Configuration loaded
+[redis]    | 1:M 26 Oct 2026 12:02:35.671 * monotonic clock: POSIX clock_gettime
+[redis]    | 1:M 26 Oct 2026 12:02:35.672 * Running mode=standalone, port=6379.
+[redis]    | 1:M 26 Oct 2026 12:02:35.672 * Server initialized
+[redis]    | 1:M 26 Oct 2026 12:02:35.672 * Ready to accept connections tcp
+[database] | 
+[database] | PostgreSQL Database directory appears to contain a database; Skipping initialization
+[database] | 
+[database] | 2026-10-26 12:02:35.693 UTC [1] LOG:  starting PostgreSQL 17.11 (Debian 17.11-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+[database] | 2026-10-26 12:02:35.693 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+[database] | 2026-10-26 12:02:35.693 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+[database] | 2026-10-26 12:02:35.695 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+[database] | 2026-10-26 12:02:35.697 UTC [11] LOG:  database system was shut down at 2026-10-26 12:02:15 UTC
+[database] | 2026-10-26 12:02:35.700 UTC [1] LOG:  database system is ready to accept connections
+[backend]  | Error: unable to start container 49ec151e1f83c0da0272ae2b2153535722a205969e336a02cfac4f3743979898: crun: executable file `/app/./matcha_backend` not found: No such file or directory: OCI runtime attempted to invoke a command that was not found
+

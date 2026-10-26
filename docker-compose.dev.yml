@@ -1,0 +1,17 @@
+# Surcharge pour le developpement, utilisee par le Makefile :
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml ...
+# Le backend utilise l'image `dev` (compilateur + dependances), le code de
+# ./backend est monte dans /app et compile dans le volume backend_build.
+services:
+  backend:
+    build:
+      target: dev
+    # Nom d'image distinct de la prod : sinon `make up` peut reprendre
+    # l'image runtime construite par `make prod` (et inversement).
+    image: matcha_backend:dev
+    volumes:
+      - ./backend:/app
+      - backend_build:/app/build
+
+volumes:
+  backend_build:

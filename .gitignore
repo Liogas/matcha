@@ -3,3 +3,5 @@
 !.env.example
 /secrets/
 tests/certs/test-key.pem
+/backend/build/
+/backend/build-sanitize/

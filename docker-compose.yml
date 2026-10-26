@@ -5,32 +5,46 @@ services:
     sysctls:
       net.ipv4.ping_group_range: "999 999"
     container_name: matcha_database
-    environment: # NE PAS LAISSER LES VALEURS BRUTS
-      POSTGRES_DB: matcha
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-matcha}
+      POSTGRES_USER: ${POSTGRES_USER:-matcha}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-   
+    secrets:
+      - db_password
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   backend:
     build:
       context: ./backend
+      target: runtime
+    image: matcha_backend:prod
     container_name: matcha_backend
+    # L'image tourne avec l'utilisateur matcha (uid 10001) : on lui fait
+    # correspondre l'utilisateur de l'hote pour qu'il puisse lire les secrets.
+    userns_mode: "keep-id:uid=10001,gid=10001"
     depends_on:
       database:
-        condition: service_started
+        condition: service_healthy
       redis:
         condition: service_healthy
       mailpit:
         condition: service_started
-    environment: # NE PAS LAISSER LES VALEURS BRUTS
+    environment:
       DB_HOST: database
       DB_PORT: 5432
-      DB_NAME: matcha
-      DB_USER: admin
-      DB_PASSWORD: admin
+      DB_NAME: ${POSTGRES_DB:-matcha}
+      DB_USER: ${POSTGRES_USER:-matcha}
+      DB_PASSWORD_FILE: /run/secrets/db_password
       JWT_ISSUER: ${JWT_ISSUER:?Set JWT_ISSUER in the environment or .env}
       JWT_AUDIENCE: ${JWT_AUDIENCE:?Set JWT_AUDIENCE in the environment or .env}
       JWT_JWKS_URL: ${JWT_JWKS_URL:?Set JWT_JWKS_URL in the environment or .env}
@@ -49,11 +63,9 @@ services:
       AUTH_REFRESH_COOKIE_SECURE: ${AUTH_REFRESH_COOKIE_SECURE:-false}
       MATCHA_CLEANUP_ORPHANED_IMAGES: ${MATCHA_CLEANUP_ORPHANED_IMAGES:-false}
     volumes:
-      - ./backend:/app
-      - backend_build:/app/build
-      - backend_vcpkg:/app/vcpkg_installed
       - profile_uploads:/var/lib/matcha/uploads
     secrets:
+      - db_password
       - jwt_private_key
       - redis_password
 
@@ -108,11 +120,11 @@ services:
 
 volumes:
   postgres_data:
-  backend_build:
-  backend_vcpkg:
   profile_uploads:
 
 secrets:
+  db_password:
+    file: ${DB_PASSWORD_FILE:?Set DB_PASSWORD_FILE to the PostgreSQL password file path}
   jwt_private_key:
     file: ${JWT_PRIVATE_KEY_FILE:?Set JWT_PRIVATE_KEY_FILE to the private PEM path}
   redis_password:

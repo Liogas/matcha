@@ -1,10 +1,33 @@
 #include "Database.hpp"
 
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <thread>
 #include <chrono>
 #include <stdexcept>
+
+namespace
+{
+	std::string readPasswordFile(const char *path)
+	{
+		std::ifstream file(path, std::ios::binary);
+		if (!file)
+			throw std::runtime_error("Unable to read DB_PASSWORD_FILE");
+
+		std::string password{
+			std::istreambuf_iterator<char>(file),
+			std::istreambuf_iterator<char>()
+		};
+		while (!password.empty() &&
+			(password.back() == '\n' || password.back() == '\r'))
+			password.pop_back();
+		if (password.empty())
+			throw std::runtime_error("DB_PASSWORD_FILE is empty");
+		return password;
+	}
+}
 
 Database::Database():
 	_connection(nullptr)
@@ -13,16 +36,17 @@ Database::Database():
 	const char *port = std::getenv("DB_PORT");
 	const char *dbname = std::getenv("DB_NAME");
 	const char *user = std::getenv("DB_USER");
-	const char *pwd = std::getenv("DB_PASSWORD");
-	if (!host || !port || !dbname || !user || !pwd)
+	const char *pwdFile = std::getenv("DB_PASSWORD_FILE");
+	if (!host || !port || !dbname || !user || !pwdFile)
 		throw std::runtime_error("Database environment is incomplete");
+	const std::string pwd = readPasswordFile(pwdFile);
 
 	std::string info =
 		"host=" + std::string(host) +
 		" port=" + std::string(port) +
 		" dbname=" + std::string(dbname) +
 		" user=" + std::string(user) +
-		" password=" + std::string(pwd);
+		" password=" + pwd;
 
 	constexpr int max = 12;
 	constexpr int delay = 5;

@@ -5,6 +5,50 @@ React posé sur une clairière en 3D qui vit au rythme du jour et des saisons.
 Pages, décor, composants et architecture du frontend :
 [`frontend/README.md`](frontend/README.md).
 
+## Démarrage
+
+Prérequis : Docker (ou Podman) avec Compose, `make` et `openssl`.
+
+```sh
+make build     # dev, premier lancement (construit les images)
+make up        # dev, lancements suivants
+make rebuild   # recompile le backend sans relancer le conteneur
+make prod      # image de production (binaire seul, sans code source)
+```
+
+Fonctionnement du build multi-étapes et du mode dev :
+[`docs/docker-backend.md`](docs/docker-backend.md). Toutes les fiches et guides :
+[`docs/`](docs/README.md).
+
+Avant chaque lancement, `make secrets` (appelé automatiquement par `build` et
+`up`) exécute `scripts/init-secrets.sh`, qui :
+
+- crée `.env` à partir de `.env.example` s’il n’existe pas, et y ajoute les
+  variables apparues depuis dans `.env.example` ;
+- génère dans `./secrets/` (droits `600`) les secrets manquants, sans jamais
+  écraser un secret existant :
+  - `db-password` : mot de passe PostgreSQL ;
+  - `redis-password` : mot de passe Redis ;
+  - `jwt-private.pem` : clé RSA 2048 bits de signature des JWT.
+
+`.env` ne contient que des réglages et des **chemins** vers ces fichiers ;
+Compose les monte dans `/run/secrets/` et aucun mot de passe n’apparaît dans
+`docker-compose.yml` ni dans l’environnement des conteneurs. `.env` et
+`secrets/` sont ignorés par Git.
+
+PostgreSQL n’initialise son mot de passe qu’à la création du volume
+`postgres_data`. Si `secrets/db-password` est régénéré alors que le volume
+existe déjà, il faut soit supprimer le volume (`docker compose down -v`, perte
+des données), soit appliquer le nouveau mot de passe :
+
+```sh
+docker compose exec database sh -c \
+  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ALTER USER \"$POSTGRES_USER\" PASSWORD '"'"'$(cat /run/secrets/db_password)'"'"'"'
+```
+
+En production, le mot de passe SMTP suit le même principe
+(`EMAIL_SMTP_PASSWORD_FILE`).
+
 ## Bibliothèques du backend
 
 CROW        -> Bibliotheque pour créer un serveur WEB
@@ -56,22 +100,12 @@ supplémentaire reçoit `429` et l’en-tête `Retry-After`. Une connexion réus
 réinitialise le compteur de cette combinaison. Si Redis est indisponible, le
 login répond `503` plutôt que de désactiver silencieusement la protection.
 
-Pour le développement local, crée le secret Redis et ajoute son chemin côté
-hôte au `.env` non versionné :
-
-```sh
-mkdir -p secrets
-umask 077
-openssl rand -hex 32 > secrets/redis-password
-chmod 600 secrets/redis-password
-```
-
-Ajoute ensuite `REDIS_PASSWORD_FILE=./secrets/redis-password` dans `.env`.
-Compose monte le secret dans les conteneurs ; le mot de passe lui-même ne doit
-pas être placé dans `.env` ni versionné. Le service Redis est privé au réseau
+Le mot de passe Redis est lu depuis le secret monté par Compose (voir
+[Démarrage](#démarrage)).
+Le mot de passe lui-même ne doit pas être placé dans `.env` ni versionné. Le service Redis est privé au réseau
 Compose et n’active pas la persistance, puisque ses compteurs sont temporaires.
 Les tests du limiteur Redis peuvent être lancés après le démarrage des services
-avec `docker compose exec -T backend ctest --test-dir /app/build -R RedisLoginAttemptLimiterTest --output-on-failure`.
+en dev avec `make test`, ou seulement ceux-ci avec `make shell` puis `ctest --test-dir build -R RedisLoginAttemptLimiterTest --output-on-failure`.
 
 ## Modèle de données compte et profil
 
@@ -178,9 +212,10 @@ fichiers associés. Pour supprimer explicitement les fichiers présents dans le
 volume mais absents des métadonnées PostgreSQL, activez temporairement :
 
 ```sh
-docker compose exec -e MATCHA_CLEANUP_ORPHANED_IMAGES=true \
-  backend /app/build/matcha_backend
+MATCHA_CLEANUP_ORPHANED_IMAGES=true make up   # ou make prod
 ```
+
+puis relancez normalement (`make up`) pour désactiver le nettoyage.
 
 Cette opération parcourt uniquement le volume d'uploads dédié et doit être
 effectuée après le chargement éventuel des seeds.

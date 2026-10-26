@@ -1,19 +1,51 @@
+COMPOSE      = docker compose
+COMPOSE_DEV  = docker compose -f docker-compose.yml -f docker-compose.dev.yml
 
 all:
-	@echo "Liste de cmd disponibles : build / up / down / start / stop"
+	@echo "Dev        : build / up / down / start / stop / rebuild / test / logs / shell"
+	@echo "Production : prod / prod-down"
+	@echo "Divers     : secrets"
 
-build:
-	docker compose up --build
+secrets:
+	@sh scripts/init-secrets.sh
 
-up:
-	docker compose up
+# --- Developpement : code monte dans le conteneur, recompilation a chaud ---
+
+build: secrets
+	$(COMPOSE_DEV) up --build
+
+up: secrets
+	$(COMPOSE_DEV) up
 
 down:
-	docker compose down
+	$(COMPOSE_DEV) down
 
 start:
-	docker compose start
+	$(COMPOSE_DEV) start
 
 stop:
-	docker compose stop
+	$(COMPOSE_DEV) stop
 
+# Recompile le backend et redemarre le serveur sans redemarrer le conteneur.
+rebuild:
+	$(COMPOSE_DEV) exec backend matcha-rebuild
+
+# Compile executable + tests puis lance ctest.
+test:
+	$(COMPOSE_DEV) exec backend sh -c 'matcha-build all && ctest --test-dir build --output-on-failure'
+
+logs:
+	$(COMPOSE_DEV) logs -f backend
+
+shell:
+	$(COMPOSE_DEV) exec backend bash
+
+# --- Production : image finale legere, sans code source ni compilateur ---
+
+prod: secrets
+	$(COMPOSE) up --build
+
+prod-down:
+	$(COMPOSE) down
+
+.PHONY: all secrets build up down start stop rebuild test logs shell prod prod-down
