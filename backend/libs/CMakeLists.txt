@@ -1,5 +1,2 @@
-# Bibliothèques internes du backend, indépendantes de Matcha.
-# Ordre important : une lib doit être déclarée AVANT celles qui en dépendent
-# (couche 0 en premier, voir le planning « Semaine des bibliothèques »).
-
+# « Ordre des couches basses vers les couches hautes : obligatoire dès qu'une lib teste if(TARGET ...) ».
 add_subdirectory(cpp-auth)

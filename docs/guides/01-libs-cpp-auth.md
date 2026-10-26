@@ -275,11 +275,24 @@ cpp-validation, cpp-geo, cpp-realtime et cpp-notify. Avec ce fichier, la liste d
 et **leur ordre** vivent au même endroit, à côté des libs, et non au milieu de la config
 de l'application.
 
-**Pourquoi l'ordre compte** : CMake lit les `add_subdirectory` de haut en bas. Si cpp-pg
-appelle `target_link_libraries(cpp-pg PUBLIC cpp-core::cpp-core)` et que cpp-core n'a pas
-encore été lu, la cible `cpp-core::cpp-core` n'existe pas : CMake s'arrête avec une erreur
-du type « target not found ». On déclare donc les libs **des couches basses vers les
-couches hautes**, comme dans le schéma du planning.
+**Quand l'ordre compte** : CMake lit les `add_subdirectory` de haut en bas, mais il ne
+résout les noms passés à `target_link_libraries` qu'**à la fin** (à la génération), une
+fois tous les fichiers lus. Un simple `target_link_libraries(cpp-pg PUBLIC
+cpp-core::cpp-core)` marche donc même si cpp-core est déclaré après.
+
+L'ordre devient important dès qu'une lib **teste l'existence** d'une cible pendant la
+lecture, typiquement pour être utilisable seule ou dans le monorepo :
+
+```cmake
+if(NOT TARGET cpp-core::cpp-core)       # pas fourni par le monorepo ?
+    find_package(cpp-core CONFIG REQUIRED)  # alors on le cherche installé
+endif()
+```
+
+Si cpp-core n'a pas encore été lu, le `if` est vrai, `find_package` ne trouve rien et
+CMake s'arrête. On déclare donc les libs **des couches basses vers les couches hautes**,
+comme dans le schéma du planning : c'est toujours correct, et ça rend le fichier lisible
+comme un graphe de dépendances.
 
 Contenu à écrire dans `backend/libs/CMakeLists.txt` :
 
@@ -617,16 +630,48 @@ Réponds sans regarder. Si tu bloques, relis la section indiquée.
 
 1. Quelle différence entre `add_subdirectory()` et `find_package()` ? Lequel utilise le
    backend pour cpp-auth, et lequel utilise `package-consumer` ? (§1.3, étape J)
+Ma reponse :  Le premier va permettre d'ajouter les regles d'un autre CMakeList la ou le deuxieme permet de recuperer quelque chose qui a deja ete compile 
+Correction : add_subdirectory / find_package : juste, mais incomplet.
+- add_subdirectory lit le CMakeLists.txt de la lib, qui est alors compilée dans le même build que l'application.
+- find_package cherche une lib déjà installée, via son cpp-authConfig.cmake, et importe ses cibles.
+- Il manquait qui utilise quoi : le backend utilise add_subdirectory, le package-consumer find_package.
 2. Pourquoi l'alias `cpp-auth::cpp-auth` existe-t-il ? (§1.4)
+   Reponse : Afin de creer une reference vers l'executable ou la bibliotheque cpp-auth
+Correction :  L'alias : il faut préciser. Ce n'est pas l'exécutable, c'est un second nom pour la cible de la bibliothèque. Il sert à deux choses :
+- Avoir le même nom partout. find_package fournit aussi cpp-auth::cpp-auth. Le code qui utilise la lib s'écrit donc pareil, qu'elle vienne du monorepo ou d'une installation.
+- Détecter les erreurs. Un nom qui contient :: doit obligatoirement être une cible. Si tu fais une faute de frappe, CMake s'arrête. Sans ::, il essaierait en silence de lier un fichier libcpp-auth.a du système.
 3. Pourquoi les `#include <auth/...>` du backend n'ont-ils pas cassé après le
    déplacement ? (étape D)
+   Reponse : Parce que les includes de cpp-auth ont ete declare comme PUBLIC 
+   Correction :  L'alias : il faut préciser. Ce n'est pas l'exécutable, c'est un second nom pour la cible de la bibliothèque. Il sert à deux choses :
+- Avoir le même nom partout. find_package fournit aussi cpp-auth::cpp-auth. Le code qui utilise la lib s'écrit donc pareil, qu'elle vienne du monorepo ou d'une installation.
+- Détecter les erreurs. Un nom qui contient :: doit obligatoirement être une cible. Si tu fais une faute de frappe, CMake s'arrête. Sans ::, il essaierait en silence de lier un fichier libcpp-auth.a du système.
 4. Pourquoi changer la valeur par défaut d'une `option()` n'a-t-il eu aucun effet sur le
    build existant ? Comment l'as-tu contourné ? (§1.6, étape G)
+Reponse : Puisque le cache de CMake ne se met pas a jour suite au modification il faut donc le supprime avant 
+Correction :  Le cache : juste. Précisément : option() n'écrase jamais une valeur déjà présente dans le cache. Sa valeur par défaut ne sert qu'à la toute première configuration. On s'en sort en supprimant le cache, ou en passant -D pour imposer la valeur.
 5. Que vaut `PROJECT_IS_TOP_LEVEL` pour cpp-auth quand tu lances `make test` ? Et à
    l'étape J ? (§1.5)
+   Reponse : Lorsque je lance make test il vaut OFF puisque la lib n'est pas le top projet etant donne que le backend en depend, alors qu'a l'etape J c'est bon
+   Correction :  PROJECT_IS_TOP_LEVEL : juste. C'est OFF dans make test, puisque le projet principal est le backend, et ON à l'étape J. Attention à ne pas confondre avec CPP_AUTH_BUILD_TESTS, qui vaut ON dans make test grâce au -D de matcha-build.
 6. Pourquoi modifier `dev/matcha-build` demande-t-il un `make build`, alors qu'un
    `.cpp` ne demande qu'un `make rebuild` ? (étape H)
+   Reponse : Puisque les modifications vont se perdre dans le cache deja existant ?
+   Correction : make build : ce n'est pas le cache. La vraie raison :
+- backend/ est monté dans le conteneur. Un .cpp modifié y apparaît donc tout de suite, et make rebuild suffit.
+- dev/matcha-build est copié dans l'image au moment du build (COPY dev/ /usr/local/bin/), et c'est cette copie qui s'exécute. Pour qu'elle change, il faut reconstruire l'image et recréer le conteneur. C'est exactement le piège dans lequel tu es tombé tout à l'heure.
 7. Demain, cpp-pg dépendra de cpp-core. Que se passe-t-il si tu écris
    `add_subdirectory(cpp-pg)` avant `add_subdirectory(cpp-core)` ? (étape E)
-
+   Reponse : J'aurais une erreur de dependance manquante 
+  Correction : L'ordre des add_subdirectory : mon guide était faux. Je l'ai vérifié sur un mini-projet :
+- avec un simple target_link_libraries(cpp-pg PUBLIC cpp-core::cpp-core), cpp-pg placé avant cpp-core compile sans erreur, car CMake ne résout les noms de cibles qu'à la fin, une fois tous les fichiers lus ;
+- l'ordre ne compte que si une lib vérifie pendant la lecture que la cible existe, par exemple avec if(NOT TARGET cpp-core::cpp-core) suivi de find_package(...). Là, l'erreur apparaît.
+  
 Quand tu as fini : montre `git log --oneline -3` et tes réponses pour une revue.
+
+bash-5.3$ git log --oneline -3
+bfc0304 (HEAD -> libs/move-cpp-auth) cpp-auth : tests descatives par defaut en sous-projet (audit 6.1 #14)
+1b7bebc Deplace cpp-auth dans backend/libs
+9bc3f0f Secrets, build multi-etapes et mode dev
+bash-5.3$ 
+
