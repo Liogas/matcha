@@ -20,7 +20,7 @@ find_package(redis++ CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 
-add_subdirectory(cpp-auth)
+add_subdirectory(libs)
 
 add_executable(matcha_backend
     src/main.cpp
