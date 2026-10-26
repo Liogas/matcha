@@ -5,11 +5,13 @@
 set -eu
 cd /app
 
+# Tests des libs internes actives en dev (a deplacer dans CMakePresets.json).
 cmake -S . -B build \
 	-DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Debug}" \
 	-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
 	-DVCPKG_INSTALLED_DIR="$VCPKG_INSTALLED_DIR" \
 	-DVCPKG_MANIFEST_INSTALL=OFF \
+	-DCPP_AUTH_BUILD_TESTS=ON \
 	> /dev/null
 
 if [ "${1:-}" = "all" ]; then

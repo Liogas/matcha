@@ -144,6 +144,7 @@ utilisateur à l'utilisateur `matcha` du conteneur, pour qu'il puisse lire les s
 | Symptôme | Piste |
 |---|---|
 | `executable file /app/./matcha_backend not found` au `make up` | le conteneur de dev a démarré sur l'image de prod. Vérifie que `docker-compose.yml` (`image: matcha_backend:prod`) et `docker-compose.dev.yml` (`image: matcha_backend:dev`) ont bien des noms d'image différents, puis `make build` |
+| Une modif de `backend/dev/` ou du Dockerfile n'a aucun effet après `make build` | le conteneur n'a pas été recréé et tourne encore sur l'ancienne image. `make build` utilise désormais `--force-recreate` ; sinon `make down && make up`. Vérifier avec `docker inspect matcha_backend --format '{{.Created}}'` |
 | `make rebuild` : `no container with name … running` | le dev n'est pas lancé : `make up` |
 | Le serveur redémarre en boucle (`[dev] Serveur arrêté (code 1)`) | il plante au démarrage, lis le message juste au-dessus dans `make logs` |
 | Erreurs cmake bizarres après un changement de Dockerfile | supprimer le cache de build : `make down && docker volume rm matcha_backend_build && make build` |

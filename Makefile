@@ -12,7 +12,7 @@ secrets:
 # --- Developpement : code monte dans le conteneur, recompilation a chaud ---
 
 build: secrets
-	$(COMPOSE_DEV) up --build
+	$(COMPOSE_DEV) up --build --force-recreate
 
 up: secrets
 	$(COMPOSE_DEV) up
@@ -43,7 +43,7 @@ shell:
 # --- Production : image finale legere, sans code source ni compilateur ---
 
 prod: secrets
-	$(COMPOSE) up --build
+	$(COMPOSE) up --build --force-recreate
 
 prod-down:
 	$(COMPOSE) down

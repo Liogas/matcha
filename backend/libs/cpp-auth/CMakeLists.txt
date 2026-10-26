@@ -1,13 +1,8 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 
 set(CPP_AUTH_VERSION 0.1.0)
-
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    project(cpp-auth VERSION ${CPP_AUTH_VERSION} LANGUAGES CXX)
-    option(CPP_AUTH_BUILD_TESTS "Build cpp-auth tests" OFF)
-else()
-    option(CPP_AUTH_BUILD_TESTS "Build cpp-auth tests" ON)
-endif()
+project(cpp-auth VERSION ${CPP_AUTH_VERSION} LANGUAGES CXX)
+option(CPP_AUTH_BUILD_TESTS "Build cpp-auth test" ${PROJECT_IS_TOP_LEVEL})
 
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(httplib CONFIG REQUIRED)

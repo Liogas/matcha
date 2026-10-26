@@ -502,10 +502,19 @@ cpp-auth déclare `openssl`, la racine non. Pourtant, ça compile. Pourquoi ?
 <details>
 <summary>Réponse</summary>
 
-La racine déclare `curl` avec la *feature* `openssl` : vcpkg installe donc OpenSSL **pour
-curl**, et cpp-auth en profite. C'est une **dépendance transitive** (on l'obtient « par
-ricochet »). Ça marche, mais c'est fragile : le jour où tu retires curl, cpp-auth casse
-sans raison apparente.
+La racine déclare `curl[openssl]` et `cpp-httplib[openssl]`. Une *feature* `openssl`
+veut dire « compile **cette** bibliothèque avec le support TLS ». Pour ça, vcpkg installe
+OpenSSL **pour curl et pour httplib**, et cpp-auth en profite. C'est une **dépendance
+transitive** (on l'obtient « par ricochet »).
+
+Or cpp-auth (et le backend) utilisent OpenSSL **directement** : `#include <openssl/...>`
+dans `RsaTokenSigner.cpp`, `SessionManager.cpp`… et `find_package(OpenSSL REQUIRED)` dans
+les deux `CMakeLists.txt`. Ça marche, mais c'est fragile : le jour où tu retires curl et
+la feature TLS de httplib, cpp-auth casse sans raison apparente.
+
+La feature `openssl` ne remplace donc pas `"openssl"` dans la liste : la première dit
+« httplib avec TLS », la seconde dit « **mon code** appelle OpenSSL ». C'est d'ailleurs
+pour ça que le `vcpkg.json` de cpp-auth contient les deux.
 
 </details>
 
