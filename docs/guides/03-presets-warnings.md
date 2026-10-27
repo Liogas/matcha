@@ -926,8 +926,7 @@ Pourquoi `-Werror` est-il activé dans `CMakePresets.json` et pas dans
 `cmake/Warnings.cmake`, ni dans le `CMakeLists.txt` de cpp-auth ?
 
 **Ta réponse :**
-
-…
+Le fait de le mettre dans CMakePresets.json est un choix que l'on a fait pour notre contexte de build. On ne le met pas directement dans CMakeLists parcequ'il ne doit pas bloquer la compilation d'une personne voulant utiliser la bibliotheque qui n'aurait pas la meme mise a jour, et pourrait donc detecter des erreurs qui ne sont pas presente dans notre contexte de build.
 
 ### Q2. L'ordre de `include(cmake/Warnings.cmake)` (§1.3, §4.2)
 
@@ -935,8 +934,7 @@ Que se passerait-il si tu déplaçais la ligne `include(cmake/Warnings.cmake)` t
 de `backend/CMakeLists.txt` ? Quelles cibles auraient encore les warnings ?
 
 **Ta réponse :**
-
-…
+Toutes les cibles etant declarees avant la ligne en question ne serait pas concernees par les warnings voulus. On le met avant pour que toutes les cibles en heritent bien.
 
 ### Q3. Le warning de `JsonJwksParser.hpp` (§4.4)
 
@@ -945,8 +943,7 @@ qu'elle est « defined but not used » ? Et pourquoi la déplacer dans le `.cpp`
 mieux qu'ajouter `-Wno-unused-function` ?
 
 **Ta réponse :**
-
-…
+Elle est effectivement utiliser dans JsnonJwksParser mais comme elle represente un namespace qui est propre au fichier en question il faudrait qu'elle soit utilisee dans tous les fichiers possedant l'include du fichier isValidBase64url, ce qui n'etait pas le cas. Donc on deplace ce namespace directement le namespace dans le fichier qui en a besoin.
 
 ### Q4. Debug et Release (§1.5, §5)
 
@@ -954,8 +951,7 @@ Pourquoi le warning de picojson n'apparaît-il qu'avec le preset `release`, alor
 le même code et les mêmes options de warnings ?
 
 **Ta réponse :**
-
-…
+Le preset release va faire une analyse plus fine, comme picojson met du code inline directement dans notre code, l'analyse va donc le voir et soulever une erreur.
 
 ### Q5. Les trois bugs (§1.6, §6.2)
 
@@ -964,8 +960,7 @@ Les trois tests `SanitizerDemo` passent en `debug`. Explique pourquoi un test pe
 sans `-fno-sanitize-recover=all` ?
 
 **Ta réponse :**
-
-…
+Parcequ'avec le mode debug et non sanitize il ne verifie pas ce point la lors des tests.
 
 ### Q6. `sanitize` hérite de `debug` (§3)
 
@@ -973,8 +968,7 @@ Pourquoi le preset `sanitize` hérite-t-il de `debug` plutôt que de `base` ou d
 `release` ? Donne deux raisons.
 
 **Ta réponse :**
-
-…
+Il herite de debug parcequ'il necessite les presets presents dans debug et non ceux de base ou release.
 
 ### Q7. Un dossier de build par preset (§1.7, guide 01 étape G)
 
@@ -982,8 +976,7 @@ Que se passerait-il si les trois presets utilisaient le même `binaryDir` (`buil
 que tu lançais `cmake --preset sanitize` puis `cmake --preset debug` ?
 
 **Ta réponse :**
-
-…
+Il devrait a chaque fois tout recompiler des qu'un preset est modifie. 
 
 ### Q8. `make build` (§8.1)
 
@@ -992,25 +985,227 @@ Tu as modifié `backend/dev/matcha-build`, qui est pourtant monté dans le conte
 utilise la nouvelle version ?
 
 **Ta réponse :**
-
-…
+Les containers etant deja lances, il ne pourrait pas prendre en compte les differences faites lors de l'utilisation de make test. Meme si ce fichier est monte dans le conteneur
 
 ---
 
 ## 11. Correction
 
-> Remplie après tes réponses.
->
 > **Légende** : 🟢 juste et complet · 🟡 juste mais incomplet ou imprécis ·
 > 🔴 faux ou à côté · ⏳ pas encore corrigé
 
 | Question | Évaluation |
 |---|---|
-| Q1. `-Werror` dans le preset | ⏳ |
-| Q2. L'ordre de `include` | ⏳ |
-| Q3. Le warning de `JsonJwksParser.hpp` | ⏳ |
-| Q4. Debug et Release | ⏳ |
-| Q5. Les trois bugs | ⏳ |
-| Q6. `sanitize` hérite de `debug` | ⏳ |
-| Q7. Un dossier de build par preset | ⏳ |
-| Q8. `make build` | ⏳ |
+| Q1. `-Werror` dans le preset | 🟢 |
+| Q2. L'ordre de `include` | 🟡 |
+| Q3. Le warning de `JsonJwksParser.hpp` | 🟡 |
+| Q4. Debug et Release | 🟡 |
+| Q5. Les trois bugs | 🟡 |
+| Q6. `sanitize` hérite de `debug` | 🔴 |
+| Q7. Un dossier de build par preset | 🟡 |
+| Q8. `make build` | 🔴 |
+
+**Bilan** : l'idée générale de chaque outil est acquise : à quoi sert `-Werror`, pourquoi
+l'ordre compte, ce que font les sanitizers. Ce qui manque presque partout, c'est
+**le mécanisme concret** : où une option est réellement **stockée**, quel fichier est
+réellement **exécuté**, quelle étape du compilateur produit vraiment le message. Trois
+questions (Q4, Q7, Q8) se résolvent avec le même réflexe :
+
+> **Ne pas raisonner sur ce qu'on a écrit, mais sur ce que la machine lit.**
+>
+> | On a écrit… | Mais la machine lit… |
+> |---|---|
+> | les options du preset `debug` | le **cache** `build/<dossier>/CMakeCache.txt`, qui garde aussi les anciennes (Q7) |
+> | `backend/dev/matcha-build` | `/usr/local/bin/matcha-build`, une **copie** faite dans l'image (Q8) |
+> | `#include <jwt-cpp/jwt.h>` en `-isystem` | du code picojson **recopié dans notre fonction** par l'optimiseur (Q4) |
+
+Autre point : Q5 et Q6 ont des réponses d'une ligne, alors que les questions demandaient
+deux choses. Relis toujours la question avant de valider : « explique… **et** que se
+passerait-il… », « donne **deux** raisons ».
+
+### Q1 — 🟢
+
+C'est exactement ça : `-Werror` est un choix de **notre** environnement de build, pas
+une propriété de la lib. Une lib s'installe chez d'autres (guide 02). Un compilateur plus
+récent invente de nouveaux warnings, et le build de quelqu'un d'autre casserait à cause de
+notre choix.
+
+Un détail en plus : comme c'est une variable du preset, on peut la couper ponctuellement
+sans modifier aucun fichier (`--compile-no-warning-as-error`, §1.2).
+
+### Q2 — 🟡
+
+**Le principe est juste** : `add_compile_options` ne touche que les cibles créées
+**après** lui.
+
+**Il manque la conclusion concrète** que demandait la question. Dans
+`backend/CMakeLists.txt`, toutes les cibles sont créées avant la fin du fichier :
+les libs (`add_subdirectory(libs)`, ligne 24), `matcha_backend` (ligne 26) et les 7
+exécutables de tests (lignes 69 à 161). Réponse : **aucune cible** n'aurait les warnings.
+
+Et le plus dangereux, c'est que **rien ne le signalerait**. `-Werror` reste actif (il vient
+du preset), mais sans `-Wall` il n'y a presque aucun warning à transformer en erreur. Le
+build passe, tout semble vert, et la règle « zéro warning » n'est plus vérifiée. C'est
+pour ça que le §4.4 te fait vérifier `flags.make` avec `grep` : on contrôle que l'option
+est **vraiment** arrivée au compilateur.
+
+### Q3 — 🟡
+
+**Le mécanisme est juste**, même si la formulation est confuse. Reformulé :
+
+1. Un namespace anonyme veut dire « privé à **ce** fichier `.cpp` ».
+2. `#include` est un **copier-coller** du texte de l'en-tête dans le `.cpp`.
+3. Donc chaque `.cpp` qui inclut `JsonJwksParser.hpp` reçoit **sa propre copie privée**
+   de `isValidBase64Url`. GCC analyse chaque `.cpp` séparément. Dans `main.cpp` et dans
+   les deux fichiers de tests, la copie n'est jamais appelée : « defined but not used ».
+
+L'appel dans `JsonJwksParser.cpp` ne compte que pour la copie de `JsonJwksParser.cpp`.
+
+**Il manque la seconde moitié** : pourquoi ne pas ajouter `-Wno-unused-function` ?
+
+- Ce serait **cacher le symptôme** : le vrai défaut (un détail d'implémentation exposé
+  dans l'en-tête **public**) resterait, et tout utilisateur de la lib recevrait encore une
+  fonction qui ne le concerne pas.
+- On perdrait le warning **pour tout le projet**. Le jour où une vraie fonction morte
+  apparaîtrait (code oublié après un refactor), plus personne ne serait prévenu.
+
+Règle générale : **on corrige la cause quand c'est notre code**. On ne coupe un warning
+(`-Wno-...`) que quand le code n'est pas à nous et que c'est un faux positif prouvé,
+comme picojson au §5, avec un commentaire qui l'explique.
+
+### Q4 — 🟡
+
+**Tu as trouvé l'ingrédient principal** : l'inlining du code de picojson dans le nôtre.
+
+**« Une analyse plus fine » est trop vague.** Ce n'est pas le preset qui analyse, c'est
+l'**optimiseur** de GCC. Les deux étapes :
+
+1. **Pourquoi seulement en Release** : `Release` ajoute `-O3`, `Debug` n'optimise pas
+   (§1.5). `-Wmaybe-uninitialized` n'est pas calculé par l'analyse « normale » du code,
+   mais par les **passes d'optimisation**, qui suivent les chemins possibles des valeurs
+   dans le programme. En `-O0`, ces passes ne tournent pas, donc ce warning ne peut pas
+   apparaître.
+2. **Pourquoi malgré `-isystem`** : `-isystem` fait taire les warnings **émis dans un
+   en-tête système**. Mais en `-O3`, GCC recopie le code de picojson à l'intérieur de
+   `TokenValidator.cpp`. L'analyse a lieu **après** cette copie : le code est désormais
+   dans **notre** fonction, et le filtre `-isystem` ne s'applique plus.
+
+Et une précision : ce n'est **pas** une erreur de picojson. C'est un **faux positif** :
+le code est correct, mais l'analyse de GCC 12 ne suit pas tous les chemins. Le
+« error » du message vient de `-Werror`.
+
+### Q5 — 🟡
+
+**L'idée est juste** : en `debug`, rien ne vérifie les accès mémoire. Mais la question
+demandait **pourquoi** un programme qui écrit hors d'un tableau ne plante pas, **et** ce
+que ferait `SignedOverflow` sans `-fno-sanitize-recover=all`. La seconde moitié manque.
+
+**Pourquoi le débordement ne plante pas.** Un programme ne plante (*segfault*) que s'il
+touche une adresse que le système ne lui a **pas donnée**. Or `new int[2]` ne réserve
+pas exactement 8 octets isolés : l'allocateur prend la mémoire par gros blocs, et la case
+`values[2]` tombe dans un octet qui appartient **déjà** au programme (une marge de
+l'allocateur, ou le bloc voisin). L'écriture réussit, elle écrase juste quelque chose
+d'autre. Personne ne vérifie : C++ ne contrôle pas les indices de tableau. C'est un
+**comportement indéfini** : le programme peut marcher, corrompre une donnée plus loin, ou
+planter des heures après, ailleurs. ASan, lui, place des zones « interdites » autour de
+chaque allocation et vérifie **chaque** accès : `values[2]` tombe dans une de ces zones.
+
+**Sans `-fno-sanitize-recover=all`.** Par défaut, UBSan **affiche** son message
+(`runtime error: signed integer overflow…`) puis **laisse le programme continuer**
+(*recover* = se rétablir). Le test va jusqu'au bout, `EXPECT_NE` passe, le test se
+termine avec le code 0 : **ctest le marque réussi**, même dans le preset `sanitize`. Le
+message est dans la sortie, mais personne ne le lit (même problème que les warnings sans
+`-Werror`, §1.2). L'option transforme chaque détection en **arrêt** du programme, donc en
+test échoué.
+
+À noter : ASan, lui, s'arrête déjà par défaut à la première erreur. Cette option
+concerne surtout UBSan.
+
+### Q6 — 🔴
+
+La réponse reprend la question (« il hérite de debug parce qu'il a besoin de debug ») sans
+dire **ce qu'il prend** à debug. Les deux raisons :
+
+**1. Les tests.** `debug` active `CPP_AUTH_BUILD_TESTS` (et `CPP_CORE_BUILD_TESTS` au
+guide 04). Un sanitizer ne trouve un bug que dans le code **exécuté**, et ce qui exécute
+notre code, ce sont les tests (`ctest --preset sanitize`). `base` et `release` ne
+compilent pas les tests des libs : le preset `sanitize` n'aurait presque rien à vérifier.
+
+**2. Le type de build `Debug`.**
+- `-g` : les rapports d'ASan et UBSan donnent le **fichier et la ligne** de chaque appel
+  (`LocalImageStorageTests.cpp:<ligne>` au §6.2). Sans `-g`, la pile d'appels ne contient
+  que des adresses.
+- pas d'optimisation : le programme exécute le code **tel que tu l'as écrit**. En `-O3`,
+  l'optimiseur peut supprimer ou transformer un code fautif avant que le sanitizer ne le
+  voie : par exemple `values[2] = 42` juste avant un `delete[]` est une écriture inutile,
+  qu'il a le droit d'effacer. Le bug serait alors invisible.
+- les `assert` restent actifs (pas de `-DNDEBUG`) : ce sont des vérifications de plus.
+
+Quant à `base`, il n'a pas de `CMAKE_BUILD_TYPE` du tout : on n'hérite jamais de lui pour
+lancer un build, il ne contient que ce qui est commun aux trois.
+
+### Q7 — 🟡
+
+**C'est vrai, ça recompilerait tout** à chaque changement de preset : les options de
+compilation changent, donc chaque `.o` doit être refait. C'est lent, mais ce n'est pas le
+vrai problème.
+
+**Le vrai problème : le build `debug` resterait instrumenté par les sanitizers, sans que
+tu le saches.** Un preset passe ses `cacheVariables` comme des `-D`. Un `-D` **écrit**
+une valeur dans `CMakeCache.txt`, mais une variable que le preset **ne mentionne pas** n'est
+jamais effacée : elle garde sa valeur précédente (c'est le piège du cache, guide 01,
+étape G).
+
+- `cmake --preset sanitize` écrit `CMAKE_CXX_FLAGS=-fsanitize=address,undefined ...` dans
+  le cache ;
+- `cmake --preset debug` ne définit pas `CMAKE_CXX_FLAGS`, donc il **ne le remet pas à
+  vide** : la valeur de `sanitize` reste.
+
+Résultat : ton build « debug » est en fait un build sanitize, deux fois plus lent, et
+aucun message ne te prévient. Je l'ai vérifié avec un petit projet :
+
+```
+$ cmake --preset sanitize && cmake --preset debug      # même binaryDir
+$ grep '^CMAKE_CXX_FLAGS:' build/CMakeCache.txt
+CMAKE_CXX_FLAGS:STRING=-DFROM_SANITIZE                  # la valeur de sanitize est restée
+```
+
+D'où la règle : **un dossier de build = une configuration**. Avec un `binaryDir` par
+preset, chaque cache ne voit jamais qu'un seul jeu d'options.
+
+### Q8 — 🔴
+
+**La raison n'est pas que le conteneur tourne déjà.** Un script shell est relu depuis
+le disque **à chaque exécution** : si `make test` lisait le fichier monté, il verrait la
+nouvelle version immédiatement, sans redémarrage. Et redémarrer le conteneur ne changerait
+rien : il repartirait de la même image.
+
+**La vraie raison : ce n'est pas le fichier monté qui est exécuté.** Dans
+`backend/Dockerfile`, ligne 51 :
+
+```dockerfile
+COPY dev/ /usr/local/bin/
+```
+
+Au moment de **construire l'image**, les scripts de `dev/` sont **copiés** dans
+`/usr/local/bin/`. Dans le conteneur, il y a donc deux fichiers :
+
+| Chemin dans le conteneur | D'où il vient | Mis à jour quand tu modifies le fichier sur l'hôte ? |
+|---|---|---|
+| `/app/dev/matcha-build` | le montage `./backend:/app` | oui, immédiatement |
+| `/usr/local/bin/matcha-build` | la copie `COPY` faite pendant `docker compose build` | **non**, figé dans l'image |
+
+Le Makefile lance `matcha-build all` **sans chemin**. Le shell cherche alors la commande
+dans les dossiers du `PATH`, trouve `/usr/local/bin/matcha-build`, et exécute la
+**vieille** copie. Le fichier monté, lui, n'est lu par personne.
+
+Tu peux le constater toi-même :
+
+```sh
+docker compose exec backend sh -c 'command -v matcha-build'
+# /usr/local/bin/matcha-build
+docker compose exec backend sh -c 'diff /app/dev/matcha-build /usr/local/bin/matcha-build && echo identiques'
+# identiques, depuis ton make build ; un diff s'afficherait si tu modifiais le script sans reconstruire
+```
+
+`make build` reconstruit l'image, refait le `COPY`, et la copie redevient à jour.
