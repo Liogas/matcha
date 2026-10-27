@@ -10,3 +10,4 @@
 2. [Le gabarit libs/_template](guides/02-libs-template.md)
 3. [Warnings en erreur, presets CMake et sanitizers](guides/03-presets-warnings.md)
 4. [cpp-core : Error, Result, Config, Logger](guides/04-cpp-core.md)
+5. [cpp-pg (1/2) : connexion, pool, transactions, lignes typées](guides/05-cpp-pg-1.md)

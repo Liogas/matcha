@@ -12,9 +12,9 @@ Quand tu arrives à un guide, demande-le simplement (« guide 05 »).
 |---|---|---|---|
 | 01 | [cpp-auth dans `backend/libs/`](01-libs-cpp-auth.md) | lundi | ✅ fait |
 | 02 | [Le gabarit `libs/_template`](02-libs-template.md) | lundi | ✅ fait |
-| 03 | [Warnings, presets, sanitizers](03-presets-warnings.md) | lundi | 📄 écrit |
-| 04 | [cpp-core](04-cpp-core.md) | lundi | 📄 écrit |
-| 05 | cpp-pg (1/2) : connexion, pool, transactions, lignes typées | mardi | 🗺️ plan ci-dessous |
+| 03 | [Warnings, presets, sanitizers](03-presets-warnings.md) | lundi | ✅ fait |
+| 04 | [cpp-core](04-cpp-core.md) | lundi | ✅ fait |
+| 05 | [cpp-pg (1/2) : connexion, pool, transactions, lignes typées](05-cpp-pg-1.md) | mardi | 📄 écrit |
 | 06 | cpp-pg (2/2) : QueryBuilder, migrations, branchement | mercredi | 🗺️ |
 | 07 | cpp-validation et cpp-geo | jeudi | 🗺️ |
 | 08 | cpp-realtime et cpp-realtime-crow | vendredi | 🗺️ |
@@ -37,6 +37,12 @@ image d'exécution légère. Pas de guide pour elles.
 ---
 
 ## Guide 05 — cpp-pg (1/2) : connexion, pool, transactions, lignes typées
+
+> 📄 **Écrit** : [05-cpp-pg-1.md](05-cpp-pg-1.md). Décision du banc de test : base
+> `postgres-test` en `tmpfs` dans le compose de dev, variables `PG_TEST_*`, tests sautés
+> sans `PG_TEST_HOST`, table vidée par `TRUNCATE` avant chaque test (et non une
+> transaction annulée : cpp-pg teste justement `commit()` et deux transactions
+> parallèles). La fixture « transaction annulée » servira aux repositories, au guide 06.
 
 **Objectif** : remplacer la connexion unique protégée par un mutex (`src/database/`) par
 un pool de connexions et des transactions sûres. C'est la priorité 1 de l'audit : les
