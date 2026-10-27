@@ -917,7 +917,7 @@ Git enregistre ce bit « exécutable » : il sera conservé au commit.
 ## 11. Étape J : essayer le script, puis jeter le résultat
 
 On crée une lib de démonstration, on vérifie qu'elle marche **comme une vraie**, puis on
-la supprime. La vraie première lib (cpp-core) viendra avec le guide suivant.
+la supprime. La vraie première lib (cpp-core) viendra après le guide 03 (presets et warnings).
 
 ### 11.1 Générer `cpp-demo`
 
