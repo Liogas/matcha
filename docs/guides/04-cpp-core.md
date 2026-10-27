@@ -218,15 +218,19 @@ Depuis `~/matcha` (ce guide a déjà été commité avec le guide 03) :
 git status
 ```
 
-✅ **Attendu** : une seule ligne, ta correction.
+✅ **Attendu** : deux lignes, la correction du quiz 03 et ta correction du gabarit.
 
 ```
 modified:   backend/libs/_template/tests/package-consumer/CMakeLists.txt
+modified:   docs/guides/03-presets-warnings.md
 ```
 
-Un commit à part, puis la branche (à partir de `build/presets`, où tu es) :
+Deux commits à part (un sujet par commit), puis la branche, à partir de
+`build/presets`, où tu es :
 
 ```sh
+git add docs/guides/03-presets-warnings.md
+git commit -m "docs : correction du quiz du guide 03"
 git add backend/libs/_template/tests/package-consumer/CMakeLists.txt
 git commit -m "libs/_template : le package-consumer redemande la version 0.1"
 git switch -c libs/cpp-core
@@ -1178,7 +1182,24 @@ TEST(StreamLogger, MasksSensitiveFields)
 - Dans une chaîne C++, `\\n` s'écrit pour obtenir les deux caractères `\` `n`, et `\"`
   pour un guillemet. Lis l'attendu lentement : c'est la partie la plus délicate du guide.
 
-Ajoute `src/Logger.cpp` et `tests/LoggerTests.cpp`, puis :
+Dans `backend/libs/cpp-core/CMakeLists.txt`, ajoute les deux fichiers, **chacun à sa
+place** :
+
+```cmake
+add_library(cpp-core STATIC
+	...
+	src/ConfigReader.cpp
+	src/Logger.cpp            # ← dans la lib
+)
+...
+    add_executable(cpp-core_tests
+        ...
+        tests/ConfigReaderTests.cpp
+        tests/LoggerTests.cpp     # ← dans les tests
+    )
+```
+
+Puis :
 
 ```sh
 cmake --build --preset debug -j"$(nproc)"
@@ -1186,6 +1207,12 @@ ctest --preset debug -R StreamLogger
 ```
 
 ✅ **Attendu** : `100% tests passed, 0 tests failed out of 4`.
+
+> ⚠️ Si tu vois `No tests were found!!!`, ce n'est **pas** une réussite : `-R` n'a trouvé
+> aucun test, donc `LoggerTests.cpp` n'est pas compilé. Vérifie la liste de
+> `add_executable(cpp-core_tests ...)`. Et si `src/Logger.cpp` manque dans
+> `add_library`, l'erreur n'arrivera qu'au §9.7, à l'édition de liens de
+> `matcha_backend` : `undefined reference to core::ILogger::info(...)`.
 
 Au total, cpp-core a maintenant 19 tests (1 + 4 + 10 + 4).
 
@@ -1714,8 +1741,7 @@ Donne un cas où une fonction de cpp-pg devra renvoyer un `Result` en erreur, et
 une exception reste acceptable. Qu'est-ce qui les distingue ?
 
 **Ta réponse :**
-
-…
+Elle doit renvoyer une erreur si par exemple il manque des informations permettant de se connecter a la base de donnees. Alors qu'une erreur plus exceptionnel qui ne depend pas forcement du code directement devra etre renvoyer une exception, probleme de memoire ou quelque chose d'anormal par rapport au comportement souhaite.
 
 ### Q2. `ASSERT` ou `EXPECT` (§4.4)
 
@@ -1723,8 +1749,8 @@ Dans `HoldsValueOnSuccess`, que se passerait-il si on remplaçait `ASSERT_TRUE(r
 `EXPECT_TRUE(result)` et que `parsePositive(42)` renvoyait une erreur à cause d'un bug ?
 
 **Ta réponse :**
-
-…
+EXPECT_TRUE() verifie un resultat mais ne bloque pas en cas d'echec, donc meme s'il ne renvoie pas le resultat attendu il continuerait les tests suivants. Ce qui peut etre problematique si les prochains tests dependent de ce qui etait tester.
+ASSERT_TRUE lui arrete la serie du test en cours s'il ne passe pas
 
 ### Q3. Pas de `default:` (§4.2)
 
@@ -1732,8 +1758,7 @@ Pourquoi le `switch` de `toString` n'a-t-il pas de `default:` ? Que se passe-t-i
 ajoutes `ErrorCode::TooManyRequests` sans toucher à `Error.cpp` ?
 
 **Ta réponse :**
-
-…
+Il n'a pas de default pour justement eviter un cas ou on ajoute quelque chose dans ErrorCode sans mettre ajouter son comportement dans le switch. Grace a -werror la compilation renvoie une erreur. Ce qui est pratique pour eviter tout oublie
 
 ### Q4. `from_chars` (§6.2)
 
@@ -1741,8 +1766,7 @@ Que renvoie `std::stoi("6379abc")` ? Et `requiredInt` avec la même valeur ? Pou
 cette différence compte-t-elle pour une configuration ?
 
 **Ta réponse :**
-
-…
+std::stoi("6379abc") renvoie 6379 alors que requiredInt grace au from_chars va detecter que la conversion s'est termine sans avoir travaille sur toute la chaine et peut donc renvoyer une erreur puisqu'on ne souhaite pas avoir de lettre presente dans un int.
 
 ### Q5. Les erreurs groupées (§1.3, §9.4)
 
@@ -1751,8 +1775,7 @@ Pourquoi a-t-il fallu remonter la lecture de `REDIS_HOST` et
 bas sans problème ?
 
 **Ta réponse :**
-
-…
+Parce que notre systeme permet desormais de lire tous les secrets/configs avant de mettre en place les services. Comme ca en cas d'erreur plutot que d'afficher l'erreur du premier element manquant et de quitter le programme. On aura une liste complete de tout ce qu'il manque.
 
 ### Q6. L'ordre de déclaration (§6.1, §9.4)
 
@@ -1760,8 +1783,7 @@ Dans `run`, que se passerait-il si on écrivait `core::ConfigReader config(core:
 (un environnement **temporaire**) au lieu de déclarer `environment` à part ?
 
 **Ta réponse :**
-
-…
+ConfigReader attend une reference, donc je suppose que la compilation n'accepterait pas cette declaration. En cas contraire, la reference censer etre envoyee serait perdu donc pas reutilisable pour la suite.
 
 ### Q7. L'injection de logs (§1.5, §7.3)
 
@@ -1770,8 +1792,7 @@ logge `logger.info("signup", {{"user", pseudo}})`. Combien de lignes sont écrit
 pourquoi est-ce important ?
 
 **Ta réponse :**
-
-…
+J'ai pas du tout compris la question
 
 ### Q8. Le mutex (§7.2)
 
@@ -1779,25 +1800,255 @@ Pourquoi construire toute la ligne **avant** de prendre le verrou, plutôt que d
 morceau par morceau dans `_out` sous le verrou ?
 
 **Ta réponse :**
-
-…
+Puisque crow tourne sous plusieurs thread, en ecrivant morceau par morceau, il pourrait se melanger avec d'autre messages venant d'un autre utilisateur par exemple. Le verrou permet donc de reserver l'envoie a l'utilisateur courant et d'envoyer la ligne complete en une seule fois
 
 ---
 
 ## 13. Correction
 
-> Remplie après tes réponses.
->
 > **Légende** : 🟢 juste et complet · 🟡 juste mais incomplet ou imprécis ·
 > 🔴 faux ou à côté · ⏳ pas encore corrigé
 
 | Question | Évaluation |
 |---|---|
-| Q1. Exceptions ou `Result` | ⏳ |
-| Q2. `ASSERT` ou `EXPECT` | ⏳ |
-| Q3. Pas de `default:` | ⏳ |
-| Q4. `from_chars` | ⏳ |
-| Q5. Les erreurs groupées | ⏳ |
-| Q6. L'ordre de déclaration | ⏳ |
-| Q7. L'injection de logs | ⏳ |
-| Q8. Le mutex | ⏳ |
+| Q1. Exceptions ou `Result` | 🟡 |
+| Q2. `ASSERT` ou `EXPECT` | 🟡 |
+| Q3. Pas de `default:` | 🟢 |
+| Q4. `from_chars` | 🟢 |
+| Q5. Les erreurs groupées | 🟡 |
+| Q6. L'ordre de déclaration | 🔴 |
+| Q7. L'injection de logs | 🔴 |
+| Q8. Le mutex | 🟡 |
+
+**Bilan** : net progrès sur la précision. Q3 et Q4 sont exactes et vont jusqu'au bout
+du raisonnement, et Q2, Q5 et Q8 partent de la bonne idée. Deux sujets sont à reprendre :
+
+- **La durée de vie des objets** (Q6) : une référence ne garde pas un objet en vie.
+  C'est **le** piège du C++, il reviendra avec cpp-pg (une `Transaction` qui référence
+  une `Connection`).
+- **Répondre à la question exacte** (Q2, Q5, Q8) : tes réponses expliquent souvent
+  l'outil en général (à quoi sert un verrou, à quoi sert `ConfigReader`), alors que la
+  question porte sur un **détail** précis (pourquoi **avant** le verrou, pourquoi **en
+  haut** de `run`). Repère le mot qui porte la question avant de répondre.
+
+Pour Q6 et Q7, j'ai exécuté le code dans ton conteneur, avec ta cpp-core : les sorties
+ci-dessous sont réelles.
+
+### Q1 — 🟡
+
+**La distinction est la bonne** : une erreur **attendue** va dans le `Result`, une
+situation **anormale** (bug, mémoire épuisée) reste une exception.
+
+**Mais l'exemple et le critère ne collent pas tout à fait :**
+
+- « Il manque les informations pour se connecter » : c'est un problème de **config**,
+  déjà réglé par `ConfigReader` au démarrage. cpp-pg ne le verra jamais.
+- « Une erreur qui ne dépend pas du code → exception » : c'est presque l'inverse. Une
+  base **injoignable** ne dépend pas de ton code, et pourtant elle va dans un `Result`
+  (`Unavailable`). Elle est **prévisible** : un serveur doit s'attendre à ce que la base
+  tombe, et y répondre proprement (503) au lieu de s'arrêter.
+
+Le bon critère : **l'appelant peut-il et doit-il réagir ?**
+
+| Cas dans cpp-pg | Prévisible ? | Signalé par |
+|---|---|---|
+| la base ne répond pas | oui, ça arrive | `Result` → `Unavailable` (503) |
+| `INSERT` d'un email déjà pris (violation d'unicité) | oui, c'est une saisie utilisateur | `Result` → `Conflict` (409) |
+| `SELECT` d'un compte qui n'existe pas | oui | `Result` → `NotFound` (404) |
+| lire la colonne `"emial"` (faute de frappe) dans une ligne | non : c'est un **bug** dans **notre** code | exception |
+| plus de mémoire (`std::bad_alloc`) | non, rien à faire | exception |
+
+Une exception signale donc souvent un problème qui **dépend du code** (un bug) : la
+seule bonne réaction, c'est de le corriger, pas de le gérer à l'exécution.
+
+### Q2 — 🟡
+
+**Juste** : `EXPECT_*` note l'échec et continue, `ASSERT_*` arrête.
+
+**Deux précisions :**
+
+1. `ASSERT` arrête **le test en cours** (la fonction `TEST(...)`), pas « la série ».
+   Les autres `TEST` tournent toujours, qu'on utilise `ASSERT` ou `EXPECT` : chaque test
+   est indépendant.
+2. Ce qui suit dans **ce** test, c'est la ligne d'après :
+
+```cpp
+EXPECT_TRUE(result);         // échoue, mais on continue
+EXPECT_EQ(*result, 42);      // *result sur un Result qui contient une ERREUR
+```
+
+C'est le ⚠️ du §1.2 : `*result` sur un `expected` en erreur est un **comportement
+indéfini**. Le test peut afficher une valeur absurde, planter avec un segfault, ou
+(en `sanitize`) s'arrêter sur un rapport d'ASan. Au lieu d'un message clair
+(« result est faux »), tu aurais un symptôme trompeur.
+
+Règle : **`ASSERT` quand la suite du test n'a pas de sens si la condition est fausse**
+(ici, lire la valeur), `EXPECT` pour tout le reste.
+
+### Q3 — 🟢
+
+Exact : `-Wall` contient `-Wswitch`, qui signale un `enum` dont une valeur n'est pas
+traitée dans un `switch`… mais **seulement s'il n'y a pas de `default:`**. Avec
+`-Werror`, l'oubli devient une erreur de compilation :
+
+```
+error: enumeration value 'TooManyRequests' not handled in switch [-Werror=switch]
+```
+
+Le compilateur tient la liste à jour à ta place. Un `default:` ferait tout passer en
+silence : la nouvelle valeur serait affichée comme… ce que dit le `default`.
+
+Le `return "internal";` **après** le `switch` sert à autre chose : un `enum class` peut
+contenir une valeur hors liste (`static_cast<ErrorCode>(42)`). Sans ce `return`, la
+fonction pourrait se terminer sans renvoyer de valeur, et GCC le signale
+(`-Wreturn-type`).
+
+### Q4 — 🟢
+
+Exact : `std::stoi("6379abc")` renvoie `6379` (il s'arrête au premier caractère qui
+n'est pas un chiffre, sans rien dire), alors que `requiredInt` vérifie que
+`from_chars` a consommé **toute** la chaîne et note l'erreur
+`REDIS_PORT must be an integer, got '6379abc'`.
+
+Pourquoi ça compte : une config fausse doit être **refusée au démarrage** (règle
+*fail fast*, §1.3). Avec `REDIS_PORT=63790` mal recopié en `6379O` (lettre O), `stoi`
+démarrerait le serveur sur le port `6379`. Ici ça tombe juste, mais avec `80O0` il
+écouterait sur le port `80`, et tu chercherais longtemps. Autre défaut de `stoi` : sur
+`"abc"`, il lève une exception (`std::invalid_argument`) au lieu de noter l'erreur avec
+les autres.
+
+### Q5 — 🟡
+
+**La bonne idée** : tout lire d'abord, pour rapporter toutes les erreurs d'un coup.
+
+**Il manque le mécanisme** : pourquoi une lecture placée **plus bas** ne marcherait
+plus. `finish()` est le **seul** endroit qui rapporte les erreurs, et il n'est appelé
+qu'une fois, juste après le bloc de lectures. Imagine `config.required("REDIS_HOST")`
+laissé en bas de `run`, **après** `finish()` :
+
+1. `REDIS_HOST` manque : `required` note l'erreur dans la liste et renvoie `""` (§1.3 :
+   une valeur neutre, pour continuer) ;
+2. mais `finish()` est déjà passé : **personne ne relira jamais cette liste** ;
+3. le serveur continue avec `redisHost = ""` et échoue plus loin, avec un message de
+   Redis qui ne parle pas de config.
+
+Pire que l'ancien code, qui au moins s'arrêtait avec « REDIS_HOST is required ». D'où la
+règle de §9.4 : **toutes** les lectures avant `finish()`, et rien n'est construit avant
+que `finish()` ait validé.
+
+### Q6 — 🔴
+
+**Ça compile.** Une référence `const` **accepte** un objet temporaire : c'est ce qui
+permet d'écrire `print(std::string{"abc"})` quand `print` prend un `const std::string &`.
+Aucun warning non plus, même avec `-Wall -Wextra`.
+
+Le problème est la **durée de vie** :
+
+```cpp
+core::ConfigReader config(core::SystemEnvironment{});
+//                        └─ temporaire : détruit à la fin de CETTE ligne (au ;)
+const std::string host = config.required("HOME");
+//                       └─ config._environment désigne un objet qui n'existe plus
+```
+
+Un temporaire vit jusqu'à la fin de l'**instruction** qui le crée. `ConfigReader` garde
+une référence (`const IEnvironment &_environment`) vers lui : dès la ligne suivante,
+c'est une **référence pendante** (*dangling reference*). La lire est un comportement
+indéfini.
+
+Ce que ça donne avec ta cpp-core, testé dans ton conteneur (en `debug` **et** en
+`sanitize`) :
+
+```
+pure virtual method called
+terminate called without an active exception
+Aborted (core dumped)
+```
+
+Pourquoi ce message : en se détruisant, l'objet est **redevenu** un `IEnvironment` (le
+destructeur de la classe de base remet le pointeur de table virtuelle sur celle
+d'`IEnvironment`), dont `get` est purement virtuelle. Ici le programme plante tout de
+suite, c'est le **bon** cas. Avec un autre objet (une `MapEnvironment`, dont la `std::map`
+est libérée), il pourrait aussi lire de la mémoire réutilisée et renvoyer n'importe quoi.
+
+D'où la déclaration à part, **avant** et **dans le même bloc** :
+
+```cpp
+const core::SystemEnvironment environment;   // vit jusqu'à la fin de run
+core::ConfigReader config(environment);      // détruit avant environment (ordre inverse)
+```
+
+Les variables locales sont détruites dans l'**ordre inverse** de leur déclaration :
+`config` disparaît avant `environment`, la référence reste toujours valide.
+
+À retenir : **qui garde une référence doit vivre moins longtemps que l'objet
+référencé.** Tu retrouveras la règle au guide 05 avec `Pool`, `Connection` et
+`Transaction`.
+
+### Q7 — 🔴
+
+Pas de souci, je reprends depuis le début. L'idée : **un utilisateur choisit le texte
+de son pseudo, donc il contrôle une partie de nos logs.**
+
+Le pseudo contient un vrai retour à la ligne (le `\n` dans la chaîne C++ est **un**
+caractère, celui de la touche Entrée). Voici ce qu'écrivent les deux loggers, testés
+dans ton conteneur :
+
+**Un logger naïf** (qui colle la valeur telle quelle) : **2 lignes**.
+
+```
+level=INFO msg=signup user=bob
+level=ERROR msg="database corrupted"
+```
+
+La seconde ligne est **fausse** : le backend n'a jamais eu d'erreur de base, c'est
+l'utilisateur qui l'a écrite. Mais elle a exactement la forme d'une vraie.
+
+**Ton `StreamLogger`** : **1 ligne**.
+
+```
+level=INFO msg=signup user="bob\nlevel=ERROR msg=\"database corrupted\""
+```
+
+`quote()` a mis la valeur entre guillemets et transformé le retour à la ligne en deux
+caractères visibles `\` et `n`, et chaque `"` en `\"`. Tout le texte de l'utilisateur
+reste **à l'intérieur** du champ `user`.
+
+**Pourquoi c'est important** : les logs sont lus par des machines et par des humains
+qui leur font confiance.
+
+- `grep level=ERROR` (ou une alerte automatique) trouverait une erreur inventée : fausse
+  alerte la nuit, ou, à force, des alertes qu'on ne lit plus ;
+- un attaquant peut inventer des lignes pour **brouiller les pistes**, par exemple un
+  faux `msg=logout user=alice` pour faire croire qu'une autre personne a fait quelque
+  chose ;
+- l'enquête après un incident repose sur les logs : s'ils mentent, elle aussi.
+
+C'est la même famille que l'injection SQL ou le XSS : **une donnée de l'utilisateur ne
+doit jamais pouvoir changer la structure** de ce qui l'entoure (une requête, une page,
+une ligne de log). Le test `EscapesNewlinesAndQuotes` du §7.3 vérifie précisément ça.
+
+### Q8 — 🟡
+
+**Juste** : Crow tourne sur plusieurs threads, et sans verrou deux lignes pourraient se
+mélanger.
+
+**Mais ça justifie le verrou, pas le « avant ».** Écrire morceau par morceau **sous le
+verrou** éviterait aussi le mélange : personne d'autre n'écrirait pendant ce temps. La
+question est : pourquoi construire la ligne **hors** du verrou ?
+
+Réponse : **pour tenir le verrou le moins longtemps possible.** Pendant qu'un thread
+tient le verrou, tous les autres qui veulent logger **attendent** (et ces threads
+traitent des requêtes HTTP). Comparons :
+
+| | Travail fait sous le verrou |
+|---|---|
+| morceau par morceau | chaque `quote()`, chaque `isSensitive()` (copie et mise en minuscules de la clé), chaque `+`, plusieurs `<<` |
+| ta version | **un seul** `_out << line << std::flush` |
+
+Dans ta version, la construction de la ligne (la partie coûteuse) se fait **en
+parallèle** dans chaque thread, sur sa propre variable `line` (rien de partagé, donc
+pas besoin de verrou). Seule l'écriture dans le flux partagé est en file d'attente.
+
+Règle générale : **un verrou protège une donnée partagée, et seulement le temps d'y
+toucher.** Tout ce qui peut se calculer avant se calcule avant.
