@@ -970,7 +970,12 @@ fichier actuel n'en a pas à la fin : si tu ajoutes la ligne avec `echo ... >>`,
 Puis, dans le conteneur, dans un dossier de build **à part** (pour ne pas polluer le
 cache de `build/`, guide 01 étape G) :
 
+⚠️ `$T` n'existe que dans le shell où tu l'as défini (§9). Si tu as refait `make shell`
+depuis, redéfinis-le, sinon CMake configure **sans vcpkg** et répond
+`Could not find a package configuration file provided by "Crow"`. Vérifie avec `echo $T`.
+
 ```sh
+rm -rf /tmp/mono   # un cache raté garde l'ancien toolchain : on repart de zéro
 cmake -S . -B /tmp/mono $T -DCPP_DEMO_BUILD_TESTS=ON
 grep -E 'CPP_(DEMO|AUTH)_BUILD_TESTS' /tmp/mono/CMakeCache.txt
 cmake --build /tmp/mono --target cpp-demo_tests -j"$(nproc)"
@@ -1044,7 +1049,15 @@ dis à quoi sert chaque groupe.
 
 **Ta réponse :**
 
-…
+INCLUDE -> En tete de la bibliotheque
+/tmp/inst/include/tmpl/Version.hpp
+CMAKE CONFIG -> configuration d'installation
+/tmp/inst/lib/cmake/cpp-template/cpp-templateConfig.cmake
+/tmp/inst/lib/cmake/cpp-template/cpp-templateConfigVersion.cmake
+/tmp/inst/lib/cmake/cpp-template/cpp-templateTargets-noconfig.cmake
+/tmp/inst/lib/cmake/cpp-template/cpp-templateTargets.cmake
+LIB -> Lib une fois installe
+/tmp/inst/lib/libcpp-template.a
 
 ### Q2. Les expressions génératrices (§1.4)
 
@@ -1053,8 +1066,7 @@ Pourquoi le chemin d'include est-il écrit deux fois, avec `$<BUILD_INTERFACE:..
 `${CMAKE_CURRENT_SOURCE_DIR}/include` ?
 
 **Ta réponse :**
-
-…
+Parce que le chemin ne sera pas le meme selon l'etape a laquelle on se trouve, BUILD_INTERFACE va etre le chemin durant le build, et INSTALL_INTERFACE est le lien une fois installe. 
 
 ### Q3. `find_dependency` (§1.5)
 
@@ -1064,7 +1076,7 @@ la réponse surprend-elle pour `PostgreSQL` ?
 
 **Ta réponse :**
 
-…
+Il faudra une ligne PostgreSQL et cpp-core puisque ce sont des bibliotheques exterieurs. Nnon c'est pas surprenant
 
 ### Q4. La version (§1.6, §9.3)
 
@@ -1073,8 +1085,7 @@ La lib installée est en `0.1.0`. Pour chacune de ces demandes, accepté ou refu
 `find_package(cpp-template 1.0 ...)`. Et quel fichier prend la décision ?
 
 **Ta réponse :**
-
-…
+Seul la premiere demande marchera puisque la version existe. Le fichier qui prend la decision c'est le CMakeVersionConfig
 
 ### Q5. `PRIVATE` pour la macro de version (§5.2)
 
@@ -1082,8 +1093,7 @@ Pourquoi `CPP_TEMPLATE_VERSION` est-il passé par `target_compile_definitions` p
 qu'écrit en dur dans `Version.cpp` ? Et pourquoi `PRIVATE` et pas `PUBLIC` ?
 
 **Ta réponse :**
-
-…
+Puisqu'elle est vouee a changer et que c'est mieux de la definir dans cmake qui a pour role de gerer ce genre de choses. Il est prive parce que les autres n'ont pas besoin de le connaiter et d'en heriter
 
 ### Q6. `GTest` absent de `Config.cmake.in` (§5.4, §6)
 
@@ -1091,8 +1101,7 @@ La lib utilise GoogleTest pour ses tests. Pourquoi ne faut-il **pas** de
 `find_dependency(GTest)` dans `Config.cmake.in` ?
 
 **Ta réponse :**
-
-…
+Parce que ma bibliotheque ne depend pas de GTest, c'est uniquement les test qui sont geres par un main.
 
 ### Q7. Le gabarit hors du monorepo (§1.8, §1.9)
 
@@ -1101,8 +1110,7 @@ n'est pas dans `libs/CMakeLists.txt`, qu'est-ce que ça implique quand tu modifi
 gabarit ?
 
 **Ta réponse :**
-
-…
+Parce que template est un mot cle deja utilise en c++. Pas compris la suite de lqesution
 
 ### Q8. Ce que le script ne fait pas (§10, et §6.1 du guide 01)
 
@@ -1110,57 +1118,191 @@ gabarit ?
 `libs/CMakeLists.txt`. Pourquoi est-ce une mauvaise idée ?
 
 **Ta réponse :**
-
-…
+Parce qu'on est pas sur de voiloir l'ajouter a ce cmakeLists
 
 ---
 
 ## 14. Correction
 
-> Remplie après tes réponses.
->
 > **Légende** : 🟢 juste et complet · 🟡 juste mais incomplet ou imprécis ·
 > 🔴 faux ou à côté · ⏳ pas encore corrigé
 
 | Question | Évaluation |
 |---|---|
-| Q1. Le préfixe d'installation | ⏳ |
-| Q2. Les expressions génératrices | ⏳ |
-| Q3. `find_dependency` | ⏳ |
-| Q4. La version | ⏳ |
-| Q5. `PRIVATE` pour la macro de version | ⏳ |
-| Q6. `GTest` absent de `Config.cmake.in` | ⏳ |
-| Q7. Le gabarit hors du monorepo | ⏳ |
-| Q8. Ce que le script ne fait pas | ⏳ |
+| Q1. Le préfixe d'installation | 🟡 |
+| Q2. Les expressions génératrices | 🟡 |
+| Q3. `find_dependency` | 🟡 |
+| Q4. La version | 🟡 |
+| Q5. `PRIVATE` pour la macro de version | 🟢 |
+| Q6. `GTest` absent de `Config.cmake.in` | 🟢 |
+| Q7. Le gabarit hors du monorepo | 🟡 |
+| Q8. Ce que le script ne fait pas | 🔴 |
 
-### Q1 — ⏳
+**Bilan** : les trois groupes, le mot-clé `template` et le rôle de `PRIVATE` sont acquis.
+Ce qui reste flou, c'est surtout **le point de vue du consommateur** : ce qui se passe chez
+celui qui fait `find_package(cpp-template)`, sur une autre machine, sans tes sources.
+Q2, Q3, Q4 et Q6 se comprennent toutes avec cette seule image, résumée ici :
 
-*Réponse attendue et commentaire : à venir.*
+```
+TOI (le producteur)                       LUI (le consommateur, autre projet)
+───────────────────                       ──────────────────────────────────
+backend/libs/cpp-template/                find_package(cpp-template 0.1 CONFIG REQUIRED)
+  CMakeLists.txt                            │
+  include/ src/ tests/                      ├─ 1. ConfigVersion.cmake : « 0.1.0 convient-elle ? »
+        │                                   ├─ 2. Config.cmake : find_dependency(...) de chaque dépendance
+        │  cmake --install                  └─ 3. Targets.cmake : crée cpp-template::cpp-template
+        ▼                                         (chemin du .a, dossier include, libs à lier)
+/tmp/inst/  ─────── seul ça voyage ──────▶  target_link_libraries(app PRIVATE cpp-template::cpp-template)
+```
 
-### Q2 — ⏳
+Le consommateur ne voit **que** `/tmp/inst`. Tout ce qui y est écrit doit donc avoir un
+sens chez lui : pas de chemin vers tes sources (Q2), toutes les libs qu'il devra lier
+(Q3), une règle pour refuser une version qui ne lui convient pas (Q4), et rien qui ne
+serve qu'à toi (Q6).
 
-*Réponse attendue et commentaire : à venir.*
+### Q1 — 🟡
 
-### Q3 — ⏳
+**Ton classement est juste.** C'est le « à quoi sert » qui reste vague, en particulier
+« configuration d'installation » : ces fichiers ne servent pas à installer (c'est déjà
+fait), ils servent au **consommateur**, après.
 
-*Réponse attendue et commentaire : à venir.*
+| Groupe | Fichiers | Utilisé par le consommateur… |
+|---|---|---|
+| En-têtes | `include/tmpl/Version.hpp` | à la **compilation** : son `#include <tmpl/Version.hpp>` doit trouver le fichier |
+| Lib compilée | `lib/libcpp-template.a` | à l'**édition de liens** : le code de `tmpl::version()` est dedans |
+| Paquet CMake | les 4 fichiers de `lib/cmake/cpp-template/` | à la **configuration** : `find_package` les lit pour créer la cible `cpp-template::cpp-template`, qui dit à CMake où sont les deux groupes précédents |
 
-### Q4 — ⏳
+Les trois moments (configuration → compilation → édition de liens) sont les trois étapes
+de `cmake -S … -B …` puis `cmake --build`. Chaque groupe sert à l'une d'elles.
 
-*Réponse attendue et commentaire : à venir.*
+### Q2 — 🟡
 
-### Q5 — ⏳
+**Première moitié juste** : pendant le build, les en-têtes sont dans
+`backend/libs/cpp-template/include` ; une fois installés, dans `<préfixe>/include`.
 
-*Réponse attendue et commentaire : à venir.*
+**Il manque la seconde moitié** : avec seulement `${CMAKE_CURRENT_SOURCE_DIR}/include`, ce
+chemin absolu (`/app/libs/cpp-template/include`) serait recopié dans
+`cpp-templateTargets.cmake`. Chez le consommateur, ce dossier n'existe pas : son
+`#include <tmpl/Version.hpp>` échouerait. En pratique, CMake détecte l'erreur avant et
+refuse d'exporter : `cmake` (la configuration de la lib) s'arrête avec un message du type
+`Target "cpp-template" INTERFACE_INCLUDE_DIRECTORIES property contains path ... which is
+prefixed in the source directory`.
 
-### Q6 — ⏳
+À retenir : **un chemin vers tes sources ne doit jamais partir dans le paquet installé.**
+Tu l'as vérifié au §9.2 : `Targets.cmake` contient `${_IMPORT_PREFIX}/include`, un chemin
+relatif au préfixe, donc valable partout.
 
-*Réponse attendue et commentaire : à venir.*
+### Q3 — 🟡
 
-### Q7 — ⏳
+**Les lignes sont justes** :
 
-*Réponse attendue et commentaire : à venir.*
+```cmake
+find_dependency(cpp-core)
+find_dependency(PostgreSQL)
+```
 
-### Q8 — ⏳
+**La raison ne l'est pas.** Le critère n'est pas « bibliothèque extérieure » (cpp-core est
+d'ailleurs la nôtre), c'est : **tout ce qui est dans `target_link_libraries`, `PUBLIC`
+comme `PRIVATE`**.
 
-*Réponse attendue et commentaire : à venir.*
+**La surprise**, c'est justement `PostgreSQL`, alors qu'elle est en `PRIVATE`. On
+s'attendrait à ce que `PRIVATE` veuille dire « le consommateur n'en a pas besoin ». C'est
+vrai pour les **en-têtes**, pas pour l'**édition de liens** :
+
+1. `libcpp-pg.a` n'est qu'une archive de `.o`. Ses appels à `PQconnectdb` (fonction de
+   libpq) ne sont **pas résolus** dedans : ce sont des trous.
+2. C'est l'exécutable final du consommateur qui bouche les trous. Il doit donc lier
+   `libcpp-pg.a` **et** libpq.
+3. CMake le sait : dans `Targets.cmake`, il écrit `$<LINK_ONLY:PostgreSQL::PostgreSQL>`
+   (« pas ses en-têtes, mais il faudra la lier »).
+4. Pour que ce nom `PostgreSQL::PostgreSQL` existe chez le consommateur, quelqu'un doit
+   faire `find_package(PostgreSQL)` : c'est le rôle du `find_dependency`.
+
+Sans lui : `The link interface of target "cpp-pg::cpp-pg" contains: PostgreSQL::PostgreSQL`
+(l'erreur vue avec `Threads` au §1.5). Avec une lib **dynamique** (`.so`), ce serait
+différent : la `.so` est déjà liée à libpq, et le consommateur n'a pas à s'en occuper.
+
+### Q4 — 🟡
+
+**Le résultat est juste** : seule `0.1` est acceptée. **Le fichier est presque juste** :
+c'est `cpp-templateConfigVersion.cmake` (pas `CMakeVersionConfig`), généré par
+`write_basic_package_version_file`.
+
+**La raison est fausse** : ce n'est pas « parce que cette version existe ». La règle
+`SameMajorVersion` est : **même majeur, et version installée ≥ version demandée**.
+
+| Demande | Même majeur ? | 0.1.0 ≥ demande ? | Résultat |
+|---|---|---|---|
+| `0.1` | 0 = 0 ✓ | 0.1.0 ≥ 0.1 ✓ | accepté |
+| `0.2` | 0 = 0 ✓ | 0.1.0 < 0.2 ✗ | **refusé** |
+| `1.0` | 0 ≠ 1 ✗ | — | **refusé** |
+
+Et ce que la règle exprime, avec SemVer (§1.6) :
+
+- `0.2` refusé : le consommateur dit « j'utilise une fonction ajoutée en 0.2 ». Une 0.1.0
+  ne l'a pas.
+- `1.0` refusé : un changement de majeur peut casser l'API. Une 0.x n'est pas la même lib.
+- Inversement, si la lib installée passe en `0.3.0`, la demande `0.1` reste acceptée :
+  une version mineure plus récente ne casse rien.
+
+### Q5 — 🟢
+
+Juste. Pour être complet :
+
+- **Pas en dur** : la version est écrite **une seule fois**, dans
+  `project(cpp-template VERSION 0.1.0)`. Elle alimente à la fois `ConfigVersion.cmake`
+  (via `PROJECT_VERSION`) et la macro. En dur dans `Version.cpp`, il faudrait penser à
+  changer deux endroits, et un jour ils divergeraient.
+- **`PRIVATE`** : la macro n'est utilisée que dans `Version.cpp`. Le consommateur, lui,
+  obtient la version en appelant `tmpl::version()`. En `PUBLIC`, chaque fichier du
+  consommateur serait compilé avec `-DCPP_TEMPLATE_VERSION=...` pour rien, et la macro
+  serait même écrite dans `Targets.cmake`.
+
+### Q6 — 🟢
+
+Juste : GTest ne sert qu'à l'exécutable `cpp-template_tests`, pas à la lib. Précision sur
+le mécanisme (au lieu de « gérés par un main ») :
+
+- `Config.cmake.in` liste les dépendances des **cibles exportées**. Seule `cpp-template`
+  est exportée (`install(TARGETS cpp-template EXPORT ...)`).
+- `cpp-template_tests` n'est ni installé ni exporté : il n'existe que dans ton dossier de
+  build. Le consommateur ne le reçoit jamais.
+- Ajouter `find_dependency(GTest)` **obligerait** chaque consommateur à avoir GoogleTest
+  installé, juste pour utiliser `tmpl::version()`.
+
+### Q7 — 🟡
+
+**Première partie juste** : `template` est un mot-clé C++, `namespace template` ne compile
+pas.
+
+**La seconde partie, reformulée** : « Qui vérifie que le gabarit marche encore ? »
+
+- Le backend ne compile que ce qui est listé dans `libs/CMakeLists.txt` (`cpp-auth`, puis
+  les vraies libs). `_template` n'y est pas.
+- Donc `make test` ne compile **jamais** le gabarit. Si tu y fais une faute de frappe,
+  aucun test ne passe au rouge.
+- Le problème n'apparaît qu'à la **prochaine** lib : `new-lib.sh` copie le gabarit cassé,
+  et cpp-core ne compile pas, sans que tu saches pourquoi.
+
+Conséquence : **après toute modification du gabarit, refais l'étape H à la main** (§9.1 à
+§9.3 : seul, installé, version cassée exprès).
+
+### Q8 — 🔴
+
+« On n'est pas sûr de vouloir l'ajouter » : on l'ajoute toujours (une lib qui n'est pas
+listée n'est pas compilée). La question est **où**.
+
+La réponse est dans le guide 01 §6.1 : **l'ordre des `add_subdirectory` compte**. Une lib
+qui fait `if(NOT TARGET cpp-core::cpp-core) find_package(...)` a besoin que cpp-core soit
+déclaré **avant** elle. On range donc les libs des couches basses vers les couches
+hautes.
+
+Le script, lui, ajouterait toujours **à la fin**. Exemple : `libs/CMakeLists.txt` contient
+déjà `cpp-auth`, et tu crées `cpp-core` (couche 0, dont cpp-auth dépendra peut-être). Le
+script l'ajouterait **après** cpp-auth : mauvais ordre, et CMake s'arrêterait dès que
+cpp-auth teste `if(NOT TARGET cpp-core::cpp-core)`.
+
+Seul toi sais à quelle couche appartient une lib : le script ne peut pas deviner la bonne
+ligne. Il **rappelle** donc l'étape au lieu de la faire mal. (Bonus : tu as vu au §11.2
+qu'un ajout naïf avec `echo >>` sur un fichier sans retour à la ligne final donne un
+`Parse error`.)
