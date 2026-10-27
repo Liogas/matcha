@@ -4,6 +4,7 @@ project(matcha_backend LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+include(cmake/Warnings.cmake)
 set(_VCPKG_INSTALLED_DIR "${VCPKG_INSTALLED_DIR}")
 set(VCPKG_TARGET_TRIPLET "x64-linux")
 

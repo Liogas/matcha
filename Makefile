@@ -2,9 +2,10 @@ COMPOSE      = docker compose
 COMPOSE_DEV  = docker compose -f docker-compose.yml -f docker-compose.dev.yml
 
 all:
-	@echo "Dev        : build / up / down / start / stop / rebuild / test / logs / shell"
+	@echo "Dev        : build / up / down / start / stop / rebuild / test / sanitize / logs / shell"
 	@echo "Production : prod / prod-down"
 	@echo "Divers     : secrets"
+
 
 secrets:
 	@sh scripts/init-secrets.sh
@@ -32,7 +33,11 @@ rebuild:
 
 # Compile executable + tests puis lance ctest.
 test:
-	$(COMPOSE_DEV) exec backend sh -c 'matcha-build all && ctest --test-dir build --output-on-failure'
+	$(COMPOSE_DEV) exec backend sh -c 'matcha-build all && ctest --preset debug'
+
+# Compile et lance tous les tests sous ASan + UBSan (dossier build/sanitize).
+sanitize:
+	$(COMPOSE_DEV) exec backend sh -c 'cmake --preset sanitize > /dev/null && cmake --build --preset sanitize --parallel "$$(nproc)" && ctest --preset sanitize'
 
 logs:
 	$(COMPOSE_DEV) logs -f backend
@@ -48,4 +53,4 @@ prod: secrets
 prod-down:
 	$(COMPOSE) down
 
-.PHONY: all secrets build up down start stop rebuild test logs shell prod prod-down
+.PHONY: all secrets build up down start stop rebuild test sanitize logs shell prod prod-down

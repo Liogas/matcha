@@ -60,12 +60,8 @@ FROM deps AS build
 
 WORKDIR /app
 COPY . .
-RUN cmake -S . -B build \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
-		-DVCPKG_INSTALLED_DIR="$VCPKG_INSTALLED_DIR" \
-		-DVCPKG_MANIFEST_INSTALL=OFF \
-	&& cmake --build build --target matcha_backend --parallel "$(nproc)"
+RUN cmake --preset release \
+	&& cmake --build --preset release --target matcha_backend --parallel "$(nproc)"
 
 
 FROM debian:bookworm-slim AS runtime
@@ -79,7 +75,7 @@ RUN useradd --system --no-create-home --uid 10001 matcha \
 	&& chown matcha:matcha /var/lib/matcha/uploads
 
 WORKDIR /app
-COPY --from=build /app/build/matcha_backend ./matcha_backend
+COPY --from=build /app/build/release/matcha_backend ./matcha_backend
 COPY migrations ./migrations
 
 USER matcha

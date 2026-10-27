@@ -6,7 +6,7 @@ set -u
 cd /app
 
 pidfile=/tmp/matcha_backend.pid
-binary=/app/build/matcha_backend
+binary=/app/build/debug/matcha_backend
 
 stop() {
 	[ -s "$pidfile" ] && kill "$(cat "$pidfile")" 2>/dev/null

@@ -98,7 +98,7 @@ Dans le conteneur, le processus principal est `matcha-dev-server` (`backend/dev/
 ```
 démarrage du conteneur
    └─ pas encore de binaire ? → matcha-build
-   └─ boucle :  lance ./build/matcha_backend
+   └─ boucle :  lance ./build/debug/matcha_backend
                 attend qu'il s'arrête
                 le relance 2 s plus tard
 ```
