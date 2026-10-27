@@ -56,6 +56,7 @@ add_executable(matcha_backend
 )
 
 target_link_libraries(matcha_backend
+    PRIVATE cpp-core::cpp-core
     PRIVATE cpp-auth::cpp-auth
     PRIVATE Crow::Crow
     PRIVATE PostgreSQL::PostgreSQL

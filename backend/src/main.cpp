@@ -3,10 +3,7 @@
 #include <libpq-fe.h>
 
 #include <chrono>
-#include <cstdlib>
-#include <fstream>
 #include <iostream>
-#include <iterator>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -29,6 +26,9 @@
 #include "messaging/MessagingRoutes.hpp"
 #include "messaging/MessagingWebSocket.hpp"
 
+#include <core/ConfigReader.hpp>
+#include <core/Logger.hpp>
+
 #include <auth/auth/Authenticator.hpp>
 #include <auth/http/CppHttpClient.hpp>
 #include <auth/http/HttpClientConfig.hpp>
@@ -43,333 +43,248 @@
 #include <auth/token/TokenGenerator.hpp>
 #include <auth/token/RsaTokenSigner.hpp>
 
-namespace
+int run(core::ILogger &logger)
 {
-    std::string requiredEnvironmentVariable(const char *name)
-    {
-        const char *value = std::getenv(name);
-        if (value == nullptr || *value == '\0')
-            throw std::runtime_error(
-                std::string("Required environment variable is not set: ") +
-                name
-            );
-        return value;
-    }
+	const core::SystemEnvironment environment;
+	core::ConfigReader config(environment);
 
-    std::string optionalEnvironmentVariable(
-        const char *name,
-        const std::string &defaultValue
-    )
-    {
-        const char *value = std::getenv(name);
-        return value == nullptr ? defaultValue : value;
-    }
+	const std::string issuer = config.required("JWT_ISSUER");
+	const std::string audience = config.required("JWT_AUDIENCE");
+	const std::string jwksUrl = config.required("JWT_JWKS_URL");
+	const std::string privateKeyPath = config.required("JWT_PRIVATE_KEY_PATH");
+	const std::string keyId = config.required("JWT_KEY_ID");
+	const bool allowInsecureJwksHttp =
+		config.optionalBool("JWT_ALLOW_INSECURE_HTTP", false);
+	const std::string redisHost = config.required("REDIS_HOST");
+	const int redisPort = config.requiredInt("REDIS_PORT");
+	const std::string redisPassword = config.requiredSecret("REDIS_PASSWORD");
+	const std::string smtpUrl = config.required("EMAIL_SMTP_URL");
+	const std::string emailFrom = config.required("EMAIL_FROM");
+	const std::string smtpUsername = config.optional("EMAIL_SMTP_USERNAME", "");
+	const std::string smtpPassword = smtpUsername.empty()
+										 ? ""
+										 : config.requiredSecret("EMAIL_SMTP_PASSWORD");
+	const bool smtpTls = config.optionalBool("EMAIL_SMTP_TLS", false);
+	const std::string emailVerificationUrl =
+		config.required("EMAIL_VERIFICATION_URL");
+	const std::string passwordResetUrl =
+		config.required("EMAIL_PASSWORD_RESET_URL");
+	const std::string allowedBrowserOrigin =
+		config.required("AUTH_ALLOWED_ORIGIN");
+	const bool secureRefreshCookie =
+		config.optionalBool("AUTH_REFRESH_COOKIE_SECURE", false);
+	const bool cleanupOrphanedImages =
+		config.optionalBool("MATCHA_CLEANUP_ORPHANED_IMAGES", false);
 
-    bool optionalBooleanEnvironmentVariable(
-        const char *name,
-        bool defaultValue
-    )
-    {
-        const char *value = std::getenv(name);
-        if (value == nullptr)
-            return defaultValue;
+	if (const auto checked = config.finish(); !checked)
+	{
+		logger.error("Invalid configuration", {{"errors", checked.error().message}});
+		return 1;
+	}
 
-        const std::string setting(value);
-        if (setting == "true")
-            return true;
-        if (setting == "false")
-            return false;
+	const SmtpEmailSender emailSender({smtpUrl,
+									   emailFrom,
+									   smtpUsername,
+									   smtpPassword,
+									   smtpTls});
 
-        throw std::invalid_argument(
-            std::string(name) + " must be either 'true' or 'false'"
-        );
-    }
+	Database database;
+	DatabaseInitializer databaseInitializer(database);
 
-    std::string requiredSecretFileEnvironmentVariable(const char *name)
-    {
-        const std::string path = requiredEnvironmentVariable(name);
-        std::ifstream file(path, std::ios::binary);
-        if (!file)
-            throw std::runtime_error(
-                std::string("Unable to read secret file configured by ") +
-                name
-            );
+	if (!databaseInitializer.run())
+	{
+		logger.error("Database initialization failed");
+		return 1;
+	}
 
-        std::string secret{
-            std::istreambuf_iterator<char>(file),
-            std::istreambuf_iterator<char>()
-        };
-        while (!secret.empty() &&
-            (secret.back() == '\n' || secret.back() == '\r'))
-            secret.pop_back();
-        if (secret.empty())
-            throw std::runtime_error(
-                std::string("Secret file configured by ") +
-                name + " is empty"
-            );
-        return secret;
-    }
+	AccountRepository accountRepository(database);
+	ProfileRepository profileRepository(database);
+	LikeRepository likeRepository(database);
+	MessagingRepository messagingRepository(database);
+	for (const auto &[firstAccountId, secondAccountId] :
+		 likeRepository.listAllMatches())
+	{
+		if (!messagingRepository.ensureDirectConversation(
+				firstAccountId, secondAccountId))
+		{
+			throw std::runtime_error(
+				"Unable to synchronize a match conversation");
+		}
+	}
+	MessagingWebSocketHub messagingWebSocketHub;
+	ImageProcessor imageProcessor(
+		10 * 1024 * 1024,
+		2048,
+		82);
+	LocalImageStorage imageStorage("/var/lib/matcha/uploads");
+	ProfilePhotoService profilePhotoService(
+		profileRepository,
+		imageProcessor,
+		imageStorage);
+	if (cleanupOrphanedImages)
+	{
+		profilePhotoService.cleanupOrphanedFiles();
+		logger.info("Orphaned profile images cleaned");
+	}
+	auth::PasswordHasher passwordHasher;
+
+	auth::AuthService authService(
+		accountRepository,
+		passwordHasher);
+
+	sw::redis::ConnectionOptions redisConnectionOptions;
+	redisConnectionOptions.host = redisHost;
+	redisConnectionOptions.port = redisPort;
+	redisConnectionOptions.password = redisPassword;
+	redisConnectionOptions.connect_timeout =
+		std::chrono::milliseconds{500};
+	redisConnectionOptions.socket_timeout =
+		std::chrono::milliseconds{1000};
+
+	sw::redis::ConnectionPoolOptions redisPoolOptions;
+	redisPoolOptions.size = 16;
+	redisPoolOptions.wait_timeout =
+		std::chrono::milliseconds{1000};
+	sw::redis::Redis redis(
+		redisConnectionOptions,
+		redisPoolOptions);
+	redis.ping();
+	RedisLoginAttemptLimiter loginAttemptLimiter(
+		redis,
+		5,
+		std::chrono::minutes{15});
+
+	/*
+	 * JWKS
+	 */
+
+	auth::HttpClientConfig httpClientConfig{std::nullopt};
+	httpClientConfig.allowInsecureHttp = allowInsecureJwksHttp;
+
+	const auth::HttpJwksConfig jwksConfig{
+		jwksUrl,
+		std::chrono::seconds{300},
+		std::chrono::seconds{30}};
+
+	auth::CppHttpClient httpClient(
+		httpClientConfig);
+
+	auth::JsonJwksParser jwksParser;
+
+	auth::SystemClock clock;
+
+	auth::JwksCache jwksCache(
+		jwksConfig.cacheTtl,
+		clock);
+
+	auth::HttpJwksProvider jwksProvider(
+		jwksConfig,
+		httpClient,
+		jwksParser,
+		jwksCache,
+		clock);
+
+	/*
+	 * Token validation
+	 */
+
+	const auth::TokenValidatorConfig tokenValidatorConfig{
+		issuer,
+		audience,
+		"RS256"};
+
+	auth::SystemWallClock wallClock;
+	auth::RsaTokenSignatureVerifier signatureVerifier;
+	auth::TokenValidator tokenValidator(
+		tokenValidatorConfig,
+		jwksProvider,
+		signatureVerifier,
+		wallClock);
+
+	auth::Authenticator authenticator(
+		tokenValidator);
+
+	auth::RsaTokenSigner tokenSigner(
+		privateKeyPath,
+		keyId);
+	auth::TokenGenerator tokenGenerator(
+		{issuer, audience, std::chrono::minutes{15}},
+		tokenSigner,
+		wallClock);
+
+	/*
+	 * HTTP server
+	 */
+
+	AuthApp app;
+	auto &cors = app.get_middleware<AuthCorsHandler>();
+	cors.allowedOrigin = allowedBrowserOrigin;
+	cors
+		.global()
+		.origin(allowedBrowserOrigin)
+		.methods(
+			crow::HTTPMethod::Get,
+			crow::HTTPMethod::Post,
+			crow::HTTPMethod::Put,
+			crow::HTTPMethod::Patch,
+			crow::HTTPMethod::Delete,
+			crow::HTTPMethod::Options)
+		.headers("Authorization", "Content-Type")
+		.allow_credentials();
+
+	registerJwksRoute(app, tokenSigner);
+	registerAuthRoutes(
+		app,
+		authService,
+		authenticator,
+		tokenGenerator,
+		loginAttemptLimiter,
+		accountRepository,
+		passwordHasher,
+		emailSender,
+		emailVerificationUrl,
+		passwordResetUrl,
+		allowedBrowserOrigin,
+		secureRefreshCookie);
+	registerProfileRoutes(
+		app,
+		authenticator,
+		profileRepository,
+		profilePhotoService);
+	registerLikeRoutes(
+		app,
+		authenticator,
+		likeRepository,
+		profileRepository,
+		messagingRepository);
+	registerMessagingRoutes(
+		app,
+		authenticator,
+		messagingRepository);
+	registerMessagingWebSocket(
+		app,
+		authenticator,
+		messagingRepository,
+		messagingWebSocketHub);
+
+	logger.info("Server starting", {{"port", "18080"}});
+	app
+		.port(18080)
+		.multithreaded()
+		.run();
+	return 0;
 }
 
 int main()
-try
 {
-    const std::string issuer =
-        requiredEnvironmentVariable("JWT_ISSUER");
-    const std::string audience =
-        requiredEnvironmentVariable("JWT_AUDIENCE");
-    const std::string jwksUrl =
-        requiredEnvironmentVariable("JWT_JWKS_URL");
-    const std::string privateKeyPath =
-        requiredEnvironmentVariable("JWT_PRIVATE_KEY_PATH");
-    const std::string keyId =
-        requiredEnvironmentVariable("JWT_KEY_ID");
-    const std::string redisPassword =
-        requiredSecretFileEnvironmentVariable("REDIS_PASSWORD_FILE");
-    const std::string smtpUsername =
-        optionalEnvironmentVariable("EMAIL_SMTP_USERNAME", "");
-    const std::string smtpPassword =
-        smtpUsername.empty()
-            ? ""
-            : requiredSecretFileEnvironmentVariable(
-                "EMAIL_SMTP_PASSWORD_FILE"
-            );
-    const SmtpEmailSender emailSender({
-        requiredEnvironmentVariable("EMAIL_SMTP_URL"),
-        requiredEnvironmentVariable("EMAIL_FROM"),
-        smtpUsername,
-        smtpPassword,
-        optionalBooleanEnvironmentVariable("EMAIL_SMTP_TLS", false)
-    });
-    const std::string emailVerificationUrl =
-        requiredEnvironmentVariable("EMAIL_VERIFICATION_URL");
-    const std::string passwordResetUrl =
-        requiredEnvironmentVariable("EMAIL_PASSWORD_RESET_URL");
-    const std::string allowedBrowserOrigin =
-        requiredEnvironmentVariable("AUTH_ALLOWED_ORIGIN");
-    const bool secureRefreshCookie =
-        optionalBooleanEnvironmentVariable(
-            "AUTH_REFRESH_COOKIE_SECURE",
-            false
-        );
-
-    Database database;
-    DatabaseInitializer databaseInitializer(database);
-
-    if (!databaseInitializer.run())
-    {
-        std::cerr << "[ERROR BDD] Database initialization failed"
-                  << std::endl;
-
-        return 1;
-    }
-
-    AccountRepository accountRepository(database);
-    ProfileRepository profileRepository(database);
-    LikeRepository likeRepository(database);
-    MessagingRepository messagingRepository(database);
-    for (const auto &[firstAccountId, secondAccountId] :
-        likeRepository.listAllMatches())
-    {
-        if (!messagingRepository.ensureDirectConversation(
-                firstAccountId, secondAccountId))
-        {
-            throw std::runtime_error(
-                "Unable to synchronize a match conversation");
-        }
-    }
-    MessagingWebSocketHub messagingWebSocketHub;
-    ImageProcessor imageProcessor(
-        10 * 1024 * 1024,
-        2048,
-        82
-    );
-    LocalImageStorage imageStorage("/var/lib/matcha/uploads");
-    ProfilePhotoService profilePhotoService(
-        profileRepository,
-        imageProcessor,
-        imageStorage
-    );
-    if (optionalBooleanEnvironmentVariable(
-            "MATCHA_CLEANUP_ORPHANED_IMAGES", false))
-    {
-        profilePhotoService.cleanupOrphanedFiles();
-        std::cout << "[INFO STORAGE] Orphaned profile images cleaned"
-            << std::endl;
-    }
-    auth::PasswordHasher passwordHasher;
-
-    auth::AuthService authService(
-        accountRepository,
-        passwordHasher
-    );
-
-    sw::redis::ConnectionOptions redisConnectionOptions;
-    redisConnectionOptions.host =
-        requiredEnvironmentVariable("REDIS_HOST");
-    redisConnectionOptions.port = std::stoi(
-        requiredEnvironmentVariable("REDIS_PORT")
-    );
-    redisConnectionOptions.password = redisPassword;
-    redisConnectionOptions.connect_timeout =
-        std::chrono::milliseconds{500};
-    redisConnectionOptions.socket_timeout =
-        std::chrono::milliseconds{1000};
-
-    sw::redis::ConnectionPoolOptions redisPoolOptions;
-    redisPoolOptions.size = 16;
-    redisPoolOptions.wait_timeout =
-        std::chrono::milliseconds{1000};
-    sw::redis::Redis redis(
-        redisConnectionOptions,
-        redisPoolOptions
-    );
-    redis.ping();
-    RedisLoginAttemptLimiter loginAttemptLimiter(
-        redis,
-        5,
-        std::chrono::minutes{15}
-    );
-
-    /*
-     * JWKS
-     */
-
-    auth::HttpClientConfig httpClientConfig{std::nullopt};
-    httpClientConfig.allowInsecureHttp =
-        optionalBooleanEnvironmentVariable(
-            "JWT_ALLOW_INSECURE_HTTP",
-            false
-        );
-
-    const auth::HttpJwksConfig jwksConfig{
-        jwksUrl,
-        std::chrono::seconds{300},
-        std::chrono::seconds{30}
-    };
-
-    auth::CppHttpClient httpClient(
-        httpClientConfig
-    );
-
-    auth::JsonJwksParser jwksParser;
-
-    auth::SystemClock clock;
-
-    auth::JwksCache jwksCache(
-        jwksConfig.cacheTtl,
-        clock
-    );
-
-    auth::HttpJwksProvider jwksProvider(
-        jwksConfig,
-        httpClient,
-        jwksParser,
-        jwksCache,
-        clock
-    );
-
-    /*
-     * Token validation
-     */
-
-    const auth::TokenValidatorConfig tokenValidatorConfig{
-        issuer,
-        audience,
-        "RS256"
-    };
-
-    auth::SystemWallClock wallClock;
-    auth::RsaTokenSignatureVerifier signatureVerifier;
-    auth::TokenValidator tokenValidator(
-        tokenValidatorConfig,
-        jwksProvider,
-        signatureVerifier,
-        wallClock
-    );
-
-    auth::Authenticator authenticator(
-        tokenValidator
-    );
-
-    auth::RsaTokenSigner tokenSigner(
-        privateKeyPath,
-        keyId
-    );
-    auth::TokenGenerator tokenGenerator(
-        {issuer, audience, std::chrono::minutes{15}},
-        tokenSigner,
-        wallClock
-    );
-
-    /*
-     * HTTP server
-     */
-
-    AuthApp app;
-    auto &cors = app.get_middleware<AuthCorsHandler>();
-    cors.allowedOrigin = allowedBrowserOrigin;
-    cors
-        .global()
-        .origin(allowedBrowserOrigin)
-        .methods(
-            crow::HTTPMethod::Get,
-            crow::HTTPMethod::Post,
-            crow::HTTPMethod::Put,
-            crow::HTTPMethod::Patch,
-            crow::HTTPMethod::Delete,
-            crow::HTTPMethod::Options
-        )
-        .headers("Authorization", "Content-Type")
-        .allow_credentials();
-
-    registerJwksRoute(app, tokenSigner);
-    registerAuthRoutes(
-        app,
-        authService,
-        authenticator,
-        tokenGenerator,
-        loginAttemptLimiter,
-        accountRepository,
-        passwordHasher,
-        emailSender,
-        emailVerificationUrl,
-        passwordResetUrl,
-        allowedBrowserOrigin,
-        secureRefreshCookie
-    );
-    registerProfileRoutes(
-        app,
-        authenticator,
-        profileRepository,
-        profilePhotoService
-    );
-    registerLikeRoutes(
-        app,
-        authenticator,
-        likeRepository,
-        profileRepository,
-        messagingRepository
-    );
-    registerMessagingRoutes(
-        app,
-        authenticator,
-        messagingRepository
-    );
-    registerMessagingWebSocket(
-        app,
-        authenticator,
-        messagingRepository,
-        messagingWebSocketHub
-    );
-
-    app
-        .port(18080)
-        .multithreaded()
-        .run();
-}
-catch (const std::exception &error)
-{
-    std::cerr << "[STARTUP ERROR] " << error.what() << std::endl;
-    return 1;
+	core::StreamLogger logger(std::cerr, core::LogLevel::Info);
+	try
+	{
+		return run(logger);
+	}
+	catch (const std::exception &error)
+	{
+		logger.error("Startup failed", {{"reason", error.what()}});
+		return 1;
+	}
 }

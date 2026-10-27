@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+# Une ligne find_dependency(...) par dépendance de la lib, PUBLIC comme PRIVATE :
+# la lib est statique, le projet qui l'utilise devra aussi lier ses dépendances.
+
+include("${CMAKE_CURRENT_LIST_DIR}/cpp-coreTargets.cmake")
+check_required_components(cpp-core)
