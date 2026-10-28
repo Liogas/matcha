@@ -12,6 +12,31 @@ services:
     volumes:
       - ./backend:/app
       - backend_build:/app/build
+    environment:
+      PG_TEST_HOST: postgres-test
+      PG_TEST_PORT: 5432
+      PG_TEST_NAME: matcha_test
+      PG_TEST_USER: matcha_test
+      PG_TEST_PASSWORD: matcha_test
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+  postgres-test:
+    image: postgres:17
+    container_name: matcha_postgres_test
+    environment:
+      POSTGRES_DB: matcha_test
+      POSTGRES_USER: matcha_test
+      POSTGRES_PASSWORD: matcha_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U matcha_test -d matcha_test
+      interval: 2s
+      timeout: 3s
+      retries: 15
 
 volumes:
   backend_build:

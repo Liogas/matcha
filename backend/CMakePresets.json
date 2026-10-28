@@ -23,7 +23,8 @@
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Debug",
 				"CPP_CORE_BUILD_TESTS": "ON",
-				"CPP_AUTH_BUILD_TESTS": "ON"
+				"CPP_AUTH_BUILD_TESTS": "ON",
+				"CPP_PG_BUILD_TESTS": "ON"
 			}
 		},
 		{
