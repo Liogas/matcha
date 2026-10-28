@@ -3,3 +3,19 @@
 !.env.example
 /secrets/
 tests/certs/test-key.pem
+
+# Build artifacts (CMake / vcpkg)
+build/
+build-*/
+vcpkg_installed/
+*.o
+*.a
+
+# Editor
+.vscode/
+
+# Sujet 42 et notes personnelles (gardés en local)
+fr.subject.pdf
+notes.txt
+cmdTest
+statusCodeCrow

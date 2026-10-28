@@ -1,5 +1,0 @@
-add_test([=[AuthIntegrationTest.CanRegisterUser]=]  /app/build-sanitize/auth_integration_tests [==[--gtest_filter=AuthIntegrationTest.CanRegisterUser]==] --gtest_also_run_disabled_tests)
-set_tests_properties([=[AuthIntegrationTest.CanRegisterUser]=]  PROPERTIES WORKING_DIRECTORY /app/build-sanitize SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
-add_test([=[AuthAuthenticationIntegrationTest.AuthenticatesValidToken]=]  /app/build-sanitize/auth_integration_tests [==[--gtest_filter=AuthAuthenticationIntegrationTest.AuthenticatesValidToken]==] --gtest_also_run_disabled_tests)
-set_tests_properties([=[AuthAuthenticationIntegrationTest.AuthenticatesValidToken]=]  PROPERTIES WORKING_DIRECTORY /app/build-sanitize SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
-set(  auth_integration_tests_TESTS AuthIntegrationTest.CanRegisterUser AuthAuthenticationIntegrationTest.AuthenticatesValidToken)

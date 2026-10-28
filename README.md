@@ -5,6 +5,21 @@ React posé sur une clairière en 3D qui vit au rythme du jour et des saisons.
 Pages, décor, composants et architecture du frontend :
 [`frontend/README.md`](frontend/README.md).
 
+## Démarrage rapide
+
+```sh
+cp .env.example .env   # puis compléter les variables décrites plus bas
+make build             # docker compose up --build
+```
+
+## Tests
+
+Les tests (Google Test, lancés via CTest) s'exécutent dans le conteneur backend :
+
+```sh
+docker compose exec backend ctest --test-dir /app/build --output-on-failure
+```
+
 ## Bibliothèques du backend
 
 CROW        -> Bibliotheque pour créer un serveur WEB
@@ -147,11 +162,15 @@ racine du projet, utiliser :
 sh backend/seeds/seed-development.sh
 ```
 
+### Sessions et refresh tokens
+
 Après une connexion réussie, le backend crée une session persistée en base :
 le JWT d’accès dure 15 minutes et le refresh token opaque est envoyé dans un
 cookie `HttpOnly`, `SameSite=Strict`, limité au chemin `/api/auth`. Le serveur
 ne conserve que son hash. Une session expire après 7 jours sans activité ou
 au plus tard après 30 jours. `POST /api/auth/refresh` fait tourner le refresh
+token et renvoie un nouvel access token ; la réutilisation d’un refresh token
+déjà consommé révoque la session concernée.
 
 ### Likes et matchs
 
@@ -184,8 +203,6 @@ docker compose exec -e MATCHA_CLEANUP_ORPHANED_IMAGES=true \
 
 Cette opération parcourt uniquement le volume d'uploads dédié et doit être
 effectuée après le chargement éventuel des seeds.
-token et renvoie un nouvel access token ; la réutilisation d’un refresh token
-déjà consommé révoque la session concernée.
 
 ### Module de messagerie
 

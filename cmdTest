@@ -1,6 +1,0 @@
-docker exec -it matcha_backend bash
-ctest --test-dir build
-
-si marche pas, faire ceci avant ctest
-cmake -S . -B build -> A
-cmake --build build
