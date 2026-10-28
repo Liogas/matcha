@@ -11,3 +11,4 @@
 3. [Warnings en erreur, presets CMake et sanitizers](guides/03-presets-warnings.md)
 4. [cpp-core : Error, Result, Config, Logger](guides/04-cpp-core.md)
 5. [cpp-pg (1/2) : connexion, pool, transactions, lignes typées](guides/05-cpp-pg-1.md)
+6. [cpp-pg (2/2) : QueryBuilder, migrations, branchement](guides/06-cpp-pg-2.md)

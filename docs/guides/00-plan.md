@@ -14,8 +14,8 @@ Quand tu arrives à un guide, demande-le simplement (« guide 05 »).
 | 02 | [Le gabarit `libs/_template`](02-libs-template.md) | lundi | ✅ fait |
 | 03 | [Warnings, presets, sanitizers](03-presets-warnings.md) | lundi | ✅ fait |
 | 04 | [cpp-core](04-cpp-core.md) | lundi | ✅ fait |
-| 05 | [cpp-pg (1/2) : connexion, pool, transactions, lignes typées](05-cpp-pg-1.md) | mardi | 📄 écrit |
-| 06 | cpp-pg (2/2) : QueryBuilder, migrations, branchement | mercredi | 🗺️ |
+| 05 | [cpp-pg (1/2) : connexion, pool, transactions, lignes typées](05-cpp-pg-1.md) | mardi | ✅ fait |
+| 06 | [cpp-pg (2/2) : QueryBuilder, migrations, branchement](06-cpp-pg-2.md) | mercredi | 📄 écrit |
 | 07 | cpp-validation et cpp-geo | jeudi | 🗺️ |
 | 08 | cpp-realtime et cpp-realtime-crow | vendredi | 🗺️ |
 | 09 | cpp-notify, puis cpp-auth (1/2) | samedi | 🗺️ |
@@ -96,6 +96,13 @@ s'influencent s'ils ne sont pas isolés.
 ---
 
 ## Guide 06 — cpp-pg (2/2) : QueryBuilder, migrations, branchement
+
+> 📄 **Écrit** : [06-cpp-pg-2.md](06-cpp-pg-2.md). Nouveau format : notions « juste à
+> temps », chaque étape part d'une situation qui casse, points d'arrêt par étape.
+> Écarts au plan : `pg::Executor` (interface commune) ajouté ; migrations en **une**
+> transaction avec `pg_advisory_xact_lock` ; verrou du like par
+> `hashtextextended(least:greatest)` (la forme à deux clés est en `INTEGER`) ;
+> `SAVEPOINT` par requête dans la fixture des repositories ; `copyIn` reporté.
 
 **Objectif** : finir cpp-pg et l'utiliser partout, jusqu'à **supprimer `src/database/`**.
 

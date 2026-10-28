@@ -2983,8 +2983,7 @@ Réponds sans regarder, puis relis la section indiquée si tu bloques. Écris so
 mutex du `BEGIN` au `COMMIT` » ?
 
 **Ta réponse :**
-
-…
+Ca ne suffit pas a rendre une transaction sure parce qu'elle ne suit la suite des requetes. une transaction a besoin de garder la connexion du Begin au Commit, mais si on la protege avec un mutex on bloquerait le serveur durant toute cette periode. C'est pour cela qu'on met en place un PoolConnexion qui va permettre de donner une connexion le temps qu'il faut et ensuite la recuperer. L'idee est d'en avoir N nombre pour ne pas bloquer un autre utilisateur.
 
 ### Q2. `PRIVATE`, mais `find_dependency` (§1.3, §4.4, §9.2)
 
@@ -2993,8 +2992,7 @@ libpq est liée en `PRIVATE` à cpp-pg. Pourquoi faut-il quand même
 `PRIVATE` épargne, concrètement, à un projet qui utilise cpp-pg ?
 
 **Ta réponse :**
-
-…
+Alors ca c'est encore tres flou pour moi. Ce que je pense avoir compris pour le moment c'est qu'on a besoin de find_dependency parce que la bibliotheques est static et contient des appel a PQexecParams. Mais voila j'ai pas tout compris pour cette partie
 
 ### Q3. `"alice"` devient `true` (§1.6)
 
@@ -3003,8 +3001,7 @@ Explique pourquoi, avec seulement `toText(bool)` et `toText(std::string_view)`,
 `std::string name = "alice"; toText(name);` ?
 
 **Ta réponse :**
-
-…
+"alice" est une litterale chaine, qui prefere la version bool par rapport a string_view. Pour l'utilisation de string_view il faudrait une conversion avant l'appel. comme c'est le cas avec std::string name = "alice", de cette maniere il va prefere toText(std::string_view)
 
 ### Q4. `Row` et `shared_ptr` (§1.3, §7.1)
 
@@ -3017,8 +3014,7 @@ int n = row.get<int>("n");
 ```
 
 **Ta réponse :**
-
-…
+Alors avec ce code je n'en sais rien, je comprend pas vraiment ce qui devrait declencer un probleme la dedans. Mais le resultat doit pouvoir avoir plusieurs proprietaires, avec un simple pg_result * cela rendrait beaucoup plus complexe de gerer la liberation de memoire au bon moment. Alors qu'avec shared_ptr la liberation se fera automatiquement lorsque le dernier proprietaire possedant le resultat se detruira/liberera
 
 ### Q5. `wait_for` et son prédicat (§1.4, §8.2)
 
@@ -3026,8 +3022,7 @@ Pourquoi `acquire` passe-t-il une lambda à `wait_for` au lieu d'écrire simplem
 `_available.wait_for(lock, timeout);` puis de prendre une connexion ?
 
 **Ta réponse :**
-
-…
+`wait_for` **relâche** le mutex pendant qu'il dort, et le **reprend** avant de rendre la main. Sans ça, personne ne pourrait rendre de connexion. La lambda est obligatoire : un thread peut se réveiller et `wait_for` revérifie la condition à chaque réveil 
 
 ### Q6. Le `COMMIT` qui ment (§1.5, §8.7)
 
@@ -3036,8 +3031,9 @@ ignore l'erreur et appelle `commit()`. Que répond PostgreSQL, et que renverrait
 `commit()` qui se contenterait de vérifier `PQresultStatus` ?
 
 **Ta réponse :**
-
-…
+PostgreSQL répond à `COMMIT` par… `ROLLBACK`, **sans erreur**. Je l'ai vérifié :
+PQresultStatus vaut PGRES_COMMAND_OK
+Un commit() dirait « c'est enregistré » alors que rien ne l'est.
 
 ### Q7. Le pool qui meurt trop tôt (§1.4, §8.2)
 
@@ -3051,8 +3047,7 @@ pg::PooledConnection keep = [&] {
 ```
 
 **Ta réponse :**
-
-…
+Aucune idees
 
 ### Q8. Pas de transaction annulée dans nos tests (§1.9)
 
@@ -3061,25 +3056,569 @@ ce guide vide-t-il plutôt la table avec `TRUNCATE` au début de chaque test ? C
 tests qui ne pourraient pas fonctionner autrement.
 
 **Ta réponse :**
-
-…
+Aucune idees
 
 ---
 
 ## 13. Correction
 
-> Remplie après tes réponses.
->
 > **Légende** : 🟢 juste et complet · 🟡 juste mais incomplet ou imprécis ·
 > 🔴 faux ou à côté · ⏳ pas encore corrigé
 
 | Question | Évaluation |
 |---|---|
-| Q1. Le mutex de `Database` | ⏳ |
-| Q2. `PRIVATE`, mais `find_dependency` | ⏳ |
-| Q3. `"alice"` devient `true` | ⏳ |
-| Q4. `Row` et `shared_ptr` | ⏳ |
-| Q5. `wait_for` et son prédicat | ⏳ |
-| Q6. Le `COMMIT` qui ment | ⏳ |
-| Q7. Le pool qui meurt trop tôt | ⏳ |
-| Q8. Pas de transaction annulée | ⏳ |
+| Q1. Le mutex de `Database` | 🟡 |
+| Q2. `PRIVATE`, mais `find_dependency` | 🟡 |
+| Q3. `"alice"` devient `true` | 🟡 |
+| Q4. `Row` et `shared_ptr` | 🔴 |
+| Q5. `wait_for` et son prédicat | 🟡 |
+| Q6. Le `COMMIT` qui ment | 🟢 |
+| Q7. Le pool qui meurt trop tôt | 🔴 |
+| Q8. Pas de transaction annulée | 🔴 |
+
+**Bilan** :
+
+- **Ce qui est acquis** : le rôle du pool (Q1), l'idée d'un résultat à plusieurs
+  propriétaires libéré par le dernier (Q4), la première moitié de Q2 (la lib statique
+  contient des appels à libpq).
+- **Q5 et Q6 reprennent mot pour mot le §1.4 et le §1.5**, jusqu'au « Je l'ai vérifié »
+  qui est ma phrase. Ce n'est pas grave en soi, mais une réponse recopiée ne me dit pas si
+  tu as compris, et Q5 répond du coup à une autre question que celle posée. Écris plutôt
+  ta version à toi, même fausse, ou « je ne sais pas » : c'est ce qui me permet de viser
+  juste.
+- **Ce qui bloque, d'après tes propres mots, c'est de te mettre dans la situation de la
+  question.** Q4, Q7 et Q8 demandent toutes le même geste : **dérouler le code ligne par
+  ligne, et noter à chaque `;` et à chaque `}` quels objets meurent et qui pointe encore
+  vers eux.** Chaque correction ci-dessous fait ce déroulé en entier. C'est le geste que
+  le guide 06 va entraîner explicitement.
+
+Toutes les sorties ci-dessous sont **réelles** : exécutées dans `matcha_backend`, avec
+ta cpp-pg et la base `postgres-test`.
+
+### 🐛 Avant les questions : une faute de frappe casse l'isolation de tes tests
+
+En corrigeant Q8, je suis tombé sur ceci dans `libs/cpp-pg/CMakeLists.txt` :
+
+```cmake
+    gtest_discover_tests(cpp-pg_tests PROPERTIES
+		RESSOURCE_LOCK cpp-pg-database)
+```
+
+`RESSOURCE`, avec deux S, à la française. CTest ne connaît que **`RESOURCE_LOCK`**. Une
+propriété au nom inconnu n'est **pas** une erreur : CMake la range sans rien dire, CTest
+ne la lit jamais. Rien n'empêche donc deux tests de cpp-pg de tourner en même temps.
+
+Tu ne l'as pas vu parce que `make test` lance `ctest` **sans** `-j` : un test à la fois.
+Avec `-j8`, voici ce que donnent trois lancements de suite :
+
+```
+82% tests passed, 3 tests failed out of 17
+	 67 - TransactionTest.DestructorRollsBack (Failed)
+	 68 - TransactionTest.FailedQueryPoisonsTheTransaction (Failed)
+	 70 - TransactionTest.ParallelTransactionsDoNotMix (Failed)
+82% tests passed, 3 tests failed out of 17
+	 62 - Query.ParametersAreNeverSql (Failed)
+	 63 - Query.ArrayParameter (Failed)
+	 68 - TransactionTest.FailedQueryPoisonsTheTransaction (Failed)
+76% tests passed, 4 tests failed out of 17
+	 62 - Query.ParametersAreNeverSql (Failed)
+	 67 - TransactionTest.DestructorRollsBack (Failed)
+	 68 - TransactionTest.FailedQueryPoisonsTheTransaction (Failed)
+	 70 - TransactionTest.ParallelTransactionsDoNotMix (Failed)
+```
+
+Ce ne sont **jamais les mêmes** : c'est la signature de tests qui se marchent dessus. Le
+test A insère une ligne et s'attend à en compter 1 ; pendant ce temps, le `SetUp` du test
+B fait `TRUNCATE items`. A compte 0, et échoue sans avoir rien fait de faux.
+
+**À toi** :
+
+1. Remplace `RESSOURCE_LOCK` par `RESOURCE_LOCK`.
+2. Vérifie que la propriété est bien écrite dans les tests générés :
+
+   ```sh
+   cmake --build --preset debug
+   grep -rho 'RES[S]*OURCE_LOCK [a-z-]*' build/debug/libs/cpp-pg/ | sort | uniq -c
+   ```
+
+   ✅ **Attendu** : `32 RESOURCE_LOCK cpp-pg-database`, un S.
+3. Relance trois fois `ctest --test-dir build/debug -R '^(Query|TransactionTest|Pool)\.' -j8`.
+
+   ✅ **Attendu** : `100% tests passed` les trois fois.
+4. Commite : `cpp-pg : RESOURCE_LOCK mal orthographié, les tests à base tournaient en parallèle`.
+
+Leçon générale : **une faute dans un nom de propriété CMake ne fait jamais d'erreur.**
+Quand une propriété « ne marche pas », vérifie d'abord son orthographe dans le fichier
+généré, comme au point 2.
+
+---
+
+### Q1 — 🟡
+
+**Juste** : une transaction doit garder la connexion du `BEGIN` au `COMMIT`, et garder
+le mutex aussi longtemps bloquerait tout le serveur. D'où un pool de N connexions.
+
+**Imprécis** : « elle ne suit pas la suite des requêtes ». L'idée est là, mais la
+question demande **ce qui se passe**, concrètement. Mettons-nous dans la situation.
+
+**La situation.** Alice like Bob : le serveur ouvre une transaction (`BEGIN`, deux
+`INSERT`, `COMMIT`). Au même moment, Charlie modifie sa bio : une seule requête
+`UPDATE`. Deux threads de Crow, une seule connexion :
+
+```
+thread A (like d'Alice)              connexion unique           thread B (bio de Charlie)
+execute("BEGIN")            lock ─▶  BEGIN          ─ unlock
+                                                     ◀─ lock ── execute("UPDATE profiles …")
+                                     UPDATE …       ─ unlock
+execute("INSERT likes …")   lock ─▶  ERREUR (doublon)
+execute("ROLLBACK")         lock ─▶  ROLLBACK       ← la bio de Charlie est annulée aussi
+```
+
+Charlie reçoit « bio enregistrée » (son `UPDATE` a réussi), mais sa bio n'est **nulle
+part** en base. Le point clé :
+
+> **Une transaction PostgreSQL appartient à une connexion**, pas à un thread ni à un
+> mutex. Tout ce qui passe par cette connexion entre `BEGIN` et `COMMIT` en fait partie,
+> d'où que ça vienne.
+
+Le mutex garantit seulement que deux requêtes ne partent pas **au même instant** sur la
+connexion (libpq ne le supporte pas). Il ne garantit pas qu'elles viennent du **même
+client**.
+
+**Pourquoi pas « garder le mutex du `BEGIN` au `COMMIT` »** : ça corrige le mélange, mais
+Charlie attend alors la fin de **toute** la transaction d'Alice, et tous les autres
+utilisateurs attendent derrière. Pire, si le code entre `BEGIN` et `COMMIT` fait quelque
+chose de lent (hacher un mot de passe, appeler un service HTTP), **tout le serveur**
+attend avec lui. Et si une exception sort avant le `unlock`, le serveur est figé pour
+toujours.
+
+**Réponse attendue** : le mutex protège chaque requête, pas la suite ; entre deux
+requêtes de la transaction, une requête d'un autre thread passe sur la **même**
+connexion et se retrouve **dans** la transaction (un `ROLLBACK` l'annulerait).
+Garder le mutex jusqu'au `COMMIT` empêche ça, mais met tout le serveur en file
+d'attente derrière chaque transaction. Le pool donne à chaque transaction sa propre
+connexion.
+
+---
+
+### Q2 — 🟡
+
+**Juste** : la lib est statique et contient des appels à `PQexecParams`. C'est le bon
+point de départ. Il manque **ce qui en découle**, et l'autre moitié de la question
+(ce que `PRIVATE` épargne). Mettons-nous à la place du consommateur.
+
+**La situation.** Tu es un projet qui utilise cpp-pg installée. Ton `CMakeLists.txt` :
+
+```cmake
+find_package(cpp-pg 0.1 CONFIG REQUIRED)
+target_link_libraries(server PRIVATE cpp-pg::cpp-pg)
+```
+
+Ton programme se construit en **deux étapes** bien distinctes. Regardons ce dont chacune
+a besoin.
+
+**Étape 1, compiler `main.cpp`.** Il fait `#include <pg/Pool.hpp>`, qui inclut
+`<pg/Connection.hpp>`, qui contient seulement :
+
+```cpp
+struct pg_conn;   // « ce type existe », rien de plus
+```
+
+Le compilateur n'a besoin d'**aucun** fichier de libpq pour compiler `main.cpp`. C'est
+ce que `PRIVATE` traduit : « les en-têtes de libpq ne font pas partie de l'interface de
+cpp-pg ». Concrètement, `PRIVATE` t'épargne :
+
+- le chemin `-I…/include` de libpq dans **ta** compilation ;
+- les centaines de noms de `libpq-fe.h` (`PQexec`, `CONNECTION_OK`, `PGRES_TUPLES_OK`…)
+  qui n'arrivent pas dans ton code : tu ne peux pas t'en servir par accident, donc pas en
+  dépendre ;
+- la recompilation de ton code si cpp-pg change sa cuisine interne (passer de libpq à
+  autre chose ne change rien à ses en-têtes).
+
+**Étape 2, l'édition de liens.** Le *linker* assemble `main.o` et les bibliothèques en un
+exécutable. Que contient `libcpp-pg.a` ? Une archive de `.o`, rien d'autre. `nm`, qui
+liste les symboles, le montre sur ta lib :
+
+```
+                 U PQclear
+                 U PQexecParams
+                 U PQfinish
+```
+
+`U` = *undefined* : « j'appelle `PQexecParams`, mais son code n'est pas chez moi ». Une
+bibliothèque **statique** n'est jamais liée toute seule : ses `.o` sont simplement
+versés dans **ton** édition de liens. C'est donc **ta** commande de lien qui doit
+contenir libpq :
+
+```
+g++ main.o libcpp-pg.a libcpp-core.a libpq.a -lssl -lcrypto …
+```
+
+CMake le sait. Pour une lib `STATIC`, il écrit la dépendance `PRIVATE` dans le fichier
+d'export, enveloppée dans `LINK_ONLY` (« pas pour compiler, seulement pour lier ») :
+
+```
+INTERFACE_LINK_LIBRARIES "cpp-core::cpp-core;\$<LINK_ONLY:PostgreSQL::PostgreSQL>"
+```
+
+**Étape 3, le chaînon qui manquait.** Cette ligne cite la cible `PostgreSQL::PostgreSQL`.
+Dans **ton** projet, qui la crée ? Personne, sauf si quelqu'un appelle
+`find_package(PostgreSQL)`. C'est le rôle de `find_dependency(PostgreSQL)` dans
+`cpp-pgConfig.cmake` : il le fait à ta place, au moment de ton `find_package(cpp-pg)`.
+Sans lui, l'erreur vue au §9.2 :
+
+```
+The link interface of target "cpp-pg::cpp-pg" contains:
+    PostgreSQL::PostgreSQL
+```
+
+**En un tableau** :
+
+| Étape chez le consommateur | A besoin de libpq ? | Grâce à |
+|---|---|---|
+| compiler son code | **non** | `struct pg_conn;` + `PRIVATE` |
+| lier son exécutable | **oui** | `LINK_ONLY` dans l'export + `find_dependency(PostgreSQL)` |
+
+**Réponse attendue** : `PRIVATE` dit que libpq ne sert pas à **compiler** le code du
+consommateur : ses en-têtes et chemins ne lui sont pas transmis, ses noms ne polluent
+pas son code. Mais `libcpp-pg.a` contient des appels non résolus à libpq, et une lib
+statique est liée dans l'exécutable du consommateur : il doit lier libpq. L'export de
+cpp-pg référence donc `PostgreSQL::PostgreSQL` (en `LINK_ONLY`), et
+`find_dependency(PostgreSQL)` crée cette cible chez lui.
+
+---
+
+### Q3 — 🟡
+
+**La conclusion est juste** sur les deux cas. Il manque le **pourquoi**, et le mot
+« préfère » est trompeur pour le second cas.
+
+**Comment le compilateur choisit une surcharge.** Pour chaque candidate, il cherche le
+chemin pour convertir l'argument vers le type du paramètre, et classe ces chemins :
+
+| Rang | Sorte de conversion | Exemple |
+|---|---|---|
+| 1, le meilleur | correspondance exacte | `const char[6]` → `const char *` (tableau vers pointeur) |
+| 2 | conversion **standard**, intégrée au langage | pointeur → `bool`, `int` → `double` |
+| 3, le pire | conversion **définie par l'utilisateur** : un constructeur ou un `operator T()` d'une classe | `const char *` → `std::string_view` |
+
+**Premier cas, `toText("alice")`**, `"alice"` est un `const char[6]` :
+
+- vers `bool` : tableau → pointeur, puis pointeur → `bool` (non nul = `true`). Que des
+  conversions **standard** : rang 2.
+- vers `std::string_view` : il faut appeler le constructeur `string_view(const char *)`.
+  Conversion **définie par l'utilisateur** : rang 3.
+
+Rang 2 bat rang 3, **toujours**, même si le résultat est absurde. `bool` gagne.
+
+**Second cas, `toText(name)`** avec `std::string name` :
+
+- vers `bool` : `std::string` n'a **aucune** conversion vers `bool`. Cette candidate est
+  **éliminée**.
+- vers `std::string_view` : `std::string` a un `operator string_view()`. Rang 3, mais
+  c'est la **seule** candidate qui reste.
+
+Ce n'est donc pas une préférence : il n'y a plus de concurrence.
+
+**Pourquoi ça compte, en situation** : sans la surcharge `toText(const char *)`,
+
+```cpp
+tx->query("UPDATE accounts SET username = $1 WHERE id = $2", "alice", id);
+```
+
+renommerait le compte en `true`. Sans erreur, sans warning. `toText(const char *)` est
+une correspondance **exacte** (rang 1) : elle bat `bool`.
+
+---
+
+### Q4 — 🔴
+
+**L'idée générale est juste** (plusieurs propriétaires, libération par le dernier), mais
+tu n'as pas trouvé ce qui se passe dans **ce** code. Dérouler ligne par ligne :
+
+```cpp
+const pg::Row row = (*pool->query("SELECT 1 AS n"))[0];
+int n = row.get<int>("n");
+```
+
+| Moment | Ce qui se passe | `PGresult` |
+|---|---|---|
+| `pool->query(…)` | renvoie un `core::Result<Rows>` **sans nom** : un temporaire. Le `Rows` dedans possède le `PGresult` | vivant, 1 propriétaire (le `Rows`) |
+| `*…` | donne accès au `Rows` dans le temporaire | |
+| `[0]` | fabrique une `Row` qui pointe vers le `PGresult`, copiée dans `row` | |
+| **`;`** | fin de l'instruction : **les temporaires meurent**. Le `Result<Rows>` est détruit, donc le `Rows`, donc… | ? |
+| `row.get<int>("n")` | lit le `PGresult` à travers `row` | ? |
+
+C'est le même piège que la question 6 du guide 04 : **un temporaire vit jusqu'au `;`**.
+
+**Avec un simple `pg_result *` dans `Row`** : le `Rows` était le seul propriétaire. Au
+`;`, il appelle `PQclear` : le résultat est libéré. `row` garde l'adresse d'une mémoire
+rendue (pointeur **pendant**). `row.get` la lit : comportement indéfini.
+
+**Avec `std::shared_ptr`** : `[0]` copie le `shared_ptr` dans la `Row`, le compteur passe
+à 2. Au `;`, le `Rows` meurt, le compteur tombe à 1 : rien n'est libéré. `PQclear` ne
+sera appelé que quand `row` mourra, à la fin de son bloc.
+
+**Quel outil ? Ce qui se passe vraiment.** J'ai modifié une **copie** de ton `Rows.hpp`
+pour que `Row` garde un simple pointeur, et lancé ce code :
+
+```
+# avec shared_ptr (ton code)
+n = 1
+
+# pointeur simple, compilé en debug
+Segmentation fault (core dumped)
+
+# pointeur simple, compilé avec -fsanitize=address,undefined
+terminate called after throwing an instance of 'pg::RowError'
+  what():  unknown column 'n'
+```
+
+La réponse attendue était « ASan, *heap-use-after-free* ». En théorie, oui. Mais ici,
+ASan **ne dit rien**, et le message est **faux** (la colonne `n` existe). Pourquoi ?
+
+> ASan ne surveille que les lectures faites par du code **compilé avec
+> `-fsanitize=address`**.
+
+Ici, la mémoire libérée est lue **dans libpq** (`PQfnumber`), compilée par vcpkg sans
+sanitizer. ASan sait que ce bloc est libéré, mais personne ne lui demande. libpq lit ce
+qui traîne à cet endroit, ne trouve pas la colonne, et notre code lève une erreur qui
+envoie chercher au mauvais endroit.
+
+À comparer avec Q7, où la lecture se fait **dans notre code** : là, ASan l'attrape.
+
+**Réponse attendue** : le `Result<Rows>` est un temporaire détruit au `;` ; avec un
+pointeur simple, il libère le `PGresult` et `row` pointe vers de la mémoire libérée.
+`row.get` est un *use-after-free* : ASan le détecte quand la lecture a lieu dans du code
+instrumenté. Avec un `shared_ptr`, `row` est co-propriétaire et garde le résultat en vie.
+
+**À retenir** : un comportement indéfini n'a **pas** de symptôme fixe. Crash, faux
+message d'erreur, ou rien du tout : c'est pour ça qu'on le rend impossible par
+construction (`shared_ptr`) plutôt que d'espérer qu'un outil le voie.
+
+---
+
+### Q5 — 🟡
+
+**Recopié du §1.4.** La première phrase (« `wait_for` relâche le mutex… ») est vraie, mais
+elle est vraie **avec ou sans** lambda : elle ne répond pas à « pourquoi la lambda ? ».
+La seconde a la bonne idée, sans dire ce qui casserait. Écrivons la version **sans**
+prédicat et faisons-la tourner dans trois situations :
+
+```cpp
+std::unique_lock lock(_mutex);
+_available.wait_for(lock, timeout);                    // sans prédicat
+Connection connection = std::move(_idle.back());       // on suppose qu'il y en a une
+_idle.pop_back();
+```
+
+**Situation 1 : une connexion est déjà libre.** Pool de 2, une seule prêtée. Le thread
+T1 arrive. Sans prédicat, `wait_for` **s'endort sans rien vérifier**, et ne se réveille
+que sur un `notify_one()` (une connexion rendue) ou au bout du délai. Si personne ne
+rend rien pendant 2 s, T1 dort 2 s… alors qu'une connexion l'attendait. Chaque requête
+prendrait jusqu'à 2 s de plus pour rien.
+
+Avec prédicat, `wait_for` teste la condition **avant** de dormir : `_idle` n'est pas vide,
+il rend la main tout de suite.
+
+**Situation 2 : la connexion volée.** Pool épuisé, T1 dort.
+
+```
+T3 rend une connexion, notify_one()     → T1 est réveillé, il doit reprendre le mutex
+T4 arrive juste à ce moment, prend le mutex avant T1, et prend la connexion
+T1 obtient enfin le mutex : _idle est VIDE
+```
+
+Sans prédicat, T1 fait `_idle.back()` sur un vecteur vide : comportement indéfini (crash,
+ou une `Connection` fantôme). Avec prédicat, T1 revérifie, voit `_idle` vide, et se
+rendort pour le temps qui reste.
+
+**Situation 3 : le réveil sans raison** (*spurious wakeup*). La norme autorise
+`wait_for` à rendre la main sans que personne n'ait appelé `notify`. Même effet que la
+situation 2.
+
+**Ce que fait la version avec prédicat**, écrite à la main (c'est sa définition) :
+
+```cpp
+while (!predicate())                                   // vérifier AVANT de dormir
+    if (_available.wait_until(lock, deadline) == std::cv_status::timeout)
+        return predicate();                            // délai écoulé : dernière chance
+return true;                                           // la condition est vraie, sous le verrou
+```
+
+**Réponse attendue** : la lambda fait tester la condition **avant** de dormir (sinon on
+attend même quand une connexion est libre) et **après chaque réveil** (un réveil peut
+être sans raison, ou la connexion déjà prise par un autre thread). Quand `wait_for`
+renvoie `true`, on sait que `_idle` n'est pas vide **et** qu'on tient le verrou.
+
+---
+
+### Q6 — 🟢
+
+**Exact**, mais recopié du §1.5. Pour vérifier que c'est compris, voici la scène jouée
+dans `psql` sur `postgres-test` :
+
+```
+BEGIN
+CREATE TABLE
+INSERT 0 1
+ERROR:  duplicate key value violates unique constraint "demo_pkey"
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK
+```
+
+La dernière ligne est la réponse de PostgreSQL à **`COMMIT`**. Ce mot, `ROLLBACK`, est
+l'**étiquette de commande** (ce que libpq rend avec `PQcmdStatus`). Le **statut**, lui,
+est `PGRES_COMMAND_OK` : pour PostgreSQL, terminer une transaction en échec n'est pas
+une erreur, c'est le comportement prévu.
+
+**La situation qui fait mal** : une inscription insère le compte, puis le profil ; le
+profil échoue sur un doublon, le code ignore l'erreur et appelle `commit()`. Un
+`commit()` naïf renvoie « succès », le serveur envoie l'email de bienvenue… et le compte
+n'existe pas.
+
+**Ce que fait ton `commit()`** (`Pool.cpp`) : il compare `result->command()` à
+`"ROLLBACK"` et renvoie alors une erreur `Internal`. Le test
+`TransactionTest.FailedQueryPoisonsTheTransaction` le vérifie.
+
+---
+
+### Q7 — 🔴
+
+Dérouler. La lambda est appelée tout de suite (le `()` final) ; son résultat sert à
+construire `keep`.
+
+```cpp
+pg::PooledConnection keep = [&] {
+    auto pool = pg::ConnectionPool::open(settings, options, logger);   // ①
+    return std::move(*(*pool)->acquire());                              // ②
+}();                                                                    // ③
+// ④ … plus tard, keep meurt
+```
+
+| Moment | Ce qui se passe |
+|---|---|
+| ① | `pool` est une variable **locale de la lambda**. Elle possède le `ConnectionPool` (via le `unique_ptr`) |
+| ② | `acquire()` prête une connexion. Le `PooledConnection` garde un **pointeur simple** vers le pool (`_pool`), pour savoir où se rendre. Il est déplacé dans `keep` |
+| ③ | `}` de la lambda : les locales meurent. `pool` est détruite, donc le `ConnectionPool` aussi. **Mais `keep` a encore sa connexion, et un pointeur vers ce pool** |
+| ④ | `~PooledConnection` de `keep` rend la connexion : `_pool->release(…)`, sur un pool qui n'existe plus |
+
+C'est encore la règle de la question 6 du guide 04 : **un pointeur ne garde pas un objet
+en vie**. Le commentaire de `Pool.hpp` le dit : le pool « doit vivre plus longtemps que
+toutes les connexions et transactions prêtées ».
+
+**En `debug`** : au moment ③, le destructeur du pool vérifie qu'aucune connexion n'est
+dehors. Sortie réelle (pool de 2) :
+
+```
+level=INFO msg="PostgreSQL pool ready" host=postgres-test database=matcha_test size=2
+Pool.cpp:173: pg::ConnectionPool::~ConnectionPool(): Assertion `this->_idle.size() == this->_options.size && "pg::ConnectionPool destroyed while connections are still borrowed"' failed.
+Aborted (core dumped)
+```
+
+Le programme s'arrête **au bon endroit**, avec un message qui dit quoi corriger.
+
+**En `release`** : `release` compile avec `-DNDEBUG`, et `assert` devient **rien du
+tout** (c'est une macro). Sortie réelle :
+
+```
+level=INFO msg="PostgreSQL pool ready" host=postgres-test database=matcha_test size=2
+le pool est detruit, keep existe encore
+```
+
+Aucun message, aucun crash. Pourtant, au moment ④, `release` a verrouillé un mutex
+détruit et ajouté un élément dans un vecteur libéré : il a écrit dans de la mémoire qui
+peut appartenir à autre chose. Ici le programme s'arrêtait juste après, donc rien ne
+s'est vu. Dans un serveur, ce serait une corruption silencieuse, découverte des heures
+plus tard, ailleurs.
+
+**Avec ASan** (compilé avec `-DNDEBUG -fsanitize=address` pour simuler un `release`
+surveillé) :
+
+```
+==2975==ERROR: AddressSanitizer: heap-use-after-free on address 0x60e000000528
+READ of size 8 at 0x60e000000528 thread T0
+    #2 in pg::ConnectionPool::release(pg::Connection) /app/libs/cpp-pg/src/Pool.cpp:224
+    #3 in pg::PooledConnection::giveBack() /app/libs/cpp-pg/src/Pool.cpp:56
+    #4 in pg::PooledConnection::~PooledConnection() /app/libs/cpp-pg/src/Pool.cpp:50
+    #5 in main /tmp/exp/q7.cpp:23
+freed by thread T0 here:
+    #1 in std::default_delete<pg::ConnectionPool>::operator()
+    #5 in operator() /tmp/exp/q7.cpp:20
+```
+
+Cette fois, la lecture fautive a lieu **dans notre code** (`Pool.cpp`, instrumenté) :
+ASan l'attrape et dit où la mémoire a été libérée (ligne 20, la fin de la lambda) et où
+elle est relue (ligne 23, la mort de `keep`). C'est la différence avec Q4.
+
+**Réponse attendue** : le pool est une locale de la lambda, détruit à sa sortie, alors
+que `keep` a encore une connexion et un pointeur vers lui. En `debug`, l'`assert` du
+destructeur arrête le programme. En `release`, l'`assert` disparaît : le pool est
+détruit en silence, puis `~PooledConnection` appelle `release` sur un objet libéré
+(*use-after-free*), un comportement indéfini que seul ASan rendrait visible.
+
+**Dans matcha**, le pool sera créé dans `main`, et vivra jusqu'à la fin de `main`, après
+l'arrêt des threads de Crow : aucune connexion ne pourra lui survivre.
+
+---
+
+### Q8 — 🔴
+
+D'abord, **la technique proposée par le plan**, en situation :
+
+```
+SetUp     : BEGIN sur la connexion C du test
+le test   : INSERT … via C, SELECT … via C, EXPECT …
+TearDown  : ROLLBACK sur C            → la base est exactement comme avant
+```
+
+C'est élégant, mais ça ne marche que si **toutes** les requêtes du test passent par
+**C**, à l'**intérieur** de cette transaction. Prenons deux de nos tests.
+
+**`TransactionTest.CommitKeepsChanges`** :
+
+```cpp
+auto tx = this->pool->begin();         // emprunte P1 au pool : PAS la connexion C
+tx->query("INSERT … 'kept'");
+tx->commit();                          // validé pour de vrai, sur P1
+EXPECT_EQ(countItems(*this->pool), 1); // relu par P2, une autre connexion
+```
+
+- La transaction du test vit sur **P1**. La transaction « enveloppe » sur **C** n'en voit
+  rien : son `ROLLBACK` final n'annule **pas** la ligne `'kept'`. Le test suivant démarre
+  avec une ligne de trop.
+- Et on ne peut pas faire passer `tx` par C : PostgreSQL n'a **pas** de transactions
+  imbriquées. Un `BEGIN` dans une transaction donne
+  `WARNING: there is already a transaction in progress`, et le `COMMIT` de `tx`
+  validerait la transaction enveloppe : plus rien à annuler.
+- Surtout, ce test **doit** valider pour de vrai : il vérifie qu'après `commit()`, **une
+  autre connexion** voit la ligne. Si rien n'est jamais validé, on ne teste rien.
+
+**`TransactionTest.ParallelTransactionsDoNotMix`** : deux threads ouvrent **deux**
+transactions **en même temps**, chacune insère, puis chacune compte ce qu'elle voit.
+
+- Une connexion porte **une seule** transaction à la fois : il en faut deux, P1 et P2.
+- Le but même du test est de vérifier l'isolation **entre connexions** : T0 ne voit pas
+  la ligne de T1 tant que T1 n'a pas validé. Enfermer les deux dans une seule
+  transaction supprimerait exactement ce qu'on veut observer.
+
+Même chose pour `DestructorRollsBack` et `FailedQueryPoisonsTheTransaction` : ils
+recomptent les lignes **par une autre connexion** du pool, après le `ROLLBACK`.
+
+**D'où `TRUNCATE items RESTART IDENTITY` au début de chaque test** : les tests valident
+pour de vrai, puis le test suivant repart d'une table vide (et d'un `id` qui recommence
+à 1). Au **début** plutôt qu'à la fin : si un test plante en route, le suivant part
+quand même propre.
+
+Le revers : deux tests qui tournent **en même temps** se vident la table l'un l'autre.
+C'est le rôle de `RESOURCE_LOCK`… d'où le 🐛 en haut de cette correction.
+
+**Réponse attendue** : la transaction enveloppe ne fonctionne que si tout le test passe
+par une seule connexion, dans une seule transaction. Or cpp-pg teste justement des
+transactions qui valident pour de vrai et qu'on relit par une autre connexion
+(`CommitKeepsChanges`), et deux transactions simultanées sur deux connexions
+(`ParallelTransactionsDoNotMix`). PostgreSQL n'imbrique pas les transactions. On vide
+donc la table au début de chaque test.
+
+**Pour le guide 06** : un repository, lui, **reçoit** une transaction et ne fait jamais
+`commit()` lui-même. Là, la transaction enveloppe redevient la bonne technique.
