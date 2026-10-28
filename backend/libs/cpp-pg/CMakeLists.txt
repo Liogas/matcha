@@ -93,5 +93,5 @@ if(CPP_PG_BUILD_TESTS)
     )
     include(GoogleTest)
     gtest_discover_tests(cpp-pg_tests PROPERTIES
-		RESSOURCE_LOCK cpp-pg-database)
+		RESOURCE_LOCK cpp-pg-database)
 endif()
