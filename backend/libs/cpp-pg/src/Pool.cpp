@@ -96,6 +96,12 @@ core::Result<pg::Rows> pg::Transaction::execute(std::string_view sql, const Para
 	return this->_connection->execute(sql, params);
 }
 
+core::Result<void> pg::Transaction::executeScript(std::string_view sql)
+{
+	this->requireOpen();
+	return this->_connection->executeScript(sql);
+}
+
 core::Result<void> pg::Transaction::commit()
 {
 	this->requireOpen();
@@ -199,6 +205,15 @@ core::Result<pg::Transaction> pg::ConnectionPool::begin(Isolation isolation)
 	if (!started)
 		return std::unexpected(started.error());
 	return Transaction(std::move(*connection));
+}
+
+core::Result<pg::Rows> pg::ConnectionPool::execute(std::string_view sql,
+const Params &params)
+{
+	auto connection = this->acquire();
+	if (!connection)
+		return std::unexpected(connection.error());
+	return (*connection)->execute(sql, params);
 }
 
 std::size_t pg::ConnectionPool::idleCount() const

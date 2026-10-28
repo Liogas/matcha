@@ -147,10 +147,16 @@ Vérifie aussi que la base de test tourne :
 
 ```sh
 make up        # si l'environnement n'est pas déjà lancé
-docker compose -f docker-compose.yml -f docker-compose.dev.yml ps postgres-test
+docker compose -f docker-compose.yml -f docker-compose.dev.yml ps
 ```
 
-✅ **Attendu** : `postgres-test` est `Up (healthy)`.
+✅ **Attendu** : la ligne `matcha_postgres_test` affiche `Up … (healthy)` dans la colonne
+`STATUS`.
+
+> Ne passe **pas** de nom de service à `ps` (`… ps postgres-test`) : chez toi,
+> `docker compose` est en réalité `podman-compose` (le message « Emulate Docker CLI
+> using podman » le dit), et sa commande `ps` refuse les noms de service
+> (`unrecognized arguments`). Elle liste toujours tous les conteneurs du projet.
 
 ---
 
@@ -3759,7 +3765,7 @@ qu'ils n'ont rien laissé. `psql` n'est pas dans l'image du backend : depuis l'h
 dans `~/matcha` :
 
 ```sh
-docker compose -f docker-compose.yml -f docker-compose.dev.yml exec postgres-test \
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T postgres-test \
     psql -U matcha_test -d matcha_test -c "SELECT count(*) FROM auth_accounts"
 ```
 

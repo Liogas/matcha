@@ -14,6 +14,16 @@ namespace
 			text.pop_back();
 		return text;
 	}
+
+	// L'erreur portée par un résultat en échec, traduite pour cpp-core.
+	core::Error failureOf(const pg_result *raw)
+	{
+		const char *state = PQresultErrorField(raw, PG_DIAG_SQLSTATE);
+		if (state == nullptr) // erreur produite par libpq elle-même : connexion perdue
+			return {core::ErrorCode::Unavailable, trimmed(PQresultErrorMessage(raw))};
+		return {pg::errorCodeFor(state),
+				trimmed(PQresultErrorField(raw, PG_DIAG_MESSAGE_PRIMARY)) + " (SQLSTATE " + state + ")"};
+	}
 }
 
 void pg::Connection::Close::operator()(pg_conn *connection) const noexcept
@@ -72,11 +82,25 @@ core::Result<pg::Rows> pg::Connection::execute(std::string_view sql, const Param
 	const ExecStatusType status = PQresultStatus(raw);
 	if (status == PGRES_COMMAND_OK || status == PGRES_TUPLES_OK)
 		return rows;
-	const char *state = PQresultErrorField(raw, PG_DIAG_SQLSTATE);
-	if (state == nullptr) // erreur produite par libpq elle-même : connexion perdue
-		return core::fail(core::ErrorCode::Unavailable, trimmed(PQresultErrorMessage(raw)));
-	return core::fail(errorCodeFor(state),
-					  trimmed(PQresultErrorField(raw, PG_DIAG_MESSAGE_PRIMARY)) + " (SQLSTATE " + state + ")");
+	return std::unexpected(failureOf(raw));
+}
+
+core::Result<void> pg::Connection::executeScript(std::string_view sql)
+{
+	const std::string text(sql);
+	// PQexec, et non PQexecParams : le seul appel de libpq qui accepte
+	// plusieurs instructions séparées par des « ; ». Il renvoie le résultat de
+	// la dernière, ou de la première qui échoue (les suivantes ne sont pas exécutées).
+	pg_result *raw = PQexec(this->_connection.get(), text.c_str());
+	if (raw == nullptr)
+		return core::fail(
+			core::ErrorCode::Unavailable,
+			trimmed(PQerrorMessage(this->_connection.get())));
+	const Rows rows(raw);
+	const ExecStatusType status = PQresultStatus(raw);
+	if (status == PGRES_COMMAND_OK || status == PGRES_TUPLES_OK || status == PGRES_EMPTY_QUERY)
+		return {};
+	return std::unexpected(failureOf(raw));
 }
 
 bool pg::Connection::isHealthy() const

@@ -2,6 +2,7 @@
 #include <latch>
 #include <thread>
 
+
 namespace
 {
 	std::int64_t countItems(pg::ConnectionPool &pool)
@@ -87,4 +88,26 @@ TEST_F(TransactionTest, ParallelTransactionsDoNotMix)
 	ASSERT_TRUE(rows) << rows.error().message;
 	ASSERT_EQ(rows->size(), 1u);
 	EXPECT_EQ((*rows)[0].get<std::string>("name"), "thread-0");
+}
+
+// Le même code « repository » (il ne connaît qu'un Executor) tourne seul, ou
+// dans une transaction qu'il ne contrôle pas.
+namespace
+{
+	bool insertItem(pg::Executor &database, const std::string &name)
+	{
+		return database.query("INSERT INTO items (name) VALUES ($1)", name).has_value();
+	}
+}
+
+TEST_F(TransactionTest, ExecutorRunsInsideTheCallersTransaction)
+{
+	{
+		auto tx = this->pool->begin();
+		ASSERT_TRUE(tx) << tx.error().message;
+		ASSERT_TRUE(insertItem(*tx, "in-transaction"));
+	} // ROLLBACK : la ligne disparaît avec la transaction
+	EXPECT_EQ(countItems(*this->pool), 0);
+	ASSERT_TRUE(insertItem(*this->pool, "alone"));
+	EXPECT_EQ(countItems(*this->pool), 1);
 }

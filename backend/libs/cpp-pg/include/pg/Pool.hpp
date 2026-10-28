@@ -46,20 +46,15 @@ namespace pg
 	// BEGIN à la création, ROLLBACK à la destruction si commit() n'a pas été
 	// appelé. Toutes les requêtes passent par la même connexion, du BEGIN au
 	// COMMIT : personne d'autre ne peut s'y glisser.
-	class Transaction
+	class Transaction : public Executor
 	{
 	public:
 		Transaction(Transaction &&other) noexcept;
 		Transaction &operator=(Transaction &&) = delete;
 		~Transaction();
 
-		core::Result<Rows> execute(std::string_view sql, const Params &params = {});
-
-		template <class... Args>
-		core::Result<Rows> query(std::string_view sql, const Args &...args)
-		{
-			return this->execute(sql, pg::params(args...));
-		}
+		core::Result<Rows> execute(std::string_view sql, const Params &params = {}) override;
+		core::Result<void> executeScript(std::string_view sql);
 
 		core::Result<void> commit();
 		core::Result<void> rollback();
@@ -83,7 +78,7 @@ namespace pg
 
 	// N connexions ouvertes au démarrage, prêtées une par une. Thread-safe.
 	// Doit vivre plus longtemps que toutes les connexions et transactions prêtées.
-	class ConnectionPool
+	class ConnectionPool : public Executor
 	{
 	public:
 		static core::Result<std::unique_ptr<ConnectionPool>> open(
@@ -100,14 +95,7 @@ namespace pg
 		core::Result<Transaction> begin(Isolation isolation = Isolation::ReadCommitted);
 
 		// Une requête seule, hors transaction : emprunte une connexion le temps de la requête.
-		template <class... Args>
-		core::Result<Rows> query(std::string_view sql, const Args &...args)
-		{
-			auto connection = this->acquire();
-			if (!connection)
-				return std::unexpected(connection.error());
-			return (*connection)->query(sql, args...);
-		}
+		core::Result<Rows> execute(std::string_view sql, const Params &params = {}) override;
 
 		std::size_t idleCount() const;
 
