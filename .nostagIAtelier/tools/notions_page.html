@@ -1,0 +1,565 @@
+<title>Dictionnaire matcha</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap">
+<style>
+/* Liseuse à une colonne, pensée pour le pouce : barre de recherche collante, fiche en pleine largeur. */
+:root {
+  --bg: #f3f6ec; --surface: #e7ecdc; --line: #cdd6bd; --fg: #1d2416; --muted: #5a6650;
+  --accent: #4d6f1f; --on-accent: #f6f9ef; --warn: #9a5b12;
+  --read: 'Literata', Georgia, serif; --ui: 'IBM Plex Sans', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11150e; --surface: #1b2116; --line: #2e3726; --fg: #e4ead9; --muted: #98a58a;
+  --accent: #b0cf72; --on-accent: #1a2110; --warn: #e0ac62; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11150e; --surface: #1b2116; --line: #2e3726; --fg: #e4ead9; --muted: #98a58a;
+  --accent: #b0cf72; --on-accent: #1a2110; --warn: #e0ac62; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font: 16px/1.5 var(--ui); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 96px }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+main, header.bar { max-width: 42rem; margin-inline: auto }
+header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 12px 10px; display: flex; flex-direction: column; gap: 10px }
+.brand { display: flex; justify-content: space-between; align-items: baseline; gap: 12px }
+.brand a { color: inherit; text-decoration: none; font: 600 1.1rem var(--read) }
+.brand span { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums }
+#q { width: 100%; font: inherit; padding: 11px 13px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--fg) }
+#q:focus-visible, a:focus-visible, button:focus-visible, pre:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.tabs { display: flex; gap: 6px }
+.tabs button, .act { font: 500 .875rem var(--ui); padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--fg); cursor: pointer; min-height: 40px }
+.tabs button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent) }
+h2.cat { font: 600 .75rem var(--ui); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 26px 0 4px; display: flex; justify-content: space-between }
+.row { display: flex; gap: 10px; align-items: baseline; padding: 11px 0; border-top: 1px solid var(--line); color: inherit; text-decoration: none }
+.row b { font-weight: 500; flex: 1; min-width: 0 }
+.row i { font-style: normal; color: var(--accent); font-size: .8rem; flex: none }
+.row small { display: block; color: var(--muted); font-weight: 400; font-size: .84rem; margin-top: 1px }
+.card { border-top: 1px solid var(--line); padding-block: 12px }
+.card h3 { font: 500 1rem var(--ui); margin: 0 0 2px }
+.card p { margin: 0 0 6px; color: var(--muted); font-size: .84rem }
+.chips { display: flex; flex-wrap: wrap; gap: 6px }
+.chips a { font-size: .84rem; color: var(--accent); text-decoration: none; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px }
+.chips a.done { color: var(--muted) }
+.doing { color: var(--warn); font-weight: 600 }
+.dl { margin-top: 28px; display: flex; flex-direction: column; gap: 8px }
+.dl h2 { font: 600 .75rem var(--ui); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 }
+.dl .acts { display: flex; flex-wrap: wrap; gap: 8px }
+.note { color: var(--muted); font-size: .84rem; min-height: 1.3em; margin: 0 }
+article .eyebrow { color: var(--muted); font-size: .84rem; margin: 18px 0 2px }
+article h1 { font: 600 1.85rem/1.2 var(--read); margin: 0 0 10px; text-wrap: balance }
+article .sum { font: 1.1rem/1.5 var(--read); color: var(--muted); margin: 0 0 8px }
+.body { font: 1.0625rem/1.65 var(--read) }
+.body h2 { font: 600 1.05rem/1.3 var(--ui); margin: 28px 0 6px; color: var(--accent) }
+.body details.answer { background: var(--surface); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px }
+.body details.answer summary { font: 500 .95rem var(--ui); color: var(--accent); cursor: pointer; min-height: 28px }
+.body details.answer[open] summary { margin-bottom: 8px }
+.body h3 { font: 600 1rem/1.3 var(--ui); margin: 20px 0 4px }
+.body h2.check { border-top: 1px solid var(--line); padding-top: 18px }
+.body p { margin: 0 0 12px }
+.body ul, .body ol { margin: 0 0 12px; padding-left: 1.3em }
+.body li { margin-bottom: 4px }
+.body ul.see { list-style: none; padding: 0 }
+.body a.ref { color: var(--accent); text-underline-offset: 2px }
+.body code { font: .86em var(--mono); background: var(--surface); padding: .1em .3em; border-radius: 4px; overflow-wrap: anywhere }
+.body pre { background: var(--surface); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 0 0 14px; font-size: .9rem; line-height: 1.45 }
+.body pre code { background: none; padding: 0; font-size: .82rem; overflow-wrap: normal }
+.foot { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px }
+.path { display: flex; flex-direction: column; gap: 6px; min-width: 0 }
+.path p { margin: 0; color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums }
+.strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none }
+.strip a { flex: none; max-width: 15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .82rem; color: var(--fg); text-decoration: none; border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px }
+.strip a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent) }
+.dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.dock div { max-width: 42rem; margin-inline: auto; display: flex; gap: 8px }
+.dock a, .dock button { flex: 1 1 0; min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; text-align: center; font: 500 .875rem var(--ui); color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 8px; text-decoration: none; padding: 4px 8px; cursor: pointer }
+.dock span.off { flex: 1 1 0 }
+details.card summary { cursor: pointer; font-weight: 500; list-style-position: outside; padding-block: 2px }
+details.card summary small { display: block; color: var(--muted); font-weight: 400; font-size: .84rem }
+details.card .chips { margin-top: 8px }
+.act.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent) }
+.act.go { background: var(--accent); border-color: var(--accent); color: var(--on-accent); width: 100%; min-height: 48px; font-size: 1rem }
+.act:disabled { opacity: .45 }
+.quizlink { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 6px; padding: 13px 14px; border-radius: 8px; background: var(--accent); color: var(--on-accent); text-decoration: none; font-weight: 600 }
+.quizlink small { font-weight: 400; font-size: .84rem }
+.quiz h1 { font: 600 1.6rem/1.2 var(--read); margin: 14px 0 4px }
+.quiz h2 { font: 600 .75rem var(--ui); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 22px 0 6px }
+.quiz .opts { display: flex; flex-wrap: wrap; gap: 6px }
+.quiz .opts .act { flex: 1 1 auto }
+.quiz .sel { width: 100%; font: inherit; min-height: 44px; margin-top: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--fg) }
+.bar-q { height: 4px; border-radius: 2px; background: var(--surface); margin: 8px 0 14px; overflow: hidden }
+.bar-q i { display: block; height: 100%; background: var(--accent) }
+.qtext { font: 1.0625rem/1.5 var(--read); margin: 0 0 12px }
+.qtext code, .choice code, .fix code { font: .86em var(--mono); background: var(--surface); padding: .1em .3em; border-radius: 4px; overflow-wrap: anywhere }
+.hint { color: var(--muted); font-size: .84rem; margin: 0 0 8px }
+.choice { display: flex; gap: 10px; width: 100%; text-align: left; font: 1rem/1.4 var(--ui); color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 8px; min-height: 52px; cursor: pointer }
+.choice > b { flex: none; width: 1.3em; color: var(--muted) }
+.choice[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent) }
+.choice[aria-pressed="true"] > b { color: var(--accent) }
+.choice.right { border-color: var(--accent); background: var(--surface) }
+.choice.wrong { border-color: var(--warn); box-shadow: inset 0 0 0 1px var(--warn) }
+.choice:disabled { cursor: default; color: var(--fg) }
+.score { font: 600 2.4rem/1.1 var(--read); margin: 16px 0 2px }
+.score.ok { color: var(--accent) }
+.score.ko { color: var(--warn) }
+.fix { border-top: 1px solid var(--line); padding-block: 12px }
+.fix .tag { font-size: .8rem; font-weight: 600; color: var(--warn) }
+.fix .tag.ok { color: var(--accent) }
+.fix ul { list-style: none; margin: 6px 0; padding: 0 }
+.fix li { font-size: .92rem; padding: 3px 0 3px 10px; border-left: 3px solid transparent; color: var(--muted) }
+.fix li.right { border-color: var(--accent); color: var(--fg) }
+.fix li.wrong { border-color: var(--warn); color: var(--fg) }
+.fix p { margin: 6px 0 }
+.quiz .past { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: .9rem }
+.quiz .past span { color: var(--muted) }
+</style>
+
+<header class="bar">
+  <div class="brand"><a href="#">Dictionnaire matcha</a><span id="count"></span></div>
+  <input id="q" type="search" placeholder="Chercher une notion, un mot du code" aria-label="Chercher une notion">
+  <div class="path" id="path" hidden></div>
+</header>
+<main id="app"></main>
+<nav class="dock" id="dock" aria-label="Parcours" hidden><div id="dockInner"></div></nav>
+
+<script>
+const DATA = /*DATA*/null;
+const byId = new Map(DATA.fiches.map(f => [f.id, f]));
+const cardById = new Map(DATA.cards.map(c => [c.id, c]));
+const app = document.getElementById('app');
+const q = document.getElementById('q');
+const pathEl = document.getElementById('path');
+const dock = document.getElementById('dock');
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
+};
+let read = new Set(store.get('lues', []));
+let tab = store.get('onglet', 'cartes');
+let cardId = store.get('carte', 0);   // carte du parcours, 0 : le thème de la fiche
+let trail = [];                       // fiches quittées par un lien, pour le bouton Retour
+let followingLink = false;
+let shownFiche = null;
+let downloads = null;
+if (window.claude?.use) claude.use('downloads').then(d => { downloads = d; route() });
+
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function updateCount() {
+  document.getElementById('count').textContent = `${read.size} lues sur ${DATA.fiches.length}`;
+}
+
+function row(f) {
+  return `<a class="row" href="#${f.id}" data-card="0"><b>${esc(f.title)}<small>${esc(f.summary)}</small></b>${read.has(f.id) ? '<i>lue</i>' : ''}</a>`;
+}
+
+/* Révision : mêmes questions et même seuil que le logiciel. Tout est gardé sur l'appareil à chaque
+   réponse, pour survivre à un tunnel ou à un changement d'application, et envoyé dès que le réseau revient. */
+const LENGTHS = [10, 20, 40];
+const PASS_RATE = 0.875;
+const questionById = new Map(DATA.quiz.map(x => [x.id, x]));
+let results = store.get('quizResultats', []);
+let quiz = store.get('quizSerie', null);        // série en cours ou terminée
+let quizResult = null;
+let setup = store.get('quizChoix', { scope: 'cours', theme: Object.keys(DATA.categories)[0], length: 1, format: 'fin' });
+let db = null;
+
+const lastAnswers = () => {
+  const answers = { ...DATA.answers };
+  for (const r of results) Object.assign(answers, r.answers);
+  return answers;
+};
+
+function weakNotions(limit) {
+  const answers = lastAnswers(), scores = new Map();
+  for (const x of DATA.quiz) {
+    if (!(x.id in answers)) continue;
+    const s = scores.get(x.n) ?? { right: 0, seen: 0 };
+    s.seen++; s.right += answers[x.id] ? 1 : 0;
+    scores.set(x.n, s);
+  }
+  return [...scores].filter(([, s]) => s.right < s.seen).sort((a, b) => a[1].right / a[1].seen - b[1].right / b[1].seen).slice(0, limit).map(([n]) => n);
+}
+
+function scopeNotions() {
+  if (setup.scope === 'cours') return DATA.cards.filter(c => c.column !== 'todo' && c.column !== 'done').flatMap(c => c.notions);
+  if (setup.scope === 'faibles') return weakNotions(15);
+  if (setup.scope === 'theme') return DATA.fiches.filter(f => f.cat === setup.theme).map(f => f.id);
+  return null;
+}
+
+const scopeLabel = () => ({ cours: 'Cartes en cours', faibles: 'Points faibles', theme: DATA.categories[setup.theme], tout: 'Toutes les notions' }[setup.scope]);
+
+const shuffled = list => {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+};
+
+// Ratée la dernière fois, puis jamais vue, puis déjà réussie ; une série couvre le plus de notions possible
+function drawQuestions(notions, count) {
+  const answers = lastAnswers();
+  const rank = x => !(x.id in answers) ? 1 : answers[x.id] ? 2 : 0;
+  const pool = shuffled(DATA.quiz.filter(x => !notions || notions.includes(x.n))).sort((a, b) => rank(a) - rank(b));
+  const chosen = [], used = new Set();
+  for (const x of pool) if (chosen.length < count && !used.has(x.n)) { chosen.push(x); used.add(x.n) }
+  for (const x of pool) if (chosen.length < count && !chosen.includes(x)) chosen.push(x);
+  return shuffled(chosen);
+}
+
+function startQuiz(questions, label) {
+  if (!questions.length) return;
+  quiz = {
+    items: questions.map(x => ({ id: x.id, order: shuffled(x.c.map((_, i) => i)), picked: [] })),
+    at: 0, corrected: false, format: setup.format, label, started: Date.now(), done: false
+  };
+  quizResult = null;
+  saveQuiz();
+  drawQuiz();
+}
+
+const saveQuiz = () => store.set('quizSerie', quiz);
+const isRight = item => {
+  const expected = questionById.get(item.id).k;
+  return item.picked.length === expected.length && expected.every(i => item.picked.includes(i));
+};
+
+function pushResults() {
+  if (!db) return;
+  for (const r of results.filter(x => !x.sent))
+    db.collection('quizresults').doc(r.key).set(r).then(() => { r.sent = true; store.set('quizResultats', results) }).catch(() => {});
+}
+
+function finishQuiz() {
+  const right = quiz.items.filter(isRight).length, total = quiz.items.length;
+  const answers = Object.fromEntries(quiz.items.map(item => [item.id, isRight(item)]));
+  quizResult = {
+    key: `${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
+    at: new Date().toLocaleString('sv-SE').slice(0, 16), scope: quiz.label, right, total,
+    seconds: Math.round((Date.now() - quiz.started) / 1000), passed: right >= Math.ceil(total * PASS_RATE),
+    wrong: quiz.items.filter(item => !isRight(item)).map(item => item.id), answers
+  };
+  results.push(quizResult);
+  store.set('quizResultats', results);
+  quiz.done = true;
+  saveQuiz();
+  pushResults();
+}
+
+function quizMenu() {
+  const notions = scopeNotions();
+  const available = notions ? DATA.quiz.filter(x => notions.includes(x.n)).length : DATA.quiz.length;
+  const option = (key, value, label) => `<button class="act ${setup[key] === value ? 'on' : ''}" data-setup="${key}" data-value="${value}">${label}</button>`;
+  const weak = weakNotions(6);
+  const past = results.slice(-6).reverse();
+  dock.hidden = true;
+  app.innerHTML = `<div class="quiz">
+    <h1>Révision</h1>
+    <p class="hint">${DATA.quiz.length} questions · réussite à 35 sur 40, comme au code</p>
+    ${quiz && !quiz.done ? `<button class="act go" data-quiz="resume">Reprendre ma série (${quiz.at + 1}/${quiz.items.length})</button>` : ''}
+    <h2>Sur quoi ?</h2>
+    <div class="opts">${option('scope', 'cours', 'Cartes en cours')}${option('scope', 'faibles', 'Points faibles')}${option('scope', 'theme', 'Un thème')}${option('scope', 'tout', 'Tout')}</div>
+    ${setup.scope === 'theme' ? `<select class="sel" id="theme" aria-label="Thème">${Object.entries(DATA.categories).map(([k, v]) => `<option value="${k}" ${k === setup.theme ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>` : ''}
+    <h2>Combien de questions ?</h2>
+    <div class="opts">${LENGTHS.map((n, i) => option('length', i, n === 40 ? '40 (examen)' : n)).join('')}</div>
+    <h2>Quand voir la correction ?</h2>
+    <div class="opts">${option('format', 'fin', 'À la fin')}${option('format', 'chaque', 'Après chaque question')}</div>
+    <p class="hint" style="margin-top:16px">${available ? `${available} questions disponibles` : setup.scope === 'faibles' ? 'Aucun point faible pour l\'instant : fais une première série.' : 'Aucune question ici.'}</p>
+    <button class="act go" data-quiz="start" ${available ? '' : 'disabled'}>Commencer</button>
+    ${weak.length ? `<h2>À revoir</h2><div class="chips">${weak.map(n => `<a href="#${n}" data-from-quiz="1">${esc(byId.get(n).title)}</a>`).join('')}</div>` : ''}
+    ${past.length ? `<h2>Dernières séries</h2>${past.map(r => `<div class="past"><b>${r.right} / ${r.total}</b><span>${esc(r.scope)} · ${r.at.slice(5)}</span></div>`).join('')}` : ''}
+  </div>`;
+}
+
+function quizQuestion() {
+  const item = quiz.items[quiz.at], x = questionById.get(item.id);
+  const last = quiz.at + 1 === quiz.items.length;
+  const label = quiz.format === 'chaque' && !quiz.corrected ? 'Valider' : last ? 'Voir le résultat' : 'Suivante';
+  app.innerHTML = `<div class="quiz">
+    <p class="hint" style="margin:14px 0 0">Question ${quiz.at + 1} sur ${quiz.items.length}</p>
+    <div class="bar-q"><i style="width:${(quiz.at + 1) / quiz.items.length * 100}%"></i></div>
+    <p class="qtext">${x.t}</p>
+    <p class="hint">Une ou plusieurs bonnes réponses</p>
+    ${item.order.map((choice, i) => {
+      const picked = item.picked.includes(choice), good = x.k.includes(choice);
+      const state = !quiz.corrected ? '' : good ? 'right' : picked ? 'wrong' : '';
+      return `<button class="choice ${state}" data-choice="${choice}" aria-pressed="${picked}" ${quiz.corrected ? 'disabled' : ''}><b>${'ABCD'[i]}</b><span>${x.c[choice]}</span></button>`;
+    }).join('')}
+    ${quiz.corrected ? `<div class="fix"><span class="tag ${isRight(item) ? 'ok' : ''}">${isRight(item) ? 'Bonne réponse' : 'Mauvaise réponse'}</span><p>${x.e}</p></div>` : ''}
+  </div>`;
+  document.getElementById('dockInner').innerHTML = `<button data-quiz="quit">Quitter</button><button data-quiz="next" ${item.picked.length ? '' : 'disabled'} style="${item.picked.length ? 'background:var(--accent);color:var(--on-accent);border-color:var(--accent)' : 'opacity:.45'}">${label}</button>`;
+  dock.hidden = false;
+}
+
+function correction(item) {
+  const x = questionById.get(item.id), good = isRight(item);
+  return `<div class="fix"><span class="tag ${good ? 'ok' : ''}">${good ? 'Juste' : 'Faux'}</span>
+    <p>${x.t}</p>
+    <ul>${item.order.map(choice => {
+      const right = x.k.includes(choice), picked = item.picked.includes(choice);
+      return `<li class="${right ? 'right' : picked ? 'wrong' : ''}">${x.c[choice]}${right ? ' (bonne réponse)' : picked ? ' (ta réponse)' : ''}</li>`;
+    }).join('')}</ul>
+    <p>${x.e}</p>
+    <a class="ref" href="#${x.n}" data-from-quiz="1">Lire : ${esc(byId.get(x.n).title)}</a></div>`;
+}
+
+function quizEnd() {
+  const r = quizResult ?? results[results.length - 1];
+  const scores = new Map();
+  for (const item of quiz.items) {
+    const n = questionById.get(item.id).n, s = scores.get(n) ?? { right: 0, total: 0 };
+    s.total++; s.right += isRight(item) ? 1 : 0;
+    scores.set(n, s);
+  }
+  const toReview = [...scores].filter(([, s]) => s.right < s.total).sort((a, b) => a[1].right / a[1].total - b[1].right / b[1].total);
+  const ordered = [...quiz.items.filter(i => !isRight(i)), ...quiz.items.filter(isRight)];
+  dock.hidden = true;
+  app.innerHTML = `<div class="quiz">
+    <p class="score ${r.passed ? 'ok' : 'ko'}">${r.right} / ${r.total}</p>
+    <p style="margin:0;font-weight:600">${r.passed ? 'Reçu' : 'Recalé'}</p>
+    <p class="hint">${esc(r.scope)} · ${Math.floor(r.seconds / 60)} min ${String(r.seconds % 60).padStart(2, '0')} s</p>
+    ${r.wrong.length ? '<button class="act go" data-quiz="retry">Refaire mes erreurs</button>' : ''}
+    <button class="act" style="width:100%;margin-top:8px" data-quiz="menu">Nouvelle série</button>
+    ${toReview.length ? `<h2>Notions à revoir</h2>${toReview.map(([n, s]) => `<a class="row" href="#${n}" data-from-quiz="1"><b>${esc(byId.get(n).title)}</b><i>${s.right}/${s.total}</i></a>`).join('')}` : '<p style="margin-top:16px">Aucune erreur : rien à revoir sur ces notions.</p>'}
+    <h2>Correction</h2>${ordered.map(correction).join('')}
+  </div>`;
+}
+
+function drawQuiz() {
+  setChrome(null);
+  q.hidden = true;
+  if (!quiz || quizShowMenu) quizMenu();
+  else if (quiz.done) quizEnd();
+  else quizQuestion();
+  window.scrollTo(0, 0);
+}
+
+let quizShowMenu = !quiz || !quiz.done;
+
+function quizAction(action) {
+  if (action === 'start') {
+    const length = LENGTHS[setup.length];
+    quizShowMenu = false;
+    startQuiz(drawQuestions(scopeNotions(), length), scopeLabel());
+  }
+  if (action === 'resume') { quizShowMenu = false; drawQuiz() }
+  if (action === 'quit') { quizShowMenu = true; drawQuiz() }
+  if (action === 'menu') { quiz = null; store.set('quizSerie', null); quizShowMenu = true; drawQuiz() }
+  if (action === 'retry') {
+    const wrong = quiz.items.filter(i => !isRight(i)).map(i => questionById.get(i.id));
+    startQuiz(shuffled(wrong), 'Mes erreurs');
+  }
+  if (action === 'next') {
+    if (quiz.format === 'chaque' && !quiz.corrected) { quiz.corrected = true; saveQuiz(); drawQuiz(); return }
+    quiz.corrected = false;
+    if (quiz.at + 1 < quiz.items.length) quiz.at++;
+    else finishQuiz();
+    saveQuiz();
+    drawQuiz();
+  }
+}
+
+function homeByCards() {
+  const rank = c => c.column === 'doing' ? 0 : c.column === 'todo' ? 1 : 2;
+  const list = [...DATA.cards].sort((a, b) => rank(a) - rank(b) || a.id - b.id);
+  return list.map(c => {
+    const done = c.notions.filter(n => read.has(n)).length;
+    const state = c.column === 'doing' ? '<span class="doing">En cours</span>' : c.column === 'done' ? 'Fait' : 'À faire';
+    return `<details class="card" ${c.id === cardId || c.column === 'doing' ? 'open' : ''}>
+    <summary>#${c.id} ${esc(c.name)}<small>${state} · ${done}/${c.notions.length} lues</small></summary>
+    <div class="chips">${c.notions.map(n => `<a href="#${n}" data-card="${c.id}" class="${read.has(n) ? 'done' : ''}">${esc(byId.get(n).title)}</a>`).join('')}</div>
+  </details>`;
+  }).join('');
+}
+
+function homeByTheme() {
+  return Object.entries(DATA.categories).map(([key, label]) => {
+    const list = DATA.fiches.filter(f => f.cat === key);
+    return `<h2 class="cat"><span>${esc(label)}</span><span>${list.filter(f => read.has(f.id)).length}/${list.length}</span></h2>${list.map(row).join('')}`;
+  }).join('');
+}
+
+function downloadBlock() {
+  if (!downloads) return '';
+  return `<section class="dl"><h2>Lire sans réseau</h2>
+    <div class="acts">
+      <button class="act" data-dl="epub">Tout en EPUB</button>
+      <button class="act" data-dl="html">Tout en page HTML</button>
+    </div><p class="note" id="note"></p></section>`;
+}
+
+function setChrome(fiche) {
+  q.hidden = !!fiche;
+  pathEl.hidden = !fiche;
+  dock.hidden = !fiche;
+  shownFiche = fiche;
+}
+
+function home() {
+  setChrome(null);
+  app.innerHTML = `<div class="tabs" style="margin-top:4px">
+      <button data-tab="cartes" aria-pressed="${tab === 'cartes'}">Par carte du kanban</button>
+      <button data-tab="themes" aria-pressed="${tab === 'themes'}">Par thème</button>
+    </div>
+    <a class="quizlink" href="#reviser">Réviser avec un quiz<small>${DATA.quiz.length} questions</small></a>
+    <div style="margin-top:10px">${tab === 'cartes' ? homeByCards() : homeByTheme()}</div>
+    ${downloadBlock()}`;
+}
+
+function search(term) {
+  setChrome(null);
+  const t = term.toLowerCase();
+  const hits = DATA.fiches.filter(f => f.title.toLowerCase().includes(t) || f.md.toLowerCase().includes(t));
+  hits.sort((a, b) => b.title.toLowerCase().includes(t) - a.title.toLowerCase().includes(t));
+  app.innerHTML = hits.length
+    ? `<h2 class="cat"><span>${hits.length} résultat${hits.length > 1 ? 's' : ''}</span></h2>${hits.map(row).join('')}`
+    : `<p class="note" style="margin-top:20px">Aucune fiche ne contient « ${esc(term)} ». Essaie un mot plus court.</p>`;
+}
+
+// La suite de fiches qu'on parcourt : celles de la carte choisie, sinon celles du thème
+function sequence(f) {
+  const card = cardById.get(cardId);
+  if (card && card.notions.includes(f.id))
+    return { ids: card.notions, label: `#${card.id} ${card.name}`, inCard: true };
+  return { ids: DATA.fiches.filter(x => x.cat === f.cat).map(x => x.id), label: DATA.categories[f.cat], inCard: false };
+}
+
+function drawPath(f, seq) {
+  const i = seq.ids.indexOf(f.id);
+  pathEl.innerHTML = `<p>${esc(seq.label)} · ${i + 1}/${seq.ids.length}</p>
+    <div class="strip">${seq.ids.map(id => `<a href="#${id}" data-keep="1" ${id === f.id ? 'aria-current="page"' : ''}>${esc(byId.get(id).title)}</a>`).join('')}</div>`;
+  pathEl.querySelector('[aria-current]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  const prev = seq.ids[i - 1], next = seq.ids[i + 1];
+  document.getElementById('dockInner').innerHTML = `
+    ${trail.length ? '<button data-back="1">Retour</button>' : ''}
+    ${prev ? `<a href="#${prev}" data-keep="1">Précédente</a>` : '<span class="off"></span>'}
+    ${next ? `<a href="#${next}" data-keep="1">Suivante</a>` : '<span class="off"></span>'}`;
+}
+
+function fiche(f) {
+  const seq = sequence(f);
+  setChrome(f);
+  drawPath(f, seq);
+  const cards = f.cards.map(id => cardById.get(id));
+  app.innerHTML = `<article>
+    <p class="eyebrow">${esc(DATA.categories[f.cat])}</p>
+    <h1>${esc(f.title)}</h1>
+    <p class="sum">${esc(f.summary)}</p>
+    <div class="body">${f.body}</div>
+    <div class="foot">
+      <button class="act ${read.has(f.id) ? 'on' : ''}" data-read="${f.id}">${read.has(f.id) ? 'Lue' : 'Marquer comme lue'}</button>
+      ${downloads ? `<button class="act" data-dl="md" data-id="${f.id}">Télécharger la fiche</button>` : ''}
+    </div>
+    <p class="note" id="note"></p>
+    ${cards.length ? `<div class="dl"><h2>Cartes qui en ont besoin</h2><div class="chips">${cards.map(c => `<a href="#${f.id}" data-card="${c.id}">#${c.id} ${esc(c.name)}</a>`).join('')}</div></div>` : ''}
+  </article>`;
+  window.scrollTo(0, 0);
+}
+
+function route() {
+  updateCount();
+  const term = q.value.trim();
+  const f = byId.get(location.hash.slice(1));
+  if (location.hash === '#reviser' && !term) drawQuiz();
+  else if (f && !term) fiche(f);
+  else if (term) search(term);
+  else home();
+}
+
+function offlineHtml() {
+  const toc = DATA.fiches.map(f => `<li><a href="#${f.id}">${esc(f.title)}</a></li>`).join('');
+  const parts = DATA.fiches.map(f => `<article id="${f.id}"><h1>${esc(f.title)}</h1><p><em>${esc(f.summary)}</em></p>${f.body}</article>`).join('<hr>');
+  return `<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dictionnaire matcha</title><style>body{max-width:42rem;margin:auto;padding:16px;font:17px/1.6 Georgia,serif}pre{overflow-x:auto;background:#eef1e6;padding:12px;font-size:13px}code{font-family:monospace}@media(prefers-color-scheme:dark){body{background:#11150e;color:#e4ead9}pre{background:#1b2116}a{color:#b0cf72}}</style><h1>Dictionnaire matcha</h1><ol>${toc}</ol><hr>${parts}</html>`;
+}
+
+async function save(kind, id) {
+  const note = document.getElementById('note');
+  const say = t => { if (note) note.textContent = t };
+  let file;
+  if (kind === 'md') { const f = byId.get(id); file = { filename: f.id + '.md', data: f.md } }
+  if (kind === 'html') file = { filename: 'dictionnaire-matcha.html', data: offlineHtml() }
+  if (kind === 'epub') file = { filename: 'dictionnaire-matcha.epub', data: Uint8Array.from(atob(DATA.epub), c => c.charCodeAt(0)) };
+  try {
+    await downloads.save(file);
+    say('Fichier enregistré.');
+  } catch (e) {
+    if (e?.code === 'declined') say('Téléchargement annulé.');
+    else if (e?.code === 'rate_limited') say('Une demande est déjà ouverte. Réponds-y puis réessaie.');
+    else say('Le téléchargement n\'est pas disponible ici.');
+  }
+}
+
+document.addEventListener('click', e => {
+  const link = e.target.closest('a[href^="#"]');
+  if (link) {
+    if (link.dataset.card !== undefined) { cardId = Number(link.dataset.card); store.set('carte', cardId); trail = [] }
+    if (link.classList.contains('ref') && shownFiche) { trail.push(shownFiche.id); followingLink = true }
+    if (link.dataset.fromQuiz) { trail = ['reviser']; followingLink = true }
+    if (q.value) q.value = '';
+    // Même adresse (autre carte, résultat déjà ouvert) : hashchange ne se déclenche pas
+    if (link.getAttribute('href') === (location.hash || '#')) setTimeout(route);
+  }
+  const t = e.target.closest('button');
+  if (!t) return;
+  if (t.dataset.back) { followingLink = true; location.hash = trail.pop() }
+  if (t.dataset.quiz) quizAction(t.dataset.quiz);
+  if (t.dataset.setup) {
+    setup[t.dataset.setup] = t.dataset.setup === 'length' ? Number(t.dataset.value) : t.dataset.value;
+    store.set('quizChoix', setup);
+    quizMenu();
+  }
+  if (t.dataset.choice !== undefined) {
+    const item = quiz.items[quiz.at], choice = Number(t.dataset.choice);
+    item.picked = item.picked.includes(choice) ? item.picked.filter(c => c !== choice) : [...item.picked, choice];
+    saveQuiz();
+    const y = window.scrollY; quizQuestion(); window.scrollTo(0, y);
+  }
+  if (t.dataset.tab) { tab = t.dataset.tab; store.set('onglet', tab); route() }
+  if (t.dataset.read) {
+    const id = t.dataset.read;
+    read.has(id) ? read.delete(id) : read.add(id);
+    store.set('lues', [...read]);
+    const y = window.scrollY; route(); window.scrollTo(0, y);
+  }
+  if (t.dataset.dl) save(t.dataset.dl, t.dataset.id);
+});
+document.addEventListener('change', e => {
+  if (e.target.id !== 'theme') return;
+  setup.theme = e.target.value;
+  store.set('quizChoix', setup);
+  quizMenu();
+});
+q.addEventListener('input', route);
+window.addEventListener('online', pushResults);
+
+// Les séries faites sur un autre appareil rejoignent celles de celui-ci
+async function connectResults() {
+  if (!window.claude?.use) return;
+  db = await claude.use('db');
+  if (!db) return;
+  try {
+    const snapshot = await db.collection('quizresults').get();
+    const known = new Set(results.map(r => r.key));
+    for (const doc of snapshot.docs) {
+      const r = doc.data();
+      if (known.has(r.key)) continue;
+      results.push({ ...r, sent: true });
+    }
+    results.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+    store.set('quizResultats', results);
+    pushResults();
+    if (location.hash === '#reviser' && quizShowMenu) quizMenu();
+  } catch {}
+}
+connectResults();
+window.addEventListener('hashchange', () => {
+  if (!followingLink && !byId.has(location.hash.slice(1))) trail = [];
+  followingLink = false;
+  q.value = '';
+  route();
+});
+route();
+</script>

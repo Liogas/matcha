@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "`transferer(a, b)` verrouille la ligne `a` puis la ligne `b`. Les appels simultanés `transferer(1, 2)` et `transferer(2, 1)` se bloquent parfois. Quelle correction supprime le risque sans changer la signature ?",
+   "choices": [
+    "Verrouiller toujours `b` avant `a`, pour inverser l'ordre actuel.",
+    "Verrouiller `std::min(a, b)` puis `std::max(a, b)`, quel que soit l'ordre des arguments.",
+    "Réduire `deadlock_timeout` pour que PostgreSQL détecte le cycle plus vite.",
+    "Rattraper l'erreur et rejouer seulement le second `UPDATE`."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Si tout le monde verrouille le plus petit identifiant d'abord, les deux appels prennent 1 avant 2 et le cycle est impossible. Inverser l'ordre pour tous les appels ne fixerait rien, car l'ordre dépend des arguments. Détecter plus vite ou rejouer une requête n'empêche pas le blocage."
+  },
+  {
+   "text": "Une transaction de cinq requêtes échoue à la troisième avec le code `40P01`. Que fais-tu ? (plusieurs réponses possibles)",
+   "choices": [
+    "Tu rejoues uniquement la troisième requête, les deux premières étant déjà faites.",
+    "Tu ignores l'erreur et tu continues vers le `COMMIT`.",
+    "Tu annules, tu attends un peu, puis tu rejoues la transaction entière depuis `BEGIN`.",
+    "Tu bornes le nombre de tentatives, pour ne pas rejouer sans fin."
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Un `40P01` fait perdre la transaction entière : les écritures précédentes sont annulées, donc rejouer seulement la dernière requête n'a pas de sens. Il faut tout rejouer depuis `BEGIN`. Rejouer sans limite est une erreur fréquente, d'où le plafond de tentatives."
+  },
+  {
+   "text": "Le pool a 4 connexions. Chaque requête HTTP ouvre `tx = pool.begin()`, puis appelle `repo(pool).find(...)` à l'intérieur. Sous charge, tout se fige, puis des erreurs `Unavailable` arrivent après 2 secondes, sans aucun `40P01`. Quelles affirmations sont justes ?",
+   "choices": [
+    "PostgreSQL ne détecte rien, car l'attente a lieu dans le pool du programme et non sur des verrous de lignes.",
+    "Il suffit d'augmenter `deadlock_timeout` pour que PostgreSQL finisse par détecter le cycle.",
+    "Il faut trier les lignes par identifiant avant de les verrouiller.",
+    "La correction est de passer l'Executor de la transaction à tout ce qui s'exécute à l'intérieur."
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Les 4 requêtes tiennent chacune une connexion et en réclament une cinquième que personne ne rendra, mais PostgreSQL ne voit pas ce cycle. Réutiliser la connexion de la transaction supprime la deuxième demande. Trier les verrous ou changer `deadlock_timeout` ne concerne pas ce blocage."
+  },
+  {
+   "text": "Deux requêtes exécutent `SELECT account_id FROM matcha_profiles WHERE account_id = ANY($1) FOR UPDATE`, l'une avec `{3, 8}`, l'autre avec `{8, 3}`. Elles se bloquent de temps en temps. Que corriges-tu ?",
+   "choices": [
+    "Tu verrouilles chaque identifiant dans une requête séparée, dans l'ordre reçu.",
+    "Tu agrandis le pool pour que chaque requête dispose de sa propre connexion.",
+    "Tu ajoutes `ORDER BY account_id` avant `FOR UPDATE`, pour que toutes prennent les verrous dans le même ordre.",
+    "Tu laisses PostgreSQL annuler l'une des deux avec `40P01` et tu ne changes rien."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Avec un tri fixe, le second appelant attend le premier sans rien détenir de ce que l'autre veut : l'attente circulaire disparaît. Verrouiller dans l'ordre reçu garde le risque, puisque cet ordre diffère selon l'appelant. Un pool plus grand ne change rien aux verrous de lignes."
+  }
+ ]
+}

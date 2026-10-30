@@ -1,0 +1,59 @@
+{
+ "questions": [
+  {
+   "text": "Tu dois tester la règle « un profil sans photo ne peut pas liker » sans démarrer de serveur. Où doit vivre cette règle pour que ce soit possible ?",
+   "choices": [
+    "Dans le handler Crow, qui connaît déjà la requête et le compte authentifié",
+    "Dans `ProfileRepository`, qui peut refuser le like au moment d'écrire le SQL",
+    "Dans `MatchService`, qui renvoie un `core::Result` au lieu d'une réponse HTTP",
+    "Dans le handler, avec un test qui lance un faux serveur Crow pour l'exécuter"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le service applique les règles et ne parle pas HTTP, donc `like` s'appelle directement dans un test. Mettre la règle dans le handler oblige à passer par HTTP pour la tester, et le repository ne doit qu'exécuter du SQL, pas décider."
+  },
+  {
+   "text": "En relisant `ProfileRepository`, tu vois `auto tx = _pool.begin();` dans sa méthode `hasPrimaryPhoto`. Que faut-il corriger ?",
+   "choices": [
+    "Rien : le repository sait mieux que personne quand le SQL doit être validé ou annulé",
+    "Le repository devrait recevoir un `pg::Executor &` et ne pas décider des transactions",
+    "La transaction doit être ouverte par le service, qui construit ensuite les repositories dessus",
+    "Il faut déplacer le SQL dans le handler pour que la transaction reste proche de la requête"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Un repository ne sait pas à quoi il participe : c'est le service qui sait ce qui doit réussir ensemble, donc lui qui ouvre la transaction. Déplacer le SQL dans le handler mélangerait encore plus les couches."
+  },
+  {
+   "text": "Un collègue fait renvoyer `crow::response(403)` par `MatchService::like` quand la photo manque. Quels sont les inconvénients ?",
+   "choices": [
+    "Il est lié au transport : une route WebSocket ou un test ne pourraient pas le réutiliser",
+    "Il doit inclure `crow.h`, une erreur fréquente qui attache le service au framework",
+    "Le code d'erreur serait perdu, car le handler ne pourrait plus le convertir en JSON",
+    "Rien de grave : le service peut choisir le statut, le handler se contente de transmettre"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Le service doit renvoyer une erreur métier (`core::fail(Forbidden, ...)`), que l'adaptateur HTTP traduit à un seul endroit. Un statut HTTP dans le service le colle à Crow et l'empêche de servir un WebSocket ou un test."
+  },
+  {
+   "text": "Pour `GET /api/profiles/<int>`, une simple lecture sans règle métier, tu crées `ProfileService::get` qui appelle juste `profiles.find(id)`. Que dit la fiche ?",
+   "choices": [
+    "C'est correct : toute route doit passer par un service, sinon les couches sont mélangées",
+    "Le handler peut appeler le repository directement, une couche qui ne fait que transmettre est du bruit",
+    "Il vaut mieux commencer par ce service, puis traiter les likes quand les lectures sont migrées",
+    "Mieux vaut commencer par les likes, là où la logique existe vraiment"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Pour une lecture simple, un service qui transmet n'apporte rien. La fiche conseille de commencer par les likes, où il y a des règles, une transaction et une publication à orchestrer."
+  }
+ ]
+}

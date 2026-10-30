@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Un test vérifie qu'un jeton expire après 30 secondes. Le développeur écrit `std::this_thread::sleep_for(31s)` avant l'assertion. Quelle correction est la bonne ?",
+   "choices": [
+    "Réduire l'expiration à 1 seconde dans le code de production pour accélérer les tests.",
+    "Lancer ce test en dernier pour que sa lenteur gêne moins les autres.",
+    "Faire lire l'heure via `IClock`, injecter un `FakeClock` et appeler `advance(31s)` avant de vérifier le refus.",
+    "Garder le `sleep`, mais ajouter une marge de sécurité de quelques secondes contre l'instabilité."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le temps est une dépendance cachée : en l'injectant, le test avance l'horloge instantanément. Le `sleep` rend le test lent et instable, et changer la valeur de production pour les tests déforme le comportement réel."
+  },
+  {
+   "text": "Un test de dispatcher vérifie que `save` est appelé, puis `publish`, dans cet ordre exact. Après un refactoring sans changement de comportement, il casse. Que retenir ?",
+   "choices": [
+    "Il vaut mieux vérifier le résultat observable, sauf quand l'ordre fait partie du contrat, comme publier après le commit.",
+    "Il faut toujours vérifier l'ordre des appels, sinon le test ne prouve rien.",
+    "Il faut remplacer le mock par un dummy, qui ignore les appels et ne cassera plus.",
+    "Il faut figer le refactoring, car le test décrit le comportement attendu du code."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Un test collé à la suite des appels internes casse à chaque restructuration. L'ordre n'a de sens à exiger que s'il est une garantie, comme publier seulement après le commit. Un dummy n'est jamais utilisé, il ne vérifie donc rien."
+  },
+  {
+   "text": "Tous les tests passent avec un `FakeStore` en mémoire, mais en production l'inscription plante sur un doublon d'email que le fake acceptait. Que conclure ?",
+   "choices": [
+    "Le `FakeStore` doit recopier toute la logique de PostgreSQL pour ne plus jamais différer.",
+    "Les tests unitaires sont inutiles et doivent être remplacés par des tests de bout en bout.",
+    "Il faut mocker le driver SQL avec GoogleMock pour reproduire l'erreur de doublon.",
+    "Un faux peut différer du vrai : il faut garder des tests d'intégration sur la vraie implémentation, qui a les contraintes SQL."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Un faux n'a pas les contraintes SQL, c'est sa limite connue. Le rendre aussi complexe que la base reviendrait à y mettre ses propres bugs, ce que la fiche cite parmi les erreurs. Les tests d'intégration couvrent ce que le faux ne voit pas."
+  },
+  {
+   "text": "Ton code appelle directement l'API HTTP d'un service externe, et tu veux le tester sans réseau. Quelle approche est la plus saine ?",
+   "choices": [
+    "Mocker directement la bibliothèque du service externe dans chaque test.",
+    "Définir ta propre interface autour de ce service, injectée dans ton code, et la remplacer par un faux dans les tests.",
+    "Appeler le vrai service dans les tests et ajouter un `sleep` pour absorber la latence.",
+    "Passer un dummy à la place du service, puisque le test ne s'intéresse pas à sa réponse."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Mocker ce qui ne t'appartient pas est fragile : l'API externe change sans prévenir. Une interface à toi, avec un faux derrière, isole le changement. Un dummy ne convient que si l'objet n'est jamais utilisé, ce qui n'est pas le cas ici."
+  }
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un dev stocke la bio en base après avoir remplacé `<` par `&lt;`. Plus tard, un email texte affiche `&lt;3` au lieu de `<3`, et certaines pages affichent `&amp;lt;`. Quelle règle a été enfreinte ?",
+   "choices": [
+    "Il faut échapper deux fois pour être sûr dans les pages HTML",
+    "Il faut supprimer les balises à l'écriture plutôt que de les convertir",
+    "Il faut échapper à l'affichage selon le contexte, pas à l'écriture",
+    "Il faut ne rien échapper en base ni ailleurs et laisser le navigateur s'en charger"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Stocker la donnée échappée l'abîme pour les autres usages, comme un email texte, et conduit à un double échappement. On stocke la valeur brute et on l'échappe au moment de l'insérer, selon le contexte."
+  },
+  {
+   "text": "Dans `<a title=VALEUR>`, le dev échappe `<`, `>` et `&` dans VALEUR. Un utilisateur envoie `x onmouseover=alert(1)`. Que se passe-t-il, et que corriger ?",
+   "choices": [
+    "Rien : sans `<`, aucun script ne peut être injecté dans un attribut",
+    "Un attribut est ajouté ; il faut guillemeter l'attribut et échapper `\"` et `'`",
+    "Un attribut est ajouté ; il suffit d'échapper les espaces en `&nbsp;`",
+    "L'attribut est bloqué par le navigateur, qui refuse les gestionnaires `on...`"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Sans guillemets, un espace termine la valeur et `onmouseover=alert(1)` devient un nouvel attribut, sans aucun `<`. L'échappement dépend du contexte : pour un attribut, il faut des guillemets et échapper ces guillemets."
+  },
+  {
+   "text": "`AuthEmailRoutes.cpp` insère `token` dans un `value=\"...\"` sans l'échapper, mais `hashEmailVerificationToken` valide le format avant. Un dev en conclut que c'est sûr. Que répondre ?",
+   "choices": [
+    "C'est sûr : le format validé empêche définitivement toute injection",
+    "C'est sûr tant que le token est généré par le serveur et jamais par le client",
+    "La protection est un effet de bord ; `HtmlEscaper::escapeAttribute` la rend explicite",
+    "Il faut ajouter `Content-Security-Policy` et retirer la validation, devenue redondante"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Se reposer sur une validation au lieu d'échapper est une erreur fréquente : si le format change, la faille apparaît. `HtmlEscaper::escapeAttribute` transforme `\"><script>` en texte inoffensif. Le CSP est une défense en plus, pas un remplaçant."
+  },
+  {
+   "text": "Dans un composant React, quels usages exposent à une XSS ?",
+   "choices": [
+    "`<p>{profile.bio}</p>` avec une bio contenant des balises HTML",
+    "`<div dangerouslySetInnerHTML={{__html: profile.bio}} />`",
+    "`<a href={profile.website}>` avec une URL fournie par l'utilisateur",
+    "`<span title={profile.bio}>` avec une bio contenant des guillemets"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "JSX échappe automatiquement `{variable}` dans le texte et dans les attributs. Les vrais dangers sont `dangerouslySetInnerHTML`, qui contourne cet échappement, et une URL utilisateur dans `href`, qui peut valoir `javascript:...`."
+  }
+ ]
+}

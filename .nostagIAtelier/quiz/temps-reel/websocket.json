@@ -1,0 +1,43 @@
+{
+ "questions": [
+  {
+   "text": "Alice envoie un message à Bob alors que Bob n'a aucun onglet ouvert. Le serveur appelle `hub.publish(\"account:12\", message)` après le commit. Que se passe-t-il, et que doit-on en déduire ?",
+   "choices": [
+    "Le message est perdu, donc il faut le stocker dans le hub en mémoire pour le rejouer plus tard.",
+    "Le message reste en base, et Bob le retrouvera à sa prochaine connexion : le canal ne fait que prévenir.",
+    "Le serveur doit garder la requête HTTP d'Alice ouverte jusqu'à ce que Bob se reconnecte.",
+    "Le message est écrit en base seulement quand Bob ouvre son WebSocket, pour éviter des lignes inutiles."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "La base est la source de vérité : le message est stocké en transaction avant toute publication, donc un destinataire hors ligne ne perd rien. Le WebSocket sert uniquement à prévenir ceux qui sont connectés, il ne remplace pas le stockage."
+  },
+  {
+   "text": "Un développeur front veut authentifier le WebSocket en écrivant `new WebSocket(url, { headers: { Authorization: token } })`. Que lui répondre ?",
+   "choices": [
+    "C'est correct, c'est la méthode standard dans tous les navigateurs.",
+    "L'API du navigateur n'accepte pas d'en-tête `Authorization` : il faut passer par un ticket à usage court, plutôt qu'un jeton dans l'URL.",
+    "Il faut envoyer l'identifiant du compte dans la première trame, le serveur le croira.",
+    "Il faut abandonner WebSocket et revenir au polling, car l'authentification y est impossible."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`new WebSocket(url)` ne permet pas d'ajouter d'en-tête, d'où le jeton dans l'URL actuel, que l'on remplace par un ticket. Faire confiance à un id annoncé par le client est une erreur : l'identité doit venir du ticket."
+  },
+  {
+   "text": "Derrière Nginx, `/api/ws` répond une page HTTP normale au lieu de `101 Switching Protocols`, et la connexion ne passe jamais en WebSocket. Quelle est la piste la plus probable ?",
+   "choices": [
+    "Le navigateur n'envoie pas `Sec-WebSocket-Key`, ce qui doit être corrigé dans le front.",
+    "Le serveur applicatif n'a pas assez de threads pour garder la connexion ouverte.",
+    "Le heartbeat n'est pas configuré, donc Nginx coupe la connexion avant l'upgrade.",
+    "Nginx ne transmet pas l'en-tête `Upgrade` au serveur, ce que règle `map $http_upgrade $connection_upgrade`."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "La mise à niveau commence par une requête HTTP avec `Upgrade: websocket`, et le proxy doit la relayer pour que le serveur réponde `101`. Le heartbeat concerne la détection d'une connexion déjà établie et morte, pas son ouverture."
+  }
+ ]
+}

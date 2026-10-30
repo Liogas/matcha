@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Un site piégé soumet automatiquement un formulaire `POST` vers `https://matcha.local/api/auth/logout-all` alors que tu es connecté. Quelles protections bloquent cette attaque ?",
+   "choices": [
+    "`SameSite=Strict` sur le cookie du refresh token, qui n'est alors pas joint à la requête",
+    "La politique de même origine, qui interdit au navigateur d'envoyer ce formulaire",
+    "Le contrôle de l'en-tête `Origin` côté serveur, qui ne correspond pas à `allowedBrowserOrigin`",
+    "Une requête préalable CORS, qui est toujours émise avant un `POST`"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "`SameSite=Strict` empêche le cookie de partir, et le contrôle d'`Origin` refuse la requête si un navigateur le joignait quand même. La politique de même origine empêche de lire la réponse, pas d'envoyer un formulaire, et un formulaire simple part sans requête préalable CORS."
+  },
+  {
+   "text": "Un collègue affirme : « notre configuration CORS est stricte, donc nous sommes protégés contre le CSRF ». Pourquoi est-ce faux ?",
+   "choices": [
+    "CORS ne s'applique qu'aux requêtes `GET`, jamais aux `POST`",
+    "CORS contrôle la lecture de la réponse, et un formulaire simple part sans requête préalable",
+    "CORS est ignoré par les navigateurs dès que la requête contient un cookie",
+    "CORS protège seulement contre les XSS, pas contre les requêtes venant d'un autre site"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "CORS décide si une page d'une autre origine peut lire une réponse. Un CSRF n'a pas besoin de la lire, seulement de déclencher l'action, et un formulaire simple n'est précédé d'aucune vérification CORS."
+  },
+  {
+   "text": "Dans matcha, seul le refresh token est dans un cookie. Quelles routes doivent être protégées contre le CSRF ?",
+   "choices": [
+    "`POST /api/auth/logout-all`",
+    "`POST /api/profiles/7/like`, protégée par `Authorization: Bearer`",
+    "`POST /api/auth/refresh`",
+    "`GET /api/profile`, protégée par `Authorization: Bearer`"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Seules les routes qui s'appuient sur le cookie sont exposées : `refresh`, `logout` et `logout-all`. Une route protégée par `Authorization` n'est pas concernée, car le navigateur n'ajoute jamais cet en-tête tout seul."
+  },
+  {
+   "text": "Le contrôle d'Origin d'une route sensible est écrit ainsi : `if (origin && *origin != allowedBrowserOrigin) return forbidden();`. Quel est le défaut ?",
+   "choices": [
+    "Il faudrait comparer le `Referer` à la place, qui est plus fiable que `Origin`",
+    "Une page tierce peut falsifier `Origin` pour imiter `allowedBrowserOrigin`",
+    "Une requête sans `Origin` passe le contrôle, alors qu'une route sensible doit la refuser",
+    "Le contrôle rend `SameSite=Strict` inutile, il faut choisir l'un ou l'autre"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Accepter un `Origin` absent sur une route sensible laisse une brèche : le contrôle ne bloque que les origines présentes et différentes. Une page ne peut pas falsifier `Origin`, et lire le `Referer` seul fait partie des erreurs fréquentes. Les deux barrières, `SameSite` et `Origin`, se cumulent."
+  }
+ ]
+}

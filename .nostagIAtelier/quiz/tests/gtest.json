@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Dans un test, tu écris `auto r = pool.begin(); EXPECT_TRUE(r); use(*r);`. Si `begin()` échoue, que se passe-t-il, et que faut-il écrire ?",
+   "choices": [
+    "Le test s'arrête proprement à l'`EXPECT_TRUE`, donc le code est correct.",
+    "Le test continue et déréférence un résultat vide, ce qui est indéfini : il faut `ASSERT_TRUE(r)`.",
+    "`EXPECT_TRUE` fait sauter le test, comme `GTEST_SKIP`, donc rien à changer.",
+    "Le test échoue puis continue sans risque, car GoogleTest protège les déréférencements."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`EXPECT_*` signale l'échec mais continue, donc `*r` serait utilisé sur un résultat invalide. `ASSERT_*` sort du test quand la suite n'a plus de sens. `EXPECT` reste adapté à plusieurs vérifications indépendantes."
+  },
+  {
+   "text": "Tu dois vérifier la table de compatibilité d'orientation sur 40 combinaisons. Quelle structure choisir ?",
+   "choices": [
+    "Une boucle `for` dans un seul `TEST`, avec un `EXPECT_EQ` par combinaison.",
+    "Un `TEST_P` avec une struct `Cas` et `INSTANTIATE_TEST_SUITE_P`, pour une ligne par cas et un rapport par cas.",
+    "Quarante `TEST` copiés-collés, pour que chaque cas reste lisible séparément.",
+    "Une fixture avec quarante membres, remplis dans `SetUp`, et un seul test."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le test paramétré couvre beaucoup de cas sans répétition, et chaque ligne apparaît dans le rapport avec son résultat. Une boucle unique ne dit pas clairement quel cas a échoué, et le copier-coller oblige à corriger partout."
+  },
+  {
+   "text": "Le test `EXPECT_EQ(haversineKm(kParis, kLyon), 392.0)` échoue alors que la formule est correcte. Quelle correction appliquer ?",
+   "choices": [
+    "Passer à `ASSERT_EQ`, pour que l'échec arrête proprement le test.",
+    "Arrondir `392.0` à `392` pour que la comparaison soit plus tolérante.",
+    "Utiliser `EXPECT_NEAR(haversineKm(kParis, kLyon), 392.0, 5.0)`, car une égalité exacte sur des `double` est fragile.",
+    "Exécuter le test deux fois, car les flottants se stabilisent à la seconde exécution."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un calcul sur des `double` donne rarement exactement la valeur attendue : on compare avec une tolérance via `EXPECT_NEAR`. Passer à `ASSERT` ne change pas la comparaison, seulement ce qui se passe après l'échec."
+  },
+  {
+   "text": "Dans une fixture `PoolTest`, le test A crée une table et stocke un indicateur dans un membre de la fixture. Le test B lit ce membre en supposant qu'il a été rempli par A. Pourquoi est-ce une erreur ?",
+   "choices": [
+    "Les membres d'une fixture sont partagés, mais seulement si on utilise `TEST` et non `TEST_F`.",
+    "GoogleTest exécute toujours B avant A, donc le membre est toujours vide.",
+    "Un membre de fixture ne peut pas contenir de `unique_ptr`, donc B ne compile pas.",
+    "Un nouvel objet de fixture est créé pour chaque test : B ne verra rien, et chaque test doit préparer son état dans `SetUp`."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Chaque test reçoit une fixture neuve, ce qui garantit l'isolation et rend l'ordre sans importance. Dépendre de l'ordre des tests fait partie des erreurs fréquentes : un test doit échouer pour une seule raison."
+  }
+ ]
+}

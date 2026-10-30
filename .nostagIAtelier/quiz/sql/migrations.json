@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Tu découvres une faute dans un nom de colonne de `005_...sql`, déjà appliquée sur toutes les bases. Tu corriges directement le fichier. Que se passe-t-il ?",
+   "choices": [
+    "Rien de visible : le runner ne relit pas les fichiers déjà appliqués, donc la correction est ignorée sans erreur.",
+    "Le runner réapplique `005` au prochain démarrage, ce qui renomme la colonne partout de façon automatique.",
+    "La somme de contrôle diffère et le backend refuse de démarrer ; il fallait ajouter une migration avec `RENAME COLUMN`.",
+    "Seules les bases neuves sont touchées : les anciennes gardent l'ancien nom, et le runner ne détecte aucune différence."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le runner stocke un SHA-256 de chaque fichier appliqué et le vérifie au démarrage : modifier `005` arrête le démarrage avec un message clair. Sans cette vérification, on aurait la divergence décrite dans la dernière réponse. La bonne démarche est une nouvelle migration."
+  },
+  {
+   "text": "Deux instances du backend démarrent en même temps sur une base où la migration 009 manque. Pourquoi la seconde n'applique-t-elle pas 009 une deuxième fois ?",
+   "choices": [
+    "Elle attend le verrou consultatif, puis son `SELECT`, une nouvelle instruction en `READ COMMITTED`, voit 009 déjà enregistrée.",
+    "Elle détecte le conflit grâce à la somme de contrôle de 009, qui échoue si le fichier a déjà été appliqué.",
+    "Elle passe en `REPEATABLE READ` pour relire la liste des migrations et constater que 009 existe déjà.",
+    "Elle ignore l'erreur de table existante : `CREATE TABLE` est idempotent, donc rejouer 009 ne change rien."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Le verrou fait attendre la seconde instance. Une fois obtenu, son `SELECT` démarre après le `COMMIT` de la première et, en `READ COMMITTED`, prend une photo neuve qui contient 009. En `REPEATABLE READ`, la photo aurait été prise trop tôt et 009 aurait été rejouée."
+  },
+  {
+   "text": "Le runner applique 009 puis 010 dans la même exécution, et 010 échoue sur une erreur SQL. Dans quel état la base se retrouve-t-elle ?",
+   "choices": [
+    "Avec 009 appliquée et enregistrée, et 010 absente, car chaque fichier a sa propre transaction.",
+    "Dans un état mixte : les tables de 009 existent mais la ligne dans `schema_migrations` n'a pas été écrite.",
+    "Avec 009 et 010 appliquées en partie, jusqu'à l'instruction fautive, que le runner complète au prochain démarrage.",
+    "Dans son état de départ : tout est dans une seule transaction, et PostgreSQL peut annuler même un `CREATE TABLE`."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Le runner ouvre une seule transaction pour l'ensemble des migrations manquantes et profite du DDL transactionnel de PostgreSQL. Une erreur dans 010 annule donc aussi 009. C'est ce qui évite un état intermédiaire difficile à diagnostiquer."
+  },
+  {
+   "text": "Tu prépares des migrations sur une base déjà remplie de comptes. Lesquelles échoueront à l'application ?",
+   "choices": [
+    "Ajouter `latitude DOUBLE PRECISION` nullable, alors que les comptes existants n'ont pas de position.",
+    "Sauter le numéro 006 entre 005 et 007, puisque l'historique doit rester continu.",
+    "Ajouter une colonne `NOT NULL` sans valeur par défaut à une table qui contient déjà des lignes.",
+    "Ajouter un `CHECK (latitude BETWEEN -90 AND 90)` alors que certaines lignes contiennent une valeur hors de cet intervalle."
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Une colonne `NOT NULL` sans défaut ne peut pas être remplie pour les lignes existantes, et un `CHECK` échoue si une ligne le viole déjà. Une colonne nullable convient aux comptes sans position. Un trou dans la numérotation est sans effet : l'ordre compte, pas la continuité."
+  }
+ ]
+}

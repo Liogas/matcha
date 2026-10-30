@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "La table `matcha_interests` contient déjà `Vegan`. Un utilisateur ajoute `vegan` et la base l'accepte, malgré un `UNIQUE (name)`. Quelle correction convient ?",
+   "choices": [
+    "Ajouter une seconde contrainte `UNIQUE (name)`, qui ignorerait la casse.",
+    "Remplacer `UNIQUE` par `NOT NULL`, qui compare sans tenir compte de la casse.",
+    "Créer `CREATE UNIQUE INDEX ... ON matcha_interests (LOWER(name))`.",
+    "Tester l'existence du tag en C++ avant chaque insertion."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "L'unicité sur une expression, ici `LOWER(name)`, empêche `Vegan` et `vegan` de coexister, ce qu'un `UNIQUE` simple ne sait pas exprimer. Tester puis insérer en C++ laisse une fenêtre de concurrence : c'est à l'unicité de trancher."
+  },
+  {
+   "text": "Une table a `CHECK (age >= 18)` sur une colonne `age` déclarée sans `NOT NULL`. Un script insère une ligne avec `age` à `NULL`. Que se passe-t-il ?",
+   "choices": [
+    "La ligne est insérée, car la condition vaut inconnu et le `CHECK` passe.",
+    "La ligne est refusée, car `NULL` n'est pas supérieur ou égal à 18.",
+    "La ligne est insérée, mais seulement si l'âge est corrigé ensuite.",
+    "La base signale une erreur de type, car `NULL` ne se compare pas."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "`NULL` signifie inconnu, et un `CHECK` dont la condition vaut inconnu passe. Si la valeur doit exister, il faut ajouter `NOT NULL`."
+  },
+  {
+   "text": "Un code insère un match entre les comptes 12 et 7 sous la forme `(12, 7)` dans `profile_matches`, qui impose `CHECK (first_account_id < second_account_id)`. Que se passe-t-il, et que doit faire le code ?",
+   "choices": [
+    "La base inverse la paire toute seule, le code n'a rien à faire.",
+    "La base accepte, et l'unicité n'interviendra qu'au prochain doublon.",
+    "La base refuse ; le code doit trier la paire avec `LEAST` et `GREATEST` avant l'insertion.",
+    "La base refuse ; le code doit désactiver le `CHECK` pour les paires inversées."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Une seule écriture est valide, `(7, 12)`, et l'unicité empêche les doublons. La base ne corrige rien : c'est au code de trier la paire avant l'insertion, et la base refuse en cas d'erreur."
+  },
+  {
+   "text": "Chaque profil doit avoir au plus une photo principale, mais autant de photos secondaires que souhaité. Quelle contrainte écrire ?",
+   "choices": [
+    "`UNIQUE (profile_account_id, is_primary)` sur la table des photos.",
+    "`CREATE UNIQUE INDEX ... ON matcha_profile_photos (profile_account_id) WHERE is_primary`.",
+    "`CHECK (is_primary)` sur chaque ligne de la table des photos.",
+    "`UNIQUE (profile_account_id)` sur la table des photos."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "L'unicité partielle ne concerne que les lignes où `is_primary` est vrai. `UNIQUE (profile_account_id, is_primary)` limiterait aussi à une seule photo non principale, et `UNIQUE (profile_account_id)` à une seule photo au total."
+  }
+ ]
+}

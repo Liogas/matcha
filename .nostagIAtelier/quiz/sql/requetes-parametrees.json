@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Un dev veut un tri dynamique et écrit `db.query(\"SELECT account_id FROM matcha_profiles ORDER BY $1\", colonne)` avec `colonne = \"fame_rating\"`. Que se passe-t-il ?",
+   "choices": [
+    "Les profils sont triés par `fame_rating`, car le paramètre est remplacé par le nom de colonne",
+    "La requête est refusée avec une erreur de syntaxe SQL, car un nom de colonne ne peut pas être passé en paramètre",
+    "La requête s'exécute, mais trie par une constante, donc l'ordre n'est pas celui voulu",
+    "Le serveur échappe le nom de colonne, ce qui rend le tri sûr et correct"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un `$n` remplace une valeur, jamais un élément de structure comme une colonne ou `ASC`. `ORDER BY $1` ne provoque pas d'erreur : il trie par la chaîne constante, donc il ne trie rien. Pour la structure, il faut une liste blanche."
+  },
+  {
+   "text": "Avec `WHERE city = $1` et la valeur `' OR '1'='1`, que fait le serveur ?",
+   "choices": [
+    "Il compare la valeur telle quelle à la colonne `city` et ne trouve aucun profil",
+    "Il échappe l'apostrophe puis exécute la condition `OR '1'='1'`, ce qui liste tous les profils",
+    "Il comprend que la valeur est suspecte et lève une erreur de sécurité",
+    "Il n'a aucune quote à échapper, car la valeur n'est jamais interprétée comme du SQL"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Le texte de la requête est analysé avant que les valeurs arrivent : la structure est figée, et la valeur est juste une ville au nom étrange. Rien n'est échappé car il n'y a rien à échapper. L'idée d'un nettoyage ou d'une détection par le serveur est fausse."
+  },
+  {
+   "text": "L'API accepte `?sort=fame` ou `?sort=age` pour trier les profils. Quelle solution est correcte ?",
+   "choices": [
+    "Concaténer `sort` après l'avoir passé dans une fonction d'échappement des apostrophes",
+    "Passer `sort` en `$2`, car PostgreSQL substitue les noms de colonnes dans les paramètres",
+    "Chercher `sort` dans une table de fragments écrits par nous et répondre `400` si la clé est inconnue",
+    "Vérifier que `sort` ne contient que des lettres, puis le concaténer dans `ORDER BY`"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Une liste blanche fait de la chaîne du client une simple clé de recherche : seul un fragment que nous avons écrit atteint le SQL. L'échappement manuel et la validation de caractères laissent du texte client entrer dans la structure, et un paramètre ne peut pas remplacer une colonne."
+  },
+  {
+   "text": "Un dev écrit `\"... LIMIT \" + std::to_string(limit)` après avoir vérifié que `limit` est un entier, en disant que c'est sûr. Que lui répondre ?",
+   "choices": [
+    "Il a raison : un entier validé ne peut pas contenir de SQL, donc la concaténation est la bonne pratique",
+    "Il vaut mieux paramétrer quand même : l'habitude de concaténer finit par s'étendre à une chaîne",
+    "La validation est inutile dès lors qu'on utilise des paramètres, il faut la retirer",
+    "La validation rend les données propres et le paramètre rend la requête sûre : les deux sont nécessaires"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Concaténer un entier est sûr aujourd'hui, mais l'habitude s'étend facilement à une chaîne. La validation et le paramètre jouent des rôles différents et se complètent. Retirer la validation laisserait passer des données incohérentes."
+  }
+ ]
+}

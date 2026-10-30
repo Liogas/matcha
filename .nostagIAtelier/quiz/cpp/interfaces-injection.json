@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Tu dois tester qu'un utilisateur bloqué ne reçoit aucune notification, mais `NotificationDispatcher` construit lui-même `new PgNotificationStore(...)`. Que faire ?",
+   "choices": [
+    "Lancer une vraie base et un vrai serveur dans le test, puisque le dispatcher les crée de toute façon",
+    "Faire hériter `NotificationDispatcher` de `PgNotificationStore` pour pouvoir surcharger ses méthodes",
+    "Faire recevoir un `INotificationStore &` par le constructeur, puis fournir un faux dans le test et le vrai dans `main.cpp`",
+    "Rendre `PgNotificationStore` global pour que le test puisse le remplacer avant d'appeler le dispatcher"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "En recevant sa dépendance, le dispatcher ne dépend plus que du contrat, et c'est `main.cpp` ou le test qui choisit l'implémentation. Créer la dépendance dedans oblige à monter une base, un serveur et un client. L'héritage ou un global ne retirent pas le couplage."
+  },
+  {
+   "text": "Un `std::unique_ptr<INotificationStore>` possède en réalité un `PgNotificationStore`, mais l'interface a été écrite sans destructeur virtuel. Que se passe-t-il à la destruction ?",
+   "choices": [
+    "Rien de particulier : la vtable de l'objet suffit à appeler le bon destructeur",
+    "Le destructeur de la classe fille n'est pas appelé, ce qui est un comportement indéfini et peut laisser des ressources non libérées",
+    "Le code ne compile pas, car `unique_ptr` refuse les classes abstraites",
+    "Il suffit d'ajouter `virtual ~INotificationStore() = default;` dans l'interface pour corriger"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Détruire via un pointeur de base exige un destructeur virtuel, sinon celui de la fille n'est pas appelé. L'ajout de `virtual ~INotificationStore() = default;` corrige le problème. Une vtable n'est consultée pour le destructeur que s'il est virtuel, et `unique_ptr` accepte très bien une interface."
+  },
+  {
+   "text": "Tu dois tester qu'un ticket WebSocket expire après 30 secondes, sans attendre 30 secondes. Quelle conception le permet ?",
+   "choices": [
+    "Réduire la durée de validité à 1 seconde dans le code de production pour accélérer tous les tests",
+    "Injecter un `IClock &` dans le code, puis utiliser une `FakeClock` réglée à la main que le test avance de 31 secondes",
+    "Appeler `sleep` dans le test pendant 31 secondes en parallèle d'autres tests pour amortir le temps",
+    "Garder l'horloge système et surcharger globalement la fonction d'heure du système d'exploitation"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le code ne doit pas appeler l'horloge système directement, mais une horloge injectée. Le test crée le ticket, avance la `FakeClock` de 31 secondes et vérifie le refus en quelques microsecondes. Changer la durée de production ou attendre réellement ne teste pas le comportement voulu."
+  },
+  {
+   "text": "Pour lesquels de ces cas une interface est-elle justifiée ?",
+   "choices": [
+    "`haversineKm`, une fonction pure sans dépendance extérieure",
+    "Une horloge, pour contrôler le temps dans les tests",
+    "Un stockage d'images, avec une implémentation locale et un faux pour les tests",
+    "Une interface unique de 15 méthodes regroupant toute la couche de données"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Une interface se justifie quand il existe deux implémentations réelles ou un besoin de faux objet en test, comme l'horloge ou le stockage d'images. Une fonction pure n'en a pas besoin. Une interface à 15 méthodes est au contraire un signe qu'elle en fait trop, car chaque faux devient pénible à écrire."
+  }
+ ]
+}

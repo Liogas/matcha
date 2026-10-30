@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Pour éviter le like croisé, tu verrouilles la clé du texte `liker || ':' || liked`. Alice (12) et Bob (7) se likent en même temps. Que se passe-t-il ?",
+   "choices": [
+    "B attend A, car les deux textes désignent la même paire",
+    "Un deadlock se produit, car chacun attend le verrou de l'autre",
+    "A verrouille `12:7`, B verrouille `7:12` : personne n'attend, et le like croisé n'est pas protégé",
+    "PostgreSQL refuse le second verrou, car la paire est déjà en cours de traitement"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Les deux textes sont différents, donc les clés aussi : aucune attente, et le bug revient. `LEAST` et `GREATEST` mettent la paire dans un ordre fixe pour que le texte soit le même dans les deux sens."
+  },
+  {
+   "text": "Tu utilises `pg_advisory_lock(clé)`, la version non transactionnelle, avec un pool de connexions. Quel est le risque principal ?",
+   "choices": [
+    "Le verrou est libéré par `COMMIT`, mais pas par `ROLLBACK`",
+    "La connexion retourne au pool en gardant le verrou, et elle ne se ferme jamais",
+    "Le verrou bloque toutes les requêtes du site, y compris celles qui ne le demandent pas",
+    "Le verrou est libéré dès la fin de l'instruction, donc il ne protège rien"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Cette version est tenue jusqu'au déverrouillage explicite ou à la fermeture de la connexion. Avec un pool, la connexion reste ouverte et garde le verrou. Le verrou est consultatif : une requête qui ne le demande pas passe sans attendre."
+  },
+  {
+   "text": "Le code appelle `pg_advisory_xact_lock(...)` via le pool, hors de toute transaction explicite, puis fait l'`INSERT` du like et lit le like opposé. Quel est l'effet ?",
+   "choices": [
+    "Le verrou reste tenu jusqu'à la fermeture de la connexion",
+    "PostgreSQL refuse l'appel avec une erreur, car la version `xact` exige un `BEGIN`",
+    "Le verrou est tenu jusqu'à la fin du programme, ce qui bloque les autres likes",
+    "Le verrou est libéré dès la fin de son instruction, donc il ne protège rien ensuite"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Hors transaction, chaque instruction est sa propre transaction : le verrou `xact` est libéré immédiatement. Il faut donc ouvrir une transaction autour du verrou et des écritures qu'il doit protéger."
+  },
+  {
+   "text": "Tu veux empêcher qu'un même utilisateur envoie deux demandes de changement d'email simultanées. Quelle approche convient ?",
+   "choices": [
+    "`pg_advisory_xact_lock(hashtextextended('email_change:' || $1::TEXT, 0))`, avec l'identifiant du compte",
+    "La même clé, avec `LEAST` et `GREATEST` pour mettre le compte dans un ordre fixe",
+    "Une clé fixe comme `pg_advisory_xact_lock(1)`, pour que toutes les demandes soient sérialisées",
+    "`pg_advisory_lock` sur l'identifiant brut du compte, sans préfixe, pour éviter tout calcul"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "La clé dépend du compte, avec un préfixe pour ne pas croiser d'autres usages. `LEAST` et `GREATEST` ne servent que pour une paire : ici il n'y a qu'un identifiant. Une clé fixe sérialiserait tout le site."
+  }
+ ]
+}

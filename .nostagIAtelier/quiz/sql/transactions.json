@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Dans l'ancien code, une connexion unique est partagée entre threads. Le thread A fait `BEGIN`. Le thread B, pour un autre utilisateur, exécute un `UPDATE`. Puis A fait `ROLLBACK`. Que devient l'`UPDATE` de B ?",
+   "choices": [
+    "Il est validé, car B n'a pas lui-même appelé `BEGIN`",
+    "Il est refusé à l'exécution, car PostgreSQL repère qu'il vient d'un autre thread",
+    "Il est mis en attente jusqu'à la fin de la transaction de A, puis rejoué",
+    "Il est annulé aussi, car `BEGIN` s'applique à la connexion et pas au thread"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "PostgreSQL ne connaît ni les threads ni les fonctions : tout ce qui passe sur la connexion après `BEGIN` fait partie de la transaction. C'est pourquoi `pg::Transaction` garde une connexion pour lui seul, du `BEGIN` au `COMMIT`."
+  },
+  {
+   "text": "Un collègue place `hub.publish(\"match\")` juste avant `tx->commit()` dans `MatchService::like`. Quels problèmes sont réels ?",
+   "choices": [
+    "Si le `COMMIT` échoue, l'utilisateur est prévenu d'un match qui n'existe pas",
+    "Le `ROLLBACK` du destructeur annule aussi le message déjà envoyé au client",
+    "Le message est perdu, car le hub refuse les publications pendant une transaction",
+    "Le client peut interroger `/api/matches` dès réception et ne pas voir le match, pas encore validé"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Un message envoyé avant le `COMMIT` ne peut pas être repris : si le commit échoue, la notification est fausse. Et si le client réagit tout de suite, la transaction n'est pas encore visible. On publie donc après un `commit()` réussi."
+  },
+  {
+   "text": "Dans un service, un repository est construit avec le pool (`LikeRepository likes(_pool)`) au lieu de la transaction `*tx`. Que risque-t-il d'arriver ?",
+   "choices": [
+    "Il prend une autre connexion, ne voit pas les écritures non validées et n'est pas annulé par le `ROLLBACK`",
+    "Il réutilise la connexion de la transaction, donc rien ne change",
+    "Il reste bloqué, car le pool refuse de donner une connexion tant qu'une transaction est ouverte",
+    "Il voit les écritures non validées, mais ses propres écritures sont validées sans attendre le `COMMIT`"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Une transaction appartient à une connexion. Un repository branché sur le pool prend une autre connexion, qui ne voit pas les écritures non validées et qui échappe au `ROLLBACK`. Les repositories doivent être construits sur la transaction."
+  },
+  {
+   "text": "Dans une transaction, un `INSERT` viole une contrainte. Le code attrape l'erreur, puis lance un `SELECT` pour continuer. Le `SELECT` échoue avec `25P02`. Que faut-il comprendre ?",
+   "choices": [
+    "Le pool a repris la connexion entre les deux requêtes ; il faut en redemander une",
+    "Après une erreur, seules les lectures sont refusées ; il faut un `COMMIT` partiel pour reprendre",
+    "La transaction est aborted jusqu'au `ROLLBACK` ; un `SAVEPOINT` posé avant l'`INSERT` permet de s'en sortir",
+    "Un `COMMIT` est obligatoire après toute erreur pour libérer les verrous, puis la transaction reprend"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Après une erreur, toute requête échoue avec `25P02` jusqu'au `ROLLBACK`. Un `COMMIT` ne répare pas cet état. Un `SAVEPOINT` posé avant l'instruction risquée permet de revenir en arrière sans perdre toute la transaction."
+  }
+ ]
+}

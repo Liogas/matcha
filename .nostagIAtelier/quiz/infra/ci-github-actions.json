@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Ton build passe sur ta machine, mais la CI échoue : un en-tête est introuvable. Quelles causes la fiche donne-t-elle comme explications possibles ?",
+   "choices": [
+    "L'en-tête existe chez toi mais n'a jamais été commité, et la CI ne voit que le dépôt.",
+    "Une dépendance a été installée à la main chez toi et n'est pas déclarée dans le projet.",
+    "GitHub Actions active par défaut un compilateur plus strict que celui de ta machine.",
+    "Le cache du runner contient d'anciens objets de compilation qui masquent l'en-tête."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "La CI démarre sur une machine neuve et ne dispose que de ce qui est dans le dépôt. Les fichiers non commités et les dépendances installées à la main n'y sont donc pas. Ce sont au contraire les anciens objets de compilation qui traînent chez toi, pas sur la CI."
+  },
+  {
+   "text": "Ton workflow lance PostgreSQL pour les tests, et un collègue veut aussi y brancher la clé d'un vrai service d'envoi d'emails. Comment gérer ces valeurs ?",
+   "choices": [
+    "Mettre la vraie clé en clair dans le fichier `.yml`, puisque le dépôt est privé.",
+    "Mettre un mot de passe fictif comme `POSTGRES_PASSWORD: test` dans le fichier, et la vraie clé dans les secrets du dépôt.",
+    "Passer la vraie clé en `ARG` dans le Dockerfile pour qu'elle soit disponible pendant les tests.",
+    "Mettre la vraie clé dans la variable `env` du workflow et la retirer du fichier avant de fusionner."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Les tests n'ont besoin que de valeurs fictives, qui peuvent rester dans le fichier. Les vraies clés vont dans les secrets du dépôt. Écrire un secret réel dans le fichier, même provisoirement, le laisse dans l'historique du dépôt."
+  },
+  {
+   "text": "Un test de ta pull request échoue une fois sur trois, sans lien avec ton changement. La soutenance est demain. Quelle attitude correspond à la fiche ?",
+   "choices": [
+    "Relancer le workflow jusqu'à ce qu'il passe, puis fusionner avec une CI verte.",
+    "Désactiver la CI sur cette branche, car un test instable n'apporte aucune information.",
+    "Ne pas fusionner tant que la CI est rouge, et corriger l'instabilité du test au lieu de la contourner.",
+    "Fusionner quand même, puisque l'échec n'a aucun rapport avec les fichiers modifiés."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Relancer jusqu'à ce que ça passe est l'erreur décrite : des tests instables qui rendent la CI inutile. Une pull request ne devrait être fusionnée qu'avec une CI verte, et un test instable doit être réparé."
+  },
+  {
+   "text": "La CI met très longtemps à chaque exécution parce que les dépendances sont recompilées depuis zéro. Que peux-tu faire ?",
+   "choices": [
+    "Mettre en cache l'image `deps`, qui contient les dépendances déjà compilées.",
+    "Mettre en cache le répertoire binaire de vcpkg pour ne pas recompiler les dépendances.",
+    "Retirer `-Werror` du build, car il force le compilateur à tout recompiler.",
+    "Lancer seulement le preset `sanitize`, qui est plus rapide que le build `debug`."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "La compilation des dépendances est la partie lente, et la fiche propose de cacher l'image `deps` ou le répertoire binaire de vcpkg. `-Werror` sert à prouver l'absence de warnings, pas à ralentir. Le preset `sanitize` est une étape de plus, pas un raccourci."
+  }
+ ]
+}

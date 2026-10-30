@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Tu lis la page 1 des suggestions, puis un nouveau profil arrive en tête du classement. Page 2 avec `LIMIT 20 OFFSET 20` : Théo, déjà vu en dernier de la page 1, s'affiche à nouveau. Pourquoi ?",
+   "choices": [
+    "`OFFSET` saute des lignes selon leur identifiant, et celui de Théo a changé.",
+    "Le tri `ORDER BY fame_rating DESC` n'est pas déterministe, donc PostgreSQL mélange les lignes.",
+    "L'`OFFSET` compte des rangs : l'arrivée en tête décale tout d'un cran, et le rang 21 est maintenant Théo.",
+    "`LIMIT 20` relit toujours la dernière ligne de la page précédente."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "`OFFSET` repose sur la position dans le classement, qui bouge quand des lignes entrent ou sortent. Le keyset repart d'une valeur, donc l'arrivée de Zoé ne change rien à la reprise."
+  },
+  {
+   "text": "Pour paginer en keyset, un développeur n'utilise que `WHERE fame_rating < $1 ORDER BY fame_rating DESC LIMIT 20`. Plusieurs profils ont la note 50 et la page s'arrête au milieu d'eux. Que se passe-t-il ?",
+   "choices": [
+    "Les profils restants de note 50 sont perdus, et passer à `<=` les ferait répéter : il faut `account_id` pour départager.",
+    "PostgreSQL départage automatiquement par l'ordre d'insertion, donc la reprise est exacte.",
+    "La requête échoue avec l'erreur `42P10`, car la comparaison n'est pas unique.",
+    "Les profils de note 50 apparaissent en double, mais jamais perdus."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Sans colonne unique, l'ordre n'est pas total : `<` saute les égalités et `<=` les répète. Ajouter `account_id` donne à chaque ligne une place unique et rend la reprise exacte."
+  },
+  {
+   "text": "La dernière ligne reçue est `(fame_rating = 42, account_id = 123)`, avec le tri `DESC, DESC` et le filtre `WHERE (fame_rating, account_id) < (42, 123)`. Quelles lignes sont gardées ?",
+   "choices": [
+    "`(42, 200)`, car le compte est plus grand donc plus récent.",
+    "`(42, 100)`, car même note et compte plus petit.",
+    "`(50, 10)`, car une note plus haute vient toujours après.",
+    "`(30, 999)`, car la note est plus petite."
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "La comparaison de lignes fonctionne comme un dictionnaire : `a < x` ou (`a = x` et `b < y`). `(42, 100)` et `(30, 999)` viennent après dans l'ordre descendant. `(50, 10)` et `(42, 200)` sont déjà passées."
+  },
+  {
+   "text": "Le client renvoie `?cursor=` avec une valeur Base64 modifiée à la main, qui se décode en JSON invalide. Que doit faire le serveur ?",
+   "choices": [
+    "Renvoyer la première page, pour ne pas bloquer le client.",
+    "Rejeter la requête avec une erreur `400`, car le curseur est une entrée comme une autre qu'il faut valider.",
+    "Faire confiance au curseur, car un jeton opaque ne peut pas être falsifié.",
+    "Laisser PostgreSQL échouer et renvoyer l'erreur `500` qui en résulte."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Un jeton opaque n'est pas protégé : le client peut le modifier. Le serveur le décode et le valide comme toute entrée, et répond `400` s'il est invalide. Une erreur `500` signalerait à tort un bug du serveur."
+  }
+ ]
+}

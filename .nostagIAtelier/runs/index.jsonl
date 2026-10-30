@@ -1,0 +1,2 @@
+{"at":"2026-10-30 15:10","command":"cmake --build --preset debug -j\"$(nproc)\" --target cpp-pg_tests","container":true,"exit":0,"guide":"06-cpp-pg-2","key":"06-cpp-pg-2#5#53d66e27eff81112-0","log":"20261030-151013-0.log","seconds":2,"status":"ok","step":"5"}
+{"at":"2026-10-30 15:41","command":"cmake --preset debug","container":true,"exit":0,"guide":"06-cpp-pg-2","key":"06-cpp-pg-2#8#0034c46d4bce812d-0","log":"20261030-154157-1.log","seconds":2,"status":"ok","step":"8"}

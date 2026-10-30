@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Un développeur écrit `query.where(\"name <> '?'\")` pour exclure une valeur littérale. Qu'est-ce qui cloche avec ce `QueryBuilder` ?",
+   "choices": [
+    "Rien : le builder ignore ce qui est entre apostrophes.",
+    "Le `?` entre apostrophes est compté comme un paramètre, donc le nombre de `?` ne correspond plus aux valeurs fournies.",
+    "Le builder remplace le `?` par la valeur littérale `$1` dans le texte SQL.",
+    "Le builder renvoie une erreur `Invalid` à la compilation du `build()`."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le builder transforme chaque `?` en numéro suivant sans analyser les chaînes littérales. Le décalage avec les valeurs fournies est un bug du code, donc `addCondition` lève `std::logic_error`. La valeur doit passer en paramètre."
+  },
+  {
+   "text": "L'URL contient `?sort=hack`, une clé absente de la liste blanche de tri. Comment le builder doit-il réagir ?",
+   "choices": [
+    "`build()` renvoie une erreur `Invalid` dans un `Result`, car cette entrée vient de l'extérieur et peut arriver.",
+    "`orderBy` lève `std::logic_error`, comme pour un mauvais nombre de `?`.",
+    "Il insère `hack` tel quel dans le `ORDER BY`, car le tri ne peut pas être paramétré.",
+    "Il ignore le tri et ne renvoie aucune erreur."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Une clé de tri inconnue vient d'une URL : ce n'est pas un bug du code, donc on renvoie un `Result` en erreur. L'exception est réservée à ce qui ne doit jamais arriver. Insérer la valeur dans le SQL serait une injection."
+  },
+  {
+   "text": "Une version naïve de `whereIf` s'écrit `whereIf(city.has_value(), \"p.city = ?\", *city)`. Quel est le défaut ?",
+   "choices": [
+    "`has_value()` renvoie un booléen que le builder ne sait pas lire.",
+    "Le `?` ne peut pas être suivi d'une valeur de type `std::string`.",
+    "Les arguments sont évalués avant l'appel : `*city` est lu même si l'`optional` est vide, ce qui est un comportement indéfini.",
+    "La condition est ajoutée deux fois dans le texte SQL."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "En C++, les arguments sont évalués avant l'appel de la fonction. Prendre `const std::optional<T> &` laisse la fonction décider, et elle ne déréférence que si la valeur existe."
+  },
+  {
+   "text": "Quelle requête et quels paramètres produit ce code ?\n\n`pg::QueryBuilder query(\"SELECT id FROM t\"); query.limit(10).where(\"age >= ? AND age <= ?\", 18, 30);`",
+   "choices": [
+    "`SELECT id FROM t WHERE age >= $1 AND age <= $2 LIMIT $3`, avec `[18, 30, 10]`.",
+    "`SELECT id FROM t WHERE age >= $2 AND age <= $3 LIMIT $1`, avec `[10, 18, 30]`.",
+    "`SELECT id FROM t WHERE age >= $1 AND age <= $2 LIMIT $1`, avec `[18, 30]`.",
+    "`SELECT id FROM t WHERE age >= 18 AND age <= 30 LIMIT 10`, sans paramètres."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`limit` est appelé en premier, donc 10 prend le numéro `$1` et `where` commence à 2. Le builder retient ce numéro avec `_limitParam`, quel que soit l'ordre des appels. Aucune valeur n'est écrite dans le texte SQL."
+  }
+ ]
+}

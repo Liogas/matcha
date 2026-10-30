@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "L'écran d'un profil affiche photo, popularité, distance, tags communs, statut en ligne et like reçu. Le front fait 6 appels pour l'afficher. Quelle conception corrige le problème ?",
+   "choices": [
+    "Garder une route par information et ajouter du cache dans le navigateur pour les six appels",
+    "Renvoyer dans `GET /api/profiles/7` un objet complet avec un bloc `relationship`, sans email ni mot de passe",
+    "Renvoyer seulement des ids et laisser le front charger chaque donnée au moment où il en a besoin",
+    "Ajouter un état de conversation côté serveur qui mémorise les champs déjà envoyés au front"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Une API se conçoit depuis l'écran : une seule réponse doit permettre de l'afficher. Renvoyer des ids provoque des appels en cascade (N+1), et un état de conversation viole le principe d'un serveur sans état."
+  },
+  {
+   "text": "Le serveur lit `age_min=25abc` avec `std::from_chars`. Un dev supprime le test `ptr != s.data() + s.size()` en estimant que `ec == std::errc{}` suffit. Que se passe-t-il ?",
+   "choices": [
+    "Une exception est levée et le serveur répond 500",
+    "La valeur 25 est acceptée et `abc` est ignoré en silence",
+    "`ec` signale une erreur, donc la requête est quand même rejetée",
+    "L'âge vaut 0, car la conversion échoue dès le premier caractère invalide"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`from_chars` ne lève pas d'exception et s'arrête au premier caractère non numérique : `ec` indique un succès et `ptr` pointe sur `a`. Seul le test sur `ptr` garantit que toute la chaîne a été lue."
+  },
+  {
+   "text": "`GET /api/suggestions` renvoie un tableau JSON nu `[...]`. Le front veut maintenant un curseur de pagination. Quel est le défaut de ce format, et quelle forme adopter ?",
+   "choices": [
+    "Un tableau nu est interdit en JSON : il faut toujours renvoyer un objet ou une chaîne",
+    "Le curseur peut s'ajouter comme dernier élément du tableau, mélangé aux profils",
+    "On ne peut plus ajouter de métadonnées ; mieux vaut `{\"items\":[...],\"next_cursor\":\"def\"}`",
+    "Le tableau convient, mais il faut une route par page, du type `/api/suggestions/page2`"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un tableau nu ne laisse aucune place pour un curseur ou d'autres métadonnées sans casser les clients existants. Une liste doit avoir un format stable avec `items` et `next_cursor`."
+  },
+  {
+   "text": "Parmi ces routes, lesquelles respectent les principes de conception de la fiche ?",
+   "choices": [
+    "`DELETE /api/profiles/7/like` pour retirer un like",
+    "`GET /api/unlikeProfile?id=7` pour retirer un like",
+    "`POST /api/getProfile` avec l'id dans le corps pour lire un profil",
+    "`POST /api/notifications/read` pour marquer les notifications comme lues"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "L'URL désigne une ressource et le verbe donne l'action, d'où `DELETE` sur la sous-ressource `like`. Une action qui n'est pas une ressource, comme marquer des notifications lues, peut être un `POST` explicite. Les deux autres routes mettent le verbe dans l'URL ou détournent `POST`."
+  }
+ ]
+}

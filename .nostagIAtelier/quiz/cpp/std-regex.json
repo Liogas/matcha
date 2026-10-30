@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un handler valide le genre avec `std::regex_match(gender, std::regex(R\"(^[A-Za-z_]+$)\"))` à chaque requête. Les mesures montrent un temps perdu important. Quelle est la correction ?",
+   "choices": [
+    "Passer à `regex_search`, qui est plus rapide que `regex_match`",
+    "Raccourcir le motif, car le temps de construction dépend surtout de sa longueur",
+    "Déclarer `static const std::regex kGender(...)` pour ne compiler l'expression qu'une fois, de façon thread-safe",
+    "Construire la regex dans un `std::lock_guard` pour que les threads ne la reconstruisent pas en même temps"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "La construction compile l'expression en automate, ce qui est coûteux, et elle est ici refaite à chaque requête. Une variable locale `static const` n'est initialisée qu'une fois, et son initialisation est thread-safe depuis C++11. L'utilisation en lecture depuis plusieurs threads est sûre, donc un verrou n'apporte rien."
+  },
+  {
+   "text": "Pour valider une ville, un développeur écrit la classe `[À-Ö]` dans une regex appliquée à une `std::string` UTF-8. Les tests montrent qu'elle accepte des octets étranges et refuse des lettres voulues. Pourquoi ?",
+   "choices": [
+    "La regex lit des octets : `À` est `C3 80` et `Ö` est `C3 96`, donc la plage mélange des octets au lieu de désigner des lettres",
+    "La regex compare des points de code, mais la locale du serveur n'est pas réglée sur UTF-8",
+    "Les lettres accentuées ne sont pas autorisées dans une classe de caractères, quel que soit le moteur",
+    "La plage est correcte, mais `regex_match` oblige à écrire aussi `^` et `$` pour que les accents fonctionnent"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "`std::regex` sur `std::string` travaille octet par octet : la classe est lue comme l'octet `C3`, la plage `80-C3`, puis `96`. Il faut décoder l'UTF-8 d'abord et tester des catégories, ou limiter la regex à l'ASCII. La locale peut modifier le comportement, mais elle n'est pas la cause."
+  },
+  {
+   "text": "Un champ est validé avec `^(a+)+$` et une requête envoie une longue suite de `a` suivie de `!`. Un thread reste bloqué pendant des minutes. Quelles mesures sont adaptées ?",
+   "choices": [
+    "Passer à `regex_search`, qui s'arrête dès qu'il trouve un début de correspondance",
+    "Borner la longueur de l'entrée avant d'appliquer la regex, et éviter les quantificateurs imbriqués",
+    "Déclarer la regex `static const`, ce qui évite le retour arrière lors des appels suivants",
+    "Remplacer la regex par une boucle explicite lorsque la règle est simple"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Avec un moteur à retour arrière, ce motif essaie un nombre exponentiel de découpages : c'est un ReDoS. Borner l'entrée limite le travail, et une boucle explicite n'a pas ce risque. Le `static const` ne fait gagner que le temps de construction, il ne change pas le comportement lors de l'exécution."
+  },
+  {
+   "text": "Un validateur appelle `std::regex_search(nom, std::regex(\"[a-z]+\"))` et laisse passer `abc<script>`. Comment corriger ?",
+   "choices": [
+    "Garder `regex_search` et ajouter `^` et `$` dans le motif, ou utiliser `regex_match`, pour que toute la chaîne corresponde",
+    "Garder le motif et ajouter une seconde regex qui cherche `<script>` dans la chaîne",
+    "Remplacer `[a-z]+` par `.+`, qui couvre mieux tous les caractères possibles",
+    "Passer la chaîne en minuscules avant la recherche, pour réduire les cas à tester"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "`regex_search` cherche une correspondance n'importe où : `abc` suffit à valider la chaîne. `regex_match` exige que toute la chaîne corresponde, et des ancres `^` et `$` donnent le même résultat avec `regex_search`. Une liste noire de motifs dangereux est fragile, et `.+` accepterait encore plus de choses."
+  }
+ ]
+}

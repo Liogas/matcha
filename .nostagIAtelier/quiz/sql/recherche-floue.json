@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Un index B-tree existe sur `name`. La requête `WHERE name LIKE '%veg%'` reste lente, alors que `LIKE 'veg%'` est rapide. Que faut-il comprendre ?",
+   "choices": [
+    "Avec un début inconnu, le B-tree ne peut pas se ramener à une plage de valeurs triées, donc il ne sert pas",
+    "Un index GIN avec `gin_trgm_ops` accélérerait aussi cette recherche de sous-chaîne",
+    "Il suffit d'ajouter `LIMIT 10` pour que PostgreSQL choisisse enfin l'index B-tree existant",
+    "Le paramètre `$1` empêche PostgreSQL d'utiliser n'importe quel index sur cette colonne"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Un B-tree trie les textes : un préfixe est une plage, mais un motif dont le début est inconnu ne l'est pas. L'index GIN de `pg_trgm` repose sur les trigrammes et couvre ce cas. `LIMIT` limite le résultat sans changer le choix de l'index, et un paramètre n'interdit pas l'usage d'un index."
+  },
+  {
+   "text": "Sur l'écran d'ajout de tags, une personne tape `vgean` en voulant `vegan`. Le tag existe. Quelle approche peut le proposer ?",
+   "choices": [
+    "`LIKE $1 || '%'` avec un index `text_pattern_ops`, car l'index rend la recherche tolérante aux fautes",
+    "`WHERE name % $1 ORDER BY similarity(name, $1) DESC` avec un index GIN `gin_trgm_ops`",
+    "`LOWER(name) LIKE $1 || '%'`, car la mise en minuscules suffit à corriger l'inversion de lettres",
+    "Un `LIMIT` plus grand sur la recherche par préfixe, pour que `vegan` finisse par apparaître"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`vgean` et `vegan` partagent plusieurs trigrammes, donc `pg_trgm` les juge assez similaires. Une recherche par préfixe cherche des noms qui commencent par `vgean` : aucun index ni `LIMIT` n'y change rien, et la casse n'est pas en cause."
+  },
+  {
+   "text": "L'index est créé par `CREATE INDEX ON matcha_interests (name)`. L'API exécute pourtant `WHERE LOWER(name) LIKE $1 || '%'` et reste lente sur une grosse table. Quelle correction est cohérente ?",
+   "choices": [
+    "Passer la requête en `ILIKE` sans toucher à l'index, qui sera alors reconnu",
+    "Ajouter `LIMIT 10`, ce qui force PostgreSQL à utiliser l'index sur `name`",
+    "Créer l'index sur l'expression `LOWER(name)`, avec `text_pattern_ops` si la collation n'est pas `C`",
+    "Remplacer l'index B-tree par un index sur `created_at`, plus petit et donc plus rapide"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un index sur `name` ne sert pas à une requête qui filtre sur `LOWER(name)` : l'expression doit être indexée telle quelle. Avec une collation autre que `C`, `text_pattern_ops` est nécessaire pour les préfixes. `LIMIT` et `ILIKE` ne changent pas cette incompatibilité."
+  },
+  {
+   "text": "Le serveur reçoit `q=%` et exécute `name LIKE $1 || '%'` avec un paramètre, sans autre traitement. Que se passe-t-il, et que faire ?",
+   "choices": [
+    "Rien de particulier : le paramètre neutralise `%`, qui est traité comme un caractère ordinaire",
+    "Tous les noms correspondent, car `LIKE` lit `%` comme un joker dans la valeur ; il faut échapper `%` et `_`",
+    "Une erreur d'injection SQL est levée, et la requête est refusée par PostgreSQL",
+    "Le `LIMIT` borne le résultat, ce qui garde une réponse petite même sans échappement"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Le paramètre empêche l'injection SQL, mais `LIKE` interprète ensuite `%` et `_` comme des jokers : `%` fait tout correspondre, d'où l'échappement. Le `LIMIT` borne la taille de la réponse, même si cela ne remplace pas l'échappement. Penser que le paramètre règle aussi le sens du motif est l'erreur tentante."
+  }
+ ]
+}

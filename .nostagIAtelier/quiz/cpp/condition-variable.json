@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Dans `acquire()`, un collègue écrit `if (_idle.empty()) _available.wait(lock);` puis enchaîne avec `_idle.back()` et `_idle.pop_back()`. Quel est le risque ?",
+   "choices": [
+    "Le thread peut se réveiller alors que `_idle` est encore vide, par réveil intempestif ou parce qu'un autre thread a pris la connexion, et le `pop_back()` s'exécute sur un vecteur vide",
+    "Le mutex n'est pas relâché pendant l'attente, donc personne ne peut rendre de connexion et le thread dort pour toujours",
+    "La notification peut tomber entre le relâchement du mutex et l'endormissement, donc le thread rate son réveil",
+    "Le `if` oblige le compilateur à lire `_idle` une seule fois, ce qui fige la valeur testée avant l'attente"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Le réveil ne garantit pas que la condition est vraie : un réveil intempestif est permis, et un autre thread peut avoir volé la connexion. Il faut donc retester dans une boucle, ce que fait la forme `wait(lock, prédicat)`. Le relâchement et l'endormissement sont atomiques, donc aucune notification ne se perd à cet endroit."
+  },
+  {
+   "text": "Pour `std::condition_variable::wait`, tu passes un `std::lock_guard` à la place du `std::unique_lock` et le code refuse de compiler. Pourquoi `unique_lock` est-il nécessaire ?",
+   "choices": [
+    "Parce que `lock_guard` n'est pas protégé contre les exceptions, alors que `unique_lock` l'est",
+    "Parce que `wait` doit pouvoir relâcher le mutex pendant l'attente puis le reprendre au réveil, ce que `lock_guard` ne permet pas",
+    "Parce que `unique_lock` stocke la condition à tester, ce qui évite de passer un prédicat",
+    "Parce que `unique_lock` est plus rapide à verrouiller quand plusieurs threads attendent en même temps"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Pendant l'attente, le mutex doit être libre pour qu'un autre thread puisse rendre une connexion. `unique_lock` peut être relâché puis repris, pas `lock_guard`. Les deux sont RAII et sûrs face aux exceptions, et aucun des deux ne contient la condition."
+  },
+  {
+   "text": "`wait_for(lock, 2s, [this]{ return !_idle.empty(); })` renvoie `false` dans `acquire()`. Que signifie ce résultat et que doit faire la fonction ?",
+   "choices": [
+    "Un réveil intempestif a eu lieu : il faut rappeler `wait_for` en boucle jusqu'à obtenir `true`",
+    "Le mutex n'a pas pu être repris : il faut réessayer immédiatement avec un nouveau `unique_lock`",
+    "Le délai a expiré avec la condition toujours fausse : il faut renvoyer une erreur `Unavailable`, qui deviendra un `503`",
+    "Une notification a été perdue : il faut forcer un `notify_all` pour relancer les threads en attente"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "`wait_for` renvoie la dernière valeur du prédicat, donc `false` veut dire que le délai a expiré sans connexion libre. Le délai évite qu'une fuite de connexion bloque silencieusement tous les threads de Crow. Les réveils intempestifs sont déjà gérés par le prédicat à l'intérieur de `wait_for`."
+  },
+  {
+   "text": "Quelles situations justifient bien l'appel de notification indiqué ?",
+   "choices": [
+    "`notify_all` à chaque connexion rendue, par sécurité, pour être sûr que le bon thread se réveille",
+    "`notify_one` quand un thread rend une connexion au pool, car une seule connexion ne satisfait qu'un seul thread",
+    "`notify_all` à la fermeture du pool, car l'événement concerne tous les threads qui attendent",
+    "`notify_one` à la fermeture du pool, car le premier thread réveillé préviendra les autres"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Une connexion libérée ne profite qu'à un thread : `notify_all` réveillerait tout le monde pour que la plupart se rendorment. La fermeture du pool concerne au contraire tous les threads, donc `notify_all`. Compter sur le premier thread réveillé pour prévenir les autres laisserait des threads dormir."
+  }
+ ]
+}

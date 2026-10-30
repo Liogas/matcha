@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "L'image `runtime` se construit sans erreur, mais au démarrage le conteneur affiche `error while loading shared libraries`. Quelle est la cause la plus probable ?",
+   "choices": [
+    "Le binaire a été compilé en Debug au lieu de Release dans l'étape `build`.",
+    "Une bibliothèque partagée utilisée par le binaire n'a pas été installée dans l'étape `runtime`.",
+    "L'instruction `USER matcha` empêche Docker de lire le binaire copié depuis `build`.",
+    "Le cache de `deps` est périmé et doit être reconstruit avec `down -v`."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "L'étape `runtime` ne contient que ce qu'on y copie ou installe, et le compilateur n'y est plus. Une bibliothèque oubliée casse donc uniquement au démarrage. Le mode de compilation et le cache n'expliquent pas ce message."
+  },
+  {
+   "text": "Dans ton Dockerfile, tu écris `COPY . .` avant d'installer les dépendances vcpkg. Quelle conséquence a ce choix à chaque modification de `LikeRoutes.cpp` ?",
+   "choices": [
+    "Aucune : Docker ne reconstruit que les couches dont le contenu a réellement changé.",
+    "Les dépendances sont réinstallées à chaque fois, car la couche `COPY` change et invalide celles qui suivent.",
+    "L'image finale contient les sources, car `COPY . .` les ajoute à toutes les étapes.",
+    "Le build échoue, car vcpkg ne peut pas s'installer après la copie des sources."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Docker réutilise une couche seulement si l'instruction et tout ce qui précède n'ont pas changé. En copiant tout le code avant les dépendances, la moindre modification invalide leur couche. Il faut placer en premier ce qui change rarement."
+  },
+  {
+   "text": "Pour le build, tu passes une clé d'API privée avec `ARG API_KEY` dans le Dockerfile. Quel est le risque ?",
+   "choices": [
+    "La clé est visible dans l'historique de l'image, même si elle n'apparaît pas dans l'étape `runtime`.",
+    "La clé est ignorée par Docker, car un `ARG` n'est pas lisible pendant le build.",
+    "La clé est publiée sur l'hôte comme un port exposé, accessible à tous les services.",
+    "La clé est supprimée au `docker compose down`, ce qui casse le conteneur au redémarrage."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Un secret passé en `ARG` reste dans l'historique de l'image, et quiconque la récupère peut le lire. Passer à une étape finale légère n'efface pas cet historique. Un `ARG` est bien lisible pendant le build, et le `.dockerignore` ou les secrets du dépôt sont les bons outils."
+  },
+  {
+   "text": "Dans l'image `runtime`, presque rien n'est installé, mais tu gardes `ca-certificates`. Que se passerait-il sans ce paquet ?",
+   "choices": [
+    "Le binaire ne démarrerait plus, car il est lié dynamiquement à ce paquet.",
+    "Les connexions TLS sortantes, comme un appel HTTPS ou un envoi d'email chiffré, échoueraient à vérifier le certificat du serveur.",
+    "Les migrations ne seraient plus copiées depuis l'étape `build`.",
+    "Le conteneur démarrerait en root, car `USER matcha` a besoin des autorités de certification."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Ce paquet fournit les autorités de certification utilisées pour valider les certificats des serveurs distants. L'image finale doit contenir ce dont le programme a besoin à l'exécution, même si ce n'est pas utile à la compilation. Le démarrage, les migrations et l'utilisateur ne dépendent pas de lui."
+  }
+ ]
+}

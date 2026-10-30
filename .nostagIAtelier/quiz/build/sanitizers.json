@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Dans un test, un `string_view` pointe sur une `std::string` déjà détruite, et le test affiche pourtant le bon texte. Que t'apporte un build avec ASan ?",
+   "choices": [
+    "Il arrête le programme au premier accès à cette mémoire libérée, même si elle n'a pas encore été réécrite.",
+    "Il corrige automatiquement le `string_view` en copiant la chaîne avant sa destruction.",
+    "Il ne signale le bug que si la mémoire a été réécrite, comme le ferait un plantage en production.",
+    "Il signale le bug à la fin du programme, avec la liste des objets jamais libérés."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "ASan suit l'état de chaque octet et met la mémoire libérée en quarantaine, donc l'accès est détecté même si le contenu semble intact. L'affichage correct n'est qu'un hasard. La liste des objets non libérés relève de LeakSanitizer, qui cherche autre chose."
+  },
+  {
+   "text": "Un rapport ASan indique : lecture dans `pg::Row::get`, libération dans `pg::Rows::~Rows` (via `PQclear`), allocation dans `Connection::execute`. Quel est le diagnostic ?",
+   "choices": [
+    "Il manque un `PQclear` quelque part : c'est une fuite mémoire classique.",
+    "Une `Row` est utilisée après la destruction du `Rows` auquel elle appartient : problème de durée de vie.",
+    "`PQexecParams` renvoie un tampon trop petit, ce qui provoque un dépassement à la lecture.",
+    "Le destructeur de `Rows` est appelé deux fois, ce qui est un double `delete`."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Les trois piles racontent la vie de l'objet : lu après avoir été libéré par le destructeur de `Rows`. Il faut donc garder les `Rows` en vie aussi longtemps que les `Row`. Une fuite serait au contraire un défaut de libération, signalé par LeakSanitizer."
+  },
+  {
+   "text": "LeakSanitizer affiche : `Direct leak of 136 byte(s) in 1 object(s)` alloués par `PQmakeEmptyPGresult`. Quelle correction est la plus adaptée ?",
+   "choices": [
+    "Compiler avec `-g` pour que le rapport ne signale plus cette allocation.",
+    "Désactiver LeakSanitizer, puisque `libpq` gère sa mémoire tout seul.",
+    "Appeler `PQclear` plus tôt sur toutes les `Rows`, quitte à invalider les `Row` en cours.",
+    "Envelopper le `PGresult` dans un objet RAII dont le destructeur appelle `PQclear`."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Un `PGresult` jamais libéré signifie qu'un `PQclear` manque sur au moins un chemin. Un wrapper RAII garantit l'appel quelle que soit la sortie de la fonction. Libérer plus tôt à la main risquerait de créer le use-after-free inverse."
+  },
+  {
+   "text": "Tu prépares la mise en place des sanitizers sur le projet. Quelles décisions sont justes ?",
+   "choices": [
+    "Compiler ASan et TSan dans des builds séparés, car ils sont incompatibles entre eux.",
+    "Lancer les sanitizers sur toute la suite de tests, car ils ne voient que le code exécuté.",
+    "Activer ASan dans le binaire de production, car son coût en temps est négligeable.",
+    "Lancer le programme sans tests : l'instrumentation seule suffit à révéler les bugs."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "ASan et TSan utilisent la mémoire différemment, d'où deux builds. Un bug jamais exécuté n'est jamais signalé, d'où la suite complète. Le coût est d'environ un facteur 2, ce qui réserve l'outil aux tests, et sans test qui passe par le bug il n'y a aucun rapport."
+  }
+ ]
+}

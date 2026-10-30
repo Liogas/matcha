@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Le compose publie à la fois Nginx (port 80) et le backend (port 8080). Le limiteur lit `X-Real-IP` sans autre vérification. Un attaquant appelle directement le port 8080 avec `X-Real-IP: 1.2.3.4`, en changeant la valeur à chaque requête. Quelles corrections vont dans le bon sens ?",
+   "choices": [
+    "Ne lire `X-Real-IP` que si `remote_ip_address` fait partie des proxies de confiance, sinon ignorer l'en-tête",
+    "Rejeter les requêtes dont `X-Real-IP` n'a pas le format d'une adresse IPv4 valide",
+    "Ne publier que le port de Nginx et laisser le backend sur le réseau interne de Compose",
+    "Faire écrire `X-Real-IP` par le front React, qui connaît mieux l'adresse réelle du client"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Un en-tête n'a de valeur que s'il vient d'un proxy de confiance, et l'isolation réseau empêche d'atteindre le backend sans passer par Nginx : les deux protections se complètent. Vérifier le format ne sert à rien, car `1.2.3.4` est une adresse parfaitement valide, simplement fausse."
+  },
+  {
+   "text": "`TRUSTED_PROXIES` couvre tout `172.16.0.0/12`, le réseau privé de Docker, par commodité. Un autre conteneur de ce réseau est compromis et envoie `X-Real-IP: 9.9.9.9` directement au backend. Que se passe-t-il ?",
+   "choices": [
+    "Le backend ignore l'en-tête, car seules les adresses publiques peuvent être usurpées",
+    "Le backend croit l'en-tête, car l'appelant est dans la plage de confiance sans être Nginx",
+    "La connexion TCP échoue, car l'adresse source ne correspond pas à celle annoncée dans l'en-tête",
+    "Le limiteur voit l'adresse du conteneur, car `remote_ip_address` prime toujours sur l'en-tête"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Faire confiance à tout le réseau privé revient à croire n'importe quel service qui s'y trouve, pas seulement Nginx. Le conteneur compromis passe le test `proxies.contains(...)` et son en-tête est lu comme s'il venait du proxy."
+  },
+  {
+   "text": "Avec `TRUSTED_PROXIES=172.20.0.5`, le backend reçoit de cet appelant l'en-tête `X-Forwarded-For: 6.6.6.6, 198.51.100.4, 172.20.0.5`. Quelle adresse retenir comme celle du client ?",
+   "choices": [
+    "`6.6.6.6`, la première de la liste, puisque c'est celle du client d'origine",
+    "`172.20.0.5`, la dernière de la liste, qui est l'appelant direct",
+    "`198.51.100.4`, la première adresse non fiable en lisant depuis la droite",
+    "Aucune : l'en-tête contient une adresse non vérifiable, donc la requête doit être refusée"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "`X-Forwarded-For` s'accumule, et le client peut écrire ce qu'il veut au début. On lit donc depuis la droite et on s'arrête à la première adresse qui n'est pas un proxy de confiance. Lire le premier élément, `6.6.6.6`, est l'erreur classique."
+  },
+  {
+   "text": "Après un redémarrage, Nginx passe de `172.20.0.5` à `172.20.0.8`, alors que `TRUSTED_PROXIES=172.20.0.5`. Le backend n'accorde plus sa confiance à Nginx et tous les clients se ressemblent pour le limiteur. Quelle solution respecte la règle ?",
+   "choices": [
+    "Déclarer le sous-réseau de Nginx en CIDR, ou un nom résolu au démarrage",
+    "Faire confiance à `X-Real-IP` dès que l'appelant a une adresse privée, quelle qu'elle soit",
+    "Désactiver la vérification de l'appelant, puisque Nginx écrase de toute façon l'en-tête",
+    "Lire `X-Forwarded-For` depuis la gauche, où se trouve l'adresse du client d'origine"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Une adresse de conteneur peut changer : on la déclare par une plage CIDR ou par un nom résolu au démarrage, sans élargir la confiance à tout le réseau. Supprimer la vérification ou accepter toute adresse privée rouvrirait la falsification de l'en-tête."
+  }
+ ]
+}

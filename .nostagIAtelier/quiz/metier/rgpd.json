@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un développeur stocke la latitude et la longitude exactes, puis arrondit à deux décimales dans la réponse de l'API pour protéger les utilisateurs. Quel est le défaut de ce choix ?",
+   "choices": [
+    "L'arrondi à l'affichage fausse les calculs de distance faits côté serveur.",
+    "La position exacte reste en base : une fuite ou un bug d'API peut la révéler.",
+    "Deux décimales sont insuffisantes, il faudrait arrondir à l'entier.",
+    "Le navigateur refuse d'envoyer une position qui sera arrondie ensuite."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Une donnée non stockée ne peut pas fuir. Arrondir à l'écriture est plus fort qu'arrondir à l'affichage, car la position exacte n'existe alors plus nulle part."
+  },
+  {
+   "text": "Un attaquant se place à trois endroits et lit la distance affichée jusqu'à une même personne. Quelles parades la fiche retient-elle ?",
+   "choices": [
+    "Afficher la distance exacte, mais seulement aux personnes connectées.",
+    "Arrondir la distance affichée, par exemple « moins de 5 km ».",
+    "Limiter le nombre d'appels qui renvoient une distance.",
+    "Chiffrer la position en base, ce qui rend tout calcul de distance impossible."
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Trois distances précises donnent trois cercles dont l'intersection révèle la position. Arrondir la distance affichée et limiter les appels rendent l'attaque inexploitable. Réserver la distance exacte aux connectés ne change rien, l'attaquant peut l'être."
+  },
+  {
+   "text": "Une utilisatrice refuse la géolocalisation dans la fenêtre du navigateur. Que doit faire l'application ?",
+   "choices": [
+    "Bloquer l'inscription tant que le consentement n'est pas donné.",
+    "Redemander l'autorisation à chaque connexion jusqu'à obtenir un accord.",
+    "Déduire une position approximative sans le dire, grâce à l'adresse IP.",
+    "Continuer normalement, la ville saisie à la main remplaçant la position GPS."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Le consentement doit être libre : refuser ne doit pas bloquer l'application, et la ville saisie à la main prend le relais. Bloquer, insister ou déduire la position en cachette contredit ce principe."
+  },
+  {
+   "text": "Un utilisateur retire son consentement à la localisation. Quel traitement est attendu côté serveur ?",
+   "choices": [
+    "Marquer le consentement comme retiré, mais garder les coordonnées pour le matching.",
+    "Passer `location_source` à `manual`, effacer coordonnées et `location_consent_at`, puis exiger une ville.",
+    "Supprimer le profil entier, puisque le matching ne peut plus fonctionner sans position.",
+    "Arrondir les coordonnées à l'entier et conserver la date de consentement d'origine."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Retirer le consentement implique d'effacer les données concernées, pas seulement de les masquer. Il faut ensuite une ville, sinon le matching ne fonctionne plus, mais le compte n'a pas à disparaître."
+  }
+ ]
+}

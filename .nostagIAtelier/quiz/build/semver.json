@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Ta lib est en version 1.2.3. Tu y ajoutes une classe `QueryBuilder` sans toucher à l'existant. Quelle version publies-tu ?",
+   "choices": [
+    "1.2.4, car rien de ce qui existait n'a changé.",
+    "2.0.0, car une nouvelle classe change la surface de l'API.",
+    "1.3.0, car c'est un ajout compatible.",
+    "1.3.3, pour conserver le numéro de correctif."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un ajout qui ne casse aucun appelant est une évolution mineure. Le numéro de correctif est réservé aux corrections compatibles. Un majeur n'est justifié que par une cassure de compatibilité."
+  },
+  {
+   "text": "Ta lib est en 1.4.2. Tu renommes `execute` en `run` sans conserver l'ancien nom. Quelle version doit sortir ?",
+   "choices": [
+    "1.4.3, car le comportement reste le même.",
+    "2.0.0, car les appelants doivent modifier leur code.",
+    "1.5.0, car il s'agit d'une amélioration du nommage.",
+    "1.4.2, avec seulement une ligne dans le CHANGELOG."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Tout ce qui oblige un utilisateur à modifier son code est une cassure, y compris un simple renommage. Publier cela en correctif ou en mineur est l'erreur fréquente : la version ne tiendrait plus sa promesse. Le CHANGELOG ne remplace pas le numéro."
+  },
+  {
+   "text": "Ton projet utilise `cpp-pg 0.2.0`. Une version `0.3.0` sort. Peut-elle casser l'API ?",
+   "choices": [
+    "Non, une version mineure garantit toujours la compatibilité.",
+    "Non, seul un changement du premier chiffre peut casser l'API.",
+    "Oui, car `find_package` accepte de toute façon n'importe quelle version `0.x`.",
+    "Oui, car avant la 1.0, tout peut encore changer, même en version mineure."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Avant 1.0, la lib n'a pas encore promis de stabilité, donc une version mineure peut casser l'API, comme c'est le cas de `cpp-pg`. La règle « mineur = compatible » ne s'applique qu'à partir de la 1.0. La vérification de `find_package` dépend de la politique de version choisie, pas de ce principe."
+  },
+  {
+   "text": "Ta lib est déjà en 1.x. Quels changements imposent de passer en version majeure ?",
+   "choices": [
+    "Retirer un en-tête que les utilisateurs incluent.",
+    "Modifier un comportement qui était documenté.",
+    "Ajouter une nouvelle fonction utilitaire facultative.",
+    "Corriger la numérotation des `$n` dans les requêtes."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Retirer un en-tête ou changer un comportement documenté oblige les utilisateurs à adapter leur code : c'est une cassure. Une fonction ajoutée est un mineur, et une correction compatible est un correctif, comme le passage de 0.2.0 à 0.2.1 dans la fiche."
+  }
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Le score est `0,5 × proximité + 0,3 × tags + 0,2 × popularité`, chaque composante étant normalisée entre 0 et 1 (proximité = `1 - min(distance / 100, 1)`, tags = `min(communs / 5, 1)`, popularité = `fame / 100`). Dalia est à 10 km avec 2 tags et fame 50. Eli est à 60 km avec 5 tags et fame 90. Qui passe devant ?",
+   "choices": [
+    "Dalia, car elle est bien plus proche : 0,67 contre 0,62.",
+    "Eli, avec 0,68 contre 0,67 pour Dalia.",
+    "Dalia, avec 0,67 contre 0,58 pour Eli.",
+    "Égalité à 0,67, départagée par `account_id`."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Dalia vaut 0,45 + 0,12 + 0,10 = 0,67 et Eli 0,20 + 0,30 + 0,18 = 0,68. L'écart est minime : la distance est pondérée mais ne garantit pas que les proches passent d'abord, d'où l'intérêt d'un bonus ou de tranches."
+  },
+  {
+   "text": "On veut garantir que tous les profils à moins de 25 km passent avant les autres. Quelles solutions conviennent ?",
+   "choices": [
+    "Passer `wd` à 0,9, ce qui garantit mathématiquement l'ordre voulu.",
+    "Ajouter un bonus fort au score des profils situés sous 25 km.",
+    "Trier d'abord par `(distance_km <= 25) DESC`, puis par score dans chaque tranche.",
+    "Exclure les profils au-delà de 25 km, car le score ne peut pas les classer."
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Une pondération seule ne garantit pas l'ordre : un profil éloigné mais très bien noté peut encore dépasser un proche. Un bonus fort ou un tri par tranches impose la priorité géographique, alors qu'exclure les profils lointains supprimerait des suggestions valides."
+  },
+  {
+   "text": "Les suggestions sont triées par un score calculé dans la requête, et paginées par curseur keyset. Le curseur ne contient que le dernier `account_id`. Quel problème apparaît à la page suivante ?",
+   "choices": [
+    "Aucun, car `account_id` est unique et suffit à reprendre après la dernière ligne.",
+    "Le curseur devient trop long pour tenir dans l'URL.",
+    "Les profils déjà vus sont exclus automatiquement du calcul du score.",
+    "La reprise ne suit pas l'ordre par score : des profils sont sautés ou répétés."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Le score n'est pas une colonne, mais c'est lui qui définit l'ordre. Pour reprendre au bon endroit, il doit faire partie du curseur, avec `account_id` pour départager les égalités."
+  },
+  {
+   "text": "Pour afficher 20 suggestions, un développeur charge tous les profils compatibles en C++, calcule le score, trie, puis garde 20. Que proposer ?",
+   "choices": [
+    "Garder ce choix, car le C++ calcule plus vite que PostgreSQL.",
+    "Calculer le score dans la requête, après bounding box et filtres fixes, avec `ORDER BY` et `LIMIT`.",
+    "Calculer le score à l'inscription et le stocker dans une colonne figée.",
+    "Tirer 100 profils au hasard avant de calculer le score."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Tout calculer en C++ oblige à charger tous les profils. En SQL, la bounding box et les filtres réduisent d'abord les candidats, puis `ORDER BY` et `LIMIT` ne renvoient que 20 lignes. Un score figé en colonne serait périmé dès que la distance ou la popularité change."
+  }
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Une fonction renvoie `core::Result<bool>` pour dire si un email est déjà pris. Le handler écrit `auto r = emailPris(e); if (r) return conflit();` et renvoie un conflit même pour les emails libres. Quelle est la cause ?",
+   "choices": [
+    "`if (r)` teste la présence d'une valeur, donc vrai dès que l'appel a réussi ; il faut tester `*r`, après avoir vérifié `r`",
+    "`if (r)` teste l'absence d'erreur et le booléen en même temps, mais seulement avec `r.value()`",
+    "`Result<bool>` ne peut pas être converti en condition ; le code ne devrait pas compiler",
+    "`if (r)` teste le booléen contenu, mais le `Result` a été copié, ce qui inverse sa valeur"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "L'opérateur booléen d'un `std::expected` répond à la question « y a-t-il une valeur ? », pas « cette valeur vaut-elle `true` ? ». Un email libre donne donc un `Result` réussi contenant `false`, et la condition passe quand même. On vérifie d'abord le succès, puis on lit `*r`."
+  },
+  {
+   "text": "Le repository reçoit une erreur `Conflict` de la base lors d'un `INSERT` et la transmet au service. Que doit faire le service, qui ne doit rien savoir du HTTP ?",
+   "choices": [
+    "Renvoyer `std::unexpected(rows.error())` et laisser l'adaptateur traduire l'erreur en `409`",
+    "Construire lui-même une réponse `409` pour que le client reçoive un message précis",
+    "Convertir l'erreur en `Internal`, pour ne pas exposer le détail de la base au client",
+    "Renvoyer une valeur par défaut, puisque l'échec est attendu et sans gravité"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Chaque couche n'a qu'une décision à prendre : traiter l'erreur ou la transmettre. Ici le service la transmet, et un unique adaptateur fait la correspondance entre `ErrorCode` et code HTTP. Avaler l'erreur ou la changer en `Internal` ferait perdre au client le `409` qu'il mérite."
+  },
+  {
+   "text": "Dans `pg::QueryBuilder`, une requête contient un nombre de `?` différent du nombre de paramètres, et une autre trie sur une clé reçue dans l'URL qui n'existe pas. Quels traitements suivent la règle du projet ?",
+   "choices": [
+    "Le mauvais nombre de `?` renvoie un `Result` en erreur `Invalid`, car l'appelant peut le corriger à l'exécution",
+    "Les deux cas lèvent `std::logic_error`, puisque tous deux viennent d'une mauvaise utilisation de l'API",
+    "La clé de tri inconnue renvoie une erreur `Invalid`, car elle vient de l'extérieur et c'est un échec attendu",
+    "Le mauvais nombre de `?` lève `std::logic_error`, car c'est un bug du programmeur"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Un échec attendu, comme une entrée venant d'une URL, passe par un `Result`. Un bug de programmation, comme un nombre de `?` incohérent, est signalé par une exception, car l'appelant n'a rien à y rattraper. Mettre les deux dans la même catégorie brouille cette frontière."
+  },
+  {
+   "text": "Le serveur ne peut pas joindre le JWKS pour vérifier un jeton. Le code renvoie `Unauthorized`. Pourquoi est-ce une erreur de choix, et que voit l'utilisateur ?",
+   "choices": [
+    "`Unauthorized` donne un `403` que le front ignore, donc l'utilisateur ne voit aucune erreur",
+    "`Unauthorized` donne un `401` : le front croit la session terminée et déconnecte l'utilisateur à cause d'une panne qui n'est pas la sienne",
+    "`Unauthorized` expose l'adresse du JWKS dans le message, ce qui est une fuite d'information",
+    "`Unauthorized` est correct, car sans vérification possible on ne peut pas considérer le jeton comme valide"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`Unauthorized` signifie que le jeton n'est pas valide, et le front en déduit que la session est finie. Une panne du JWKS doit donner `Unavailable`, soit un `503` qui veut dire « réessaie » : la session reste ouverte. Ce n'est pas un `403` et ce n'est pas une affaire de fuite de message."
+  }
+ ]
+}

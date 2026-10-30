@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Dix requêtes simultanées écrivent dans les mêmes logs, et tu veux retrouver avec `grep` toutes les lignes d'une seule d'entre elles. Que faut-il mettre en place ?",
+   "choices": [
+    "Un `request_id` créé dans le middleware, ajouté à chaque ligne de log et renvoyé dans un en-tête de réponse",
+    "Le niveau `debug` activé en production, pour que chaque ligne soit assez détaillée pour être reconnue à coup sûr",
+    "Un horodatage à la seconde sur chaque ligne, puis un tri manuel des lignes autour de l'heure de l'erreur signalée",
+    "Un appel à `std::cerr` séparé pour chaque requête, afin que les messages de chacune restent à part des autres"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Un identifiant unique présent sur toutes les lignes permet de reconstituer l'histoire d'une requête avec `grep a81f`. L'heure ne suffit pas : dix requêtes peuvent écrire dans la même seconde. Le niveau `debug` ajoute du bruit sans créer de lien entre les lignes."
+  },
+  {
+   "text": "Un service de la lib écrit directement dans `std::cerr` quand une opération échoue. Tu veux écrire un test qui vérifie que ce message est bien émis. Que fais-tu ?",
+   "choices": [
+    "Tu redirige `std::cerr` dans le test, puis tu relis le texte capturé pour y chercher le message attendu",
+    "Tu fais dépendre le service d'une `core::ILogger` injectée, et le test fournit un faux logger qui capture les messages",
+    "Tu remplaces `std::cerr` par un logger global statique que le test peut vider et relire entre deux cas",
+    "Tu écris le message dans un fichier temporaire, puis le test ouvre ce fichier pour comparer son contenu"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`core::ILogger` est une interface : en injectant un faux, le test lit directement les messages capturés. Une lib ne doit jamais écrire elle-même dans `std::cerr`. Un logger global ou un fichier temporaire rendent le test fragile et dépendant de l'environnement."
+  },
+  {
+   "text": "Le front ouvre le WebSocket avec le JWT dans l'URL de connexion. Pourquoi cela pose-t-il un problème du point de vue des logs ?",
+   "choices": [
+    "L'URL est trop longue, donc Nginx tronque la ligne de log et la requête ne peut plus être corrélée avec le backend",
+    "Le backend journalise l'URL deux fois au niveau `info`, ce qui double le volume de logs sans rien apporter",
+    "Le JWT est invalidé dès que le fichier de logs d'accès est archivé, et l'utilisateur doit alors se reconnecter",
+    "Nginx écrit toutes les URL dans ses logs d'accès : le JWT y reste en clair et reste utilisable pendant 15 minutes"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Les logs d'accès de Nginx contiennent l'URL complète, donc le jeton. Toute personne qui peut lire ces fichiers peut rejouer le JWT tant qu'il est valable. Les autres réponses inventent des effets de taille ou d'archivage qui n'existent pas."
+  },
+  {
+   "text": "Une requête échoue avec une erreur SQL de deadlock (`40P01`). Quelles décisions sont correctes pour traiter cette erreur ?",
+   "choices": [
+    "Renvoyer au client le message SQL complet, pour que l'utilisateur puisse le copier dans son signalement",
+    "Journaliser côté serveur le détail de l'erreur au niveau `error`, avec le `request_id` de la requête",
+    "Journaliser seulement le mot `error`, pour ne pas laisser de détail technique dans les fichiers de logs",
+    "Renvoyer au client un message générique, sans détail sur la base ni sur la requête exécutée"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Le détail utile pour diagnostiquer reste côté serveur, relié à la requête par son `request_id`, et le client ne reçoit qu'un message générique. Un message sans contexte comme `error` est inutilisable pendant une panne. Exposer l'erreur SQL au client révèle des informations internes."
+  }
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Dans la table `notifications`, tu hésites à ranger `read_at` dans `payload` avec les autres détails. La page affiche à chaque chargement le nombre de notifications non lues. Que choisis-tu ?",
+   "choices": [
+    "Le garder dans `payload`, car c'est une donnée propre à chaque type de notification, comme les autres détails.",
+    "Le garder dans `payload`, car `JSONB` est indexable et rend donc le filtrage aussi efficace qu'une colonne.",
+    "En faire une colonne `read_at`, typée et indexable avec `(recipient_id, read_at, id DESC)`, car elle sert à filtrer et compter.",
+    "En faire une colonne, mais seulement parce que `JSONB` ne peut pas stocker de dates, quel que soit l'usage."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Une donnée qui sert à filtrer, joindre ou contraindre mérite une vraie colonne. Dans le JSON, il faudrait un index spécial et une conversion de type. La seconde réponse est tentante, mais un index GIN générique ne remplace pas un index btree sur une colonne."
+  },
+  {
+   "text": "Tu stockes `{\"count\": 10}` et `{\"count\": 9}` dans `payload`, puis tu tries avec `ORDER BY payload ->> 'count'`. Le 9 apparaît après le 10 dans l'ordre décroissant, ce qui est faux. Quelle est la cause et la correction ?",
+   "choices": [
+    "`->>` renvoie du texte, donc `'10' < '9'` ; il faut caster, par exemple `(payload ->> 'count')::int`.",
+    "`->>` renvoie du JSON, donc l'ordre suit l'ordre des clés ; il faut utiliser `->` à la place pour trier.",
+    "`JSONB` supprime les doublons de clés, donc un des deux nombres est écrasé ; il faut passer au type `JSON`.",
+    "L'index GIN sur `payload` trie les valeurs par ordre d'insertion ; il faut le supprimer pour retrouver le bon ordre."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "L'opérateur `->>` renvoie du texte et la comparaison est alors alphabétique, d'où `'10' < '9'`. Il suffit de caster vers le type voulu. L'opérateur `->` renvoie du JSON, pas un type numérique directement comparable."
+  },
+  {
+   "text": "Tu veux retrouver rapidement toutes les notifications dont le payload contient `{\"kind\":\"match\"}`, sur une table volumineuse. Quel choix convient ?",
+   "choices": [
+    "Stocker la colonne en `JSON`, qui garde le texte exact et se lit plus vite puisqu'il n'est pas décomposé.",
+    "Stocker la colonne en `JSONB` et créer un index `GIN` sur `payload`, qui accélère l'opérateur `@>`.",
+    "Stocker la colonne en `TEXT` et chercher avec `LIKE '%match%'`, qui utilise automatiquement un index.",
+    "Stocker la colonne en `JSONB` sans index, car la décomposition binaire suffit à rendre `@>` instantané."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`JSONB` est décomposé à l'écriture et peut être indexé ; un index `GIN` accélère `@>`. `JSON` est réanalysé à chaque lecture et n'est pas indexable de la même façon. Sans index, `@>` parcourt toute la table malgré le format binaire."
+  },
+  {
+   "text": "Tu conçois `notifications` : le destinataire, l'auteur de l'action (avec une clé étrangère vers `auth_accounts`) et l'identifiant de conversation d'un message. Quels placements respectent la règle de conception ?",
+   "choices": [
+    "`actor_id` en colonne, car il a besoin d'une clé étrangère, une contrainte impossible à poser sur un champ JSON.",
+    "`actor_id` dans `payload`, pour que `cpp-notify` ne connaisse aucune colonne propre à matcha.",
+    "`conversation_id` dans `payload`, car c'est un détail variable selon le type, qui ne sert pas à filtrer.",
+    "`conversation_id` en colonne `NOT NULL`, car chaque ligne de la table doit avoir ce détail renseigné."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Les données structurantes, comme celles qui portent une clé étrangère, restent en colonnes. Les détails variables et secondaires, comme `conversation_id` qui n'existe que pour les messages, vont dans le JSON. Une colonne `NOT NULL` serait fausse pour les likes ou les visites."
+  }
+ ]
+}

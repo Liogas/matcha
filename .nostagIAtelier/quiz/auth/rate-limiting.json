@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un développeur écrit `INCR` puis `EXPIRE` comme deux commandes Redis séparées. Le processus plante entre les deux au premier essai d'un compte. Que se passe-t-il, et quelle solution retenir ?",
+   "choices": [
+    "Le compteur est remis à zéro automatiquement au redémarrage de Redis",
+    "L'essai est perdu, ce qui est sans conséquence pour le blocage",
+    "La clé n'expire jamais et le compte reste bloqué ; il faut un script Lua atomique",
+    "Redis refuse le deuxième `INCR` ; il faut ajouter un verrou applicatif"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Sans expiration, la clé garde son compteur indéfiniment et finit par bloquer le compte pour toujours. Redis exécute un script en entier sans l'interrompre, ce qui rend `INCR` et `EXPIRE` atomiques."
+  },
+  {
+   "text": "Un attaquant teste un même mot de passe sur 1000 comptes depuis une seule IP. Le limiteur par couple compte et IP suffit-il ?",
+   "choices": [
+    "Oui, chaque compte a sa propre limite qui bloque l'attaque",
+    "Non, aucun couple n'atteint son seuil ; la limite par IP de Nginx couvre ce cas",
+    "Non, il faudrait remplacer le limiteur par couple par une limite par compte seule",
+    "Oui, Redis agrège automatiquement les essais de tous les comptes d'une même IP"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Chaque couple ne reçoit qu'un essai, donc aucun compteur ne dépasse le seuil : c'est une pulvérisation de mots de passe. La limite de 5 requêtes par minute par IP côté Nginx la bloque, d'où l'intérêt des deux étages."
+  },
+  {
+   "text": "On discute du choix de la clé du limiteur. Quelles affirmations sont exactes ?",
+   "choices": [
+    "Une clé par IP seule bloque tous les utilisateurs d'un réseau d'entreprise partageant une adresse",
+    "Une clé par compte seule empêche toute tentative de verrouiller la victime",
+    "Une clé par compte seule permet à un attaquant de verrouiller la victime exprès",
+    "Une clé par IP est la seule façon d'éviter des emails en clair dans Redis"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Chaque choix simple a un défaut : l'IP partagée pénalise des innocents, et le compte seul permet un verrouillage volontaire. Le couple est le compromis du code. Les emails en clair se évitent par un hachage dans la clé, quel que soit le choix."
+  },
+  {
+   "text": "Le serveur lit `X-Real-IP` sans aucun contrôle, et un attaquant change cet en-tête à chaque requête de login. Quel est l'effet sur le limiteur ?",
+   "choices": [
+    "Redis refuse les clés trop nombreuses et bloque l'attaquant",
+    "Le limiteur est contourné : chaque requête semble venir d'une IP différente",
+    "Seul Nginx est touché, le limiteur Redis ne dépend pas de l'IP",
+    "Les compteurs expirent plus vite, sans conséquence sur la protection"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le limiteur est aussi fiable que l'adresse qu'il reçoit. Si l'IP est falsifiable, chaque essai tombe dans un nouveau compteur et le seuil n'est jamais atteint. Il faut donc ne faire confiance qu'aux proxies de confiance."
+  }
+ ]
+}

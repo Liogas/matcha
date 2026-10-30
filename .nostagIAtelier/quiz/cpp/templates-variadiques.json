@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Tu déclares `template <class... Args> Result<Rows> query(std::string_view sql, const Args &...args);` dans `db.hpp`, mais tu écris son corps dans `db.cpp`. Tout compile, puis l'édition de liens échoue dès qu'un autre fichier appelle `query(sql, id, nom)`. Quelle est la cause ?",
+   "choices": [
+    "Le fichier appelant ne voit pas le corps du template, donc le compilateur ne peut pas générer `query<int64_t, std::string>`.",
+    "Un paquet de paramètres ne peut pas être déclaré dans un en-tête, il doit toujours rester dans un `.cpp`.",
+    "Il manque `virtual` devant `query`, car l'éditeur de liens cherche la fonction dans la table des fonctions virtuelles.",
+    "Le compilateur ne sait pas déduire `Args` quand `sql` est un `std::string_view`, il faut le préciser à la main."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Un template est un modèle recopié par le compilateur pour chaque combinaison de types, et il ne peut le faire que s'il voit la définition à l'endroit de l'appel. C'est pourquoi les templates vivent dans les en-têtes. Le problème ne vient ni du paquet de paramètres ni de la déduction des types."
+  },
+  {
+   "text": "Dans `pg::params`, tu écris `(result.add(args), ...);` pour trois arguments `a`, `b` et `c`. Que garantit cette écriture ?",
+   "choices": [
+    "Elle est déroulée en `result.add(a), result.add(b), result.add(c)`, appelés de gauche à droite.",
+    "Les parenthèses extérieures sont obligatoires : sans elles, la fold expression ne compile pas.",
+    "Elle génère une récursion de templates, comme avant C++17, avec une fonction par argument.",
+    "L'ordre d'appel n'est pas défini : le compilateur peut très bien évaluer `c` avant `a`."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Le fold remplace la récursion d'avant C++17 : il déroule le paquet avec l'opérateur virgule, qui impose l'ordre de gauche à droite. Les parenthèses extérieures font partie de la syntaxe. Penser que l'ordre est libre est faux ici, justement grâce à la virgule."
+  },
+  {
+   "text": "Dans `Params::add<T>`, un collègue remplace `if constexpr (is_optional<T>)` par un simple `if (is_optional<T>)`. Que se passe-t-il quand on appelle `add(7)` avec un `int` ?",
+   "choices": [
+    "Ça compile : le `if` est évalué à l'exécution et la branche `optional` n'est jamais prise pour un `int`.",
+    "Ça ne compile pas : `*value` est invalide pour un `int`, car toutes les branches doivent compiler pour tous les types.",
+    "Ça compile mais le binaire grossit, car les trois branches sont recopiées pour chaque type utilisé.",
+    "Ça ne compile pas : `if` est interdit dans un template, seul `if constexpr` y est accepté."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Avec un `if` ordinaire, le compilateur doit compiler toutes les branches pour `T = int`, y compris `add(*value)`, ce qui échoue. `if constexpr` écarte les branches inutiles à la compilation. Un `if` simple reste autorisé dans un template, mais il ne convient pas ici."
+  },
+  {
+   "text": "Pour mocker la base dans les tests, tu veux rendre `query` virtuelle dans l'interface. Le compilateur refuse. Quelle conception respecte la fiche ?",
+   "choices": [
+    "Garder `query` template : elle convertit les valeurs en `Params`, puis appelle une fonction `execute` non template et virtuelle.",
+    "Déclarer `query` virtuelle avec un paquet de paramètres, en limitant le nombre d'arguments à 16 par une constante.",
+    "Déplacer `query` dans le `.cpp` pour que le compilateur n'instancie qu'une version et la place dans la table virtuelle.",
+    "Écrire une surcharge virtuelle de `query` pour chaque combinaison de types utilisée dans le projet."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "La table des fonctions virtuelles a une taille fixe, alors qu'un template peut générer un nombre illimité de versions : les deux sont incompatibles. On fait donc deux niveaux, le template convertit puis passe la main à une fonction virtuelle non template. Les autres pistes recréent le même problème ou une liste ingérable."
+  }
+ ]
+}

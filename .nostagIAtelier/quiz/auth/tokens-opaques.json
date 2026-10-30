@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Le lien de reset de mot de passe est consommé par un `SELECT ... WHERE used_at IS NULL`, suivi plus tard d'un `UPDATE used_at`. Deux clics simultanés réussissent tous les deux. Quelle correction appliquer ?",
+   "choices": [
+    "Refaire un second `SELECT` juste avant l'`UPDATE` pour revérifier que le token est toujours libre.",
+    "Un seul `UPDATE ... WHERE token_hash = $1 AND used_at IS NULL ... RETURNING` : une ligne renvoyée signifie un succès.",
+    "Ajouter un petit délai aléatoire avant chaque `UPDATE`, pour que les deux requêtes ne se chevauchent plus.",
+    "Vérifier `used_at` côté application après l'`UPDATE`, puis annuler l'opération si la valeur existait déjà."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Avec une seule instruction, la seconde transaction attend, puis réévalue `used_at IS NULL`, devenu faux. Un second `SELECT` ou un délai laissent la fenêtre de course ouverte. La vérification doit être atomique dans la base."
+  },
+  {
+   "text": "Tu écris la génération d'un token de reset de mot de passe en C++. Quelle source d'aléa utiliser ?",
+   "choices": [
+    "`randombytes_buf` de libsodium, qui lit l'aléa du système.",
+    "`std::mt19937` initialisé avec l'heure courante, pour obtenir assez de bits.",
+    "`rand()` appelé plusieurs fois et concaténé jusqu'à atteindre 64 caractères.",
+    "Le SHA-256 de l'identifiant du compte, qui donne une valeur unique par utilisateur."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Seul un aléa cryptographique est imprévisible. `rand()` et `std::mt19937` sont déterministes : quelques valeurs observées permettent de prédire les suivantes. Un hash de l'identifiant est lui aussi prévisible."
+  },
+  {
+   "text": "La table `password_reset_tokens` fuit. Les tokens y sont stockés sous forme de `SHA-256(token)`. Que peut faire l'attaquant ?",
+   "choices": [
+    "Rien d'immédiat : il a des empreintes, pas les tokens, et un token aléatoire résiste au dictionnaire.",
+    "Coller les empreintes dans des liens de reset, puisque le serveur compare justement ces empreintes.",
+    "Retrouver les tokens sans peine, car SHA-256 étant rapide, il se renverse facilement.",
+    "Prédire les futurs tokens à partir des empreintes, car elles révèlent le générateur d'aléa."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Le lien contient le token en clair, que le serveur hache avant de chercher. Avec seulement l'empreinte, l'attaquant ne peut pas construire le lien. Et 256 bits aléatoires ne se retrouvent pas par force brute."
+  },
+  {
+   "text": "Des utilisateurs disent que leur lien de vérification d'email est déjà marqué comme utilisé quand ils cliquent pour la première fois. Quelles réponses de la fiche s'appliquent ?",
+   "choices": [
+    "Un client de messagerie ou un antivirus a ouvert le lien automatiquement et consommé le token.",
+    "Une page intermédiaire avec un bouton impose un POST, donc une intention réelle de l'utilisateur.",
+    "Le token expire trop vite : il suffit d'allonger sa durée de vie pour éviter ce problème.",
+    "Deux tokens ont la même empreinte SHA-256, ce qui marque le second comme déjà utilisé."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Une action déclenchée par un simple GET peut être consommée par un robot avant l'utilisateur. Un bouton qui envoie un POST sépare l'ouverture du lien de la consommation. Allonger la durée n'y change rien, et une collision SHA-256 est irréaliste."
+  }
+ ]
+}

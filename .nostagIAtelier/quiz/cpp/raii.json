@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Dans le code d'un like, la connexion est prise avec `pool.take()` puis rendue à la main avec `pool.giveBack(c)` à deux endroits. Quand `insererMatch` lève une exception, la transaction reste ouverte et la connexion est perdue. Quelle est la bonne correction ?",
+   "choices": [
+    "Ajouter un `try/catch` autour de `insererMatch` qui fait `ROLLBACK` et `giveBack`, en gardant le reste du code",
+    "Envelopper la connexion et la transaction dans des objets locaux dont les destructeurs rendent la connexion et annulent la transaction",
+    "Remplacer l'exception par un code de retour `false` dans `insererMatch`, pour que le code existant passe par le chemin du `ROLLBACK`",
+    "Agrandir le pool de quatre à vingt connexions, pour que les fuites ne vident plus le pool"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Avec des objets RAII sur la pile, le nettoyage est écrit une seule fois et s'exécute à la sortie du bloc, quelle qu'elle soit, y compris par exception. Un `try/catch` ajoute une troisième copie du nettoyage, qu'il faudra encore penser à maintenir partout. Agrandir le pool ne fait que retarder la panne."
+  },
+  {
+   "text": "Dans `~Transaction`, l'appel au `ROLLBACK` échoue et le code relance l'erreur avec `throw`. Le destructeur s'exécute alors qu'une autre exception est en cours de propagation. Que se passe-t-il, et que faire ?",
+   "choices": [
+    "Les deux exceptions sont fusionnées et l'appelant reçoit la dernière ; il suffit de la rattraper plus haut",
+    "Le programme s'arrête avec `std::terminate` ; il faut journaliser l'échec dans le destructeur et continuer",
+    "L'exception du destructeur est ignorée par le langage, donc le `throw` est inoffensif ici",
+    "Le programme s'arrête avec `std::terminate` ; il faut retirer le `noexcept` du destructeur pour autoriser le `throw`"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Une seconde exception qui sort d'un destructeur pendant le déroulement de pile provoque `std::terminate`. Depuis C++11 les destructeurs sont `noexcept` par défaut, donc retirer ce mot-clé ne règle rien et rend le programme plus fragile. La bonne approche est de journaliser l'échec du `ROLLBACK` dans le destructeur et de continuer."
+  },
+  {
+   "text": "Un développeur écrit `std::lock_guard<std::mutex>{_mutex};` au début d'une section critique, puis modifie une structure partagée. Les tests de charge montrent des corruptions. Quelle est la cause ?",
+   "choices": [
+    "Le `lock_guard` ne verrouille qu'au premier accès à la structure partagée, pas à sa construction",
+    "Le verrou est pris mais jamais rendu, ce qui devrait provoquer un blocage et non une corruption",
+    "L'objet n'a pas de nom : c'est un temporaire, détruit au `;`, donc le mutex est libéré avant la modification",
+    "Le `lock_guard` est copié lors de la construction, et la copie libère le mutex immédiatement"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un temporaire est détruit à la fin de l'instruction : le mutex est verrouillé puis déverrouillé sur la même ligne, et la modification se fait sans protection. Il faut donner un nom à l'objet, par exemple `std::lock_guard lock(_mutex);`, pour qu'il vive jusqu'à la fin du bloc."
+  },
+  {
+   "text": "Dans un bloc, on déclare `auto tx = pool.begin();` puis `std::lock_guard lock(_mutex);`, puis on lève `std::runtime_error`. Que se passe-t-il à la sortie du bloc ?",
+   "choices": [
+    "`tx` est détruit en premier et le `ROLLBACK` s'exécute sous le mutex, encore verrouillé",
+    "`lock` est détruit en premier et libère le mutex, puis `tx` est détruit et exécute le `ROLLBACK` hors verrou",
+    "Les deux destructeurs s'exécutent dans un ordre non spécifié par le langage",
+    "Seul `lock` est détruit, car l'exception interrompt la destruction des autres objets locaux"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Les objets locaux sont détruits dans l'ordre inverse de leur création, y compris pendant le déroulement de pile. Le `lock_guard`, créé en dernier, libère donc le mutex avant que `tx` n'exécute son `ROLLBACK`. Si les déclarations étaient inversées, le `ROLLBACK` serait exécuté sous verrou."
+  }
+ ]
+}

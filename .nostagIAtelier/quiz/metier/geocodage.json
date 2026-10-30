@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Le jour de la soutenance, le réseau de la salle est instable et l'application géocode les villes via Nominatim. Que faire pour que la saisie manuelle d'une ville marche quand même ?",
+   "choices": [
+    "Garder Nominatim seul, en ajoutant un délai plus long entre les requêtes.",
+    "Mettre en cache les réponses Nominatim uniquement, sans table locale, pour limiter les appels.",
+    "Imposer le GPS à tous les utilisateurs et retirer la saisie de ville.",
+    "Charger le fichier GeoNames `cities15000` dans un `TableGeocoder`, avec Nominatim en secours éventuel."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Une dépendance réseau est un risque : la table locale est rapide, hors ligne et fiable. Les deux géocodeurs respectent `IGeocoder`, donc on peut essayer la table d'abord puis le service en secours. Un cache seul ne sert à rien tant qu'une ville n'a pas encore été interrogée avec succès."
+  },
+  {
+   "text": "Au chargement, la table indexe `saint etienne` (normalisé). Un utilisateur saisit `SAINT ETIENNE` et le géocodeur répond « introuvable ». Quelle est l'erreur probable ?",
+   "choices": [
+    "Le fichier GeoNames ne contient pas de villes avec des tirets.",
+    "La recherche n'applique pas la même normalisation que l'indexation, donc les clés ne coïncident pas.",
+    "L'`unordered_map` est sensible à l'ordre des insertions et doit être triée.",
+    "La saisie doit être faite en minuscules par l'utilisateur, c'est à lui de respecter le format."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Normaliser à l'indexation mais pas à la recherche est une erreur fréquente. La même chaîne de transformations (minuscules, sans accents, tirets en espaces, espaces simplifiés) doit s'appliquer des deux côtés. Demander à l'utilisateur un format précis n'est pas acceptable."
+  },
+  {
+   "text": "L'utilisateur saisit `Paris`. Le fichier contient Paris en France et Paris au Texas. Quelle(s) stratégie(s) la fiche propose-t-elle ?",
+   "choices": [
+    "Garder par défaut la ville la plus peuplée.",
+    "Demander un pays à l'utilisateur pour lever l'ambiguïté.",
+    "Renvoyer une erreur dans tous les cas, car le nom est ambigu.",
+    "Prendre la première ville lue dans le fichier, l'ordre étant stable."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "En cas d'homonymes, on garde la ville la plus peuplée ou on demande un pays. Au chargement, quand un nom existe déjà, on conserve la plus peuplée. Prendre la première ligne donnerait un résultat arbitraire, et refuser systématiquement bloquerait une saisie qui est obligatoire."
+  },
+  {
+   "text": "Un utilisateur saisit `Trifouillis`, une ville absente du fichier. Que doit renvoyer l'API ?",
+   "choices": [
+    "Les coordonnées `(0, 0)` pour que le matching continue malgré tout.",
+    "Une erreur 500, car la ville n'existe pas dans la base.",
+    "Un succès sans position, en laissant la localisation vide.",
+    "Un `NotFound` traduit en 404, avec un message clair invitant à essayer une grande ville proche."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "La saisie de la localisation est requise, donc elle doit se conclure. Un 404 avec message clair permet à l'utilisateur de réessayer. Des coordonnées bidon fausseraient le matching, et un 500 signalerait à tort une panne du serveur."
+  }
+ ]
+}

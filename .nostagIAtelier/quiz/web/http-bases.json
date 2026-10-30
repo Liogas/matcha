@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Le JWKS ne répond plus. Les jetons des utilisateurs sont valides mais invérifiables, et le serveur répond `401`. Que se passe-t-il côté front, et que faut-il répondre ?",
+   "choices": [
+    "Le front affiche une erreur de formulaire ; `400` serait plus juste",
+    "Le front tente `/refresh` puis déconnecte tout le monde ; `503` laisserait la session intacte",
+    "Le front réessaie en boucle sans effet ; `500` serait plus juste, car c'est un bug",
+    "Le front déconnecte seulement les nouveaux utilisateurs ; `403` serait plus juste"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Un `401` signale un défaut d'authentification, donc le front essaie de se rafraîchir puis déconnecte, alors que la panne vient du serveur. Avec `503`, le front affiche « réessaie plus tard » et la session reste intacte. Le code de statut est un contrat."
+  },
+  {
+   "text": "Une réponse se perd en route et le front rejoue automatiquement la requête. Dans lesquels de ces cas est-ce sans risque ?",
+   "choices": [
+    "`PUT /api/profile` avec le profil complet",
+    "`POST /api/messages` qui envoie un nouveau message",
+    "`DELETE /api/profiles/7/like`",
+    "`POST /api/profiles/7/report` qui crée un signalement"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "PUT et DELETE sont idempotents : répéter donne le même état final. Rejouer un POST peut créer un second message ou un second signalement."
+  },
+  {
+   "text": "Un utilisateur authentifié, avec un jeton valide, tente de liker un profil alors qu'il n'a pas de photo. Quel statut renvoyer ?",
+   "choices": [
+    "`401`, car l'action n'est pas autorisée pour cet utilisateur",
+    "`403`, car il est authentifié mais l'action lui est interdite",
+    "`404`, car la photo de profil est introuvable",
+    "`409`, car son état de profil est en conflit avec l'action"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`403` signifie « authentifié mais interdit ». `401` pousserait le front à tenter un refresh puis à déconnecter un utilisateur qui est pourtant bien identifié. Confondre `401` et `403` est une erreur fréquente."
+  },
+  {
+   "text": "Un utilisateur double-clique sur « retirer le like », donc `DELETE /api/profiles/7/like` arrive deux fois. La seconde fois, le like n'existe plus. Que répondre ?",
+   "choices": [
+    "`404`, car la ressource demandée n'existe plus",
+    "`200` avec `{\"error\":\"not found\"}` dans le corps",
+    "`409`, car deux suppressions successives sont en conflit",
+    "`204`, car l'état voulu, pas de like, est déjà atteint"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "DELETE est idempotent : le résultat attendu est atteint, donc `204` convient. Répondre `404` compliquerait le front en cas de double clic, sans aucun bénéfice. Un `200` avec une erreur dans le corps fait partie des erreurs fréquentes."
+  }
+ ]
+}

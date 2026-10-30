@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Une requête `WITH inserted AS (INSERT INTO profile_likes ...), reciprocal AS (SELECT ... FROM profile_likes WHERE ...) INSERT INTO profile_matches ...` doit créer un match quand deux personnes se likent. A et B likent exactement en même temps, et aucun match n'apparaît. Quelles explications sont correctes ?",
+   "choices": [
+    "Chaque instruction travaille sur la photo prise à son début, qui ne contient pas encore le like de l'autre.",
+    "Dans une même instruction, `reciprocal` ne voit pas non plus la ligne que `inserted` vient d'écrire.",
+    "`reciprocal` s'exécute avant `inserted`, et inverser l'ordre des deux CTE corrigerait le problème.",
+    "PostgreSQL ignore les CTE d'écriture quand un `SELECT` voisin lit la même table."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Toutes les parties d'une instruction voient le même état de la base, pris au début. Le like de l'autre transaction n'y est pas, et celui que `inserted` écrit non plus. Compter sur l'ordre d'exécution des CTE d'écriture est justement une erreur fréquente."
+  },
+  {
+   "text": "Un CTE appelle une fonction très coûteuse, et la requête principale le référence deux fois. Tu veux être sûr que ce calcul n'est fait qu'une fois. Que fais-tu ?",
+   "choices": [
+    "Rien : un CTE est toujours calculé une seule fois, quelle que soit la version.",
+    "Tu écris `AS MATERIALIZED` pour forcer le calcul unique.",
+    "Tu remplaces le CTE par une sous-requête imbriquée, qui est toujours calculée une fois.",
+    "Tu ajoutes `RETURNING` au CTE pour figer son résultat."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Depuis PostgreSQL 12, un CTE simple est fusionné dans la requête principale, donc croire qu'il est toujours calculé une fois est faux. `AS MATERIALIZED` impose le calcul unique. Une sous-requête imbriquée ou `RETURNING` n'offrent pas cette garantie."
+  },
+  {
+   "text": "Dans la requête des suggestions, un collègue remplace `LEFT JOIN communs x USING (account_id)` par un simple `JOIN`. Que se passe-t-il ?",
+   "choices": [
+    "Les profils compatibles qui n'ont aucun tag commun disparaissent du résultat.",
+    "Ils restent dans le résultat, avec `tags_communs` à `NULL` au lieu de 0.",
+    "Le `COALESCE` devient inutile, car `n` ne peut plus être `NULL`.",
+    "La requête échoue, car `USING` n'accepte que `LEFT JOIN`."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Un `JOIN` simple ne garde que les profils présents des deux côtés, donc ceux sans tag commun sont perdus. Comme chaque ligne restante a un `n`, le `COALESCE` ne sert plus à rien. C'est le `LEFT JOIN` qui garde ces profils, et le `COALESCE` qui remplace `NULL` par 0."
+  },
+  {
+   "text": "Dans une même instruction, un CTE exécute `UPDATE t SET n = 2 WHERE id = 1` (la valeur actuelle est 1), et le `SELECT` principal lit `n` dans `t`. Que lit-il, et comment voir la nouvelle valeur ?",
+   "choices": [
+    "Il lit 2, car le CTE d'écriture s'exécute avant le `SELECT` principal.",
+    "Il lit 1, et on obtient 2 en lisant le résultat de `RETURNING n` dans le CTE.",
+    "Il lit 1, et on obtient 2 en ajoutant `AS MATERIALIZED` au CTE.",
+    "Il lit 2 seulement si le CTE d'écriture est déclaré en premier dans le `WITH`."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le `SELECT` lit la photo du début d'instruction, donc l'ancienne valeur 1. Seul `RETURNING` expose la ligne modifiée aux autres parties de la requête. `MATERIALIZED` ou l'ordre de déclaration ne créent pas d'étape dans le temps."
+  }
+ ]
+}

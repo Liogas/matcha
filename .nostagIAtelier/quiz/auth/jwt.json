@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un attaquant envoie un jeton dont l'en-tête dit `alg: HS256`, signé en HMAC avec la clé publique du serveur comme secret. Quelle parade empêche le jeton de passer ?",
+   "choices": [
+    "Lire `alg` dans l'en-tête et choisir l'algorithme de vérification correspondant",
+    "Imposer RS256 dans le vérificateur, quelle que soit la valeur de l'en-tête",
+    "Garder la clé publique secrète pour que personne ne puisse forger de HMAC",
+    "Chiffrer le payload pour que l'attaquant ne puisse pas le recopier"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "L'en-tête est fourni par le client, donc on ne doit pas lui faire confiance pour choisir l'algorithme. Le serveur impose RS256 et rejette le reste. Faire confiance à `alg` est précisément ce qui rend l'attaque possible."
+  },
+  {
+   "text": "Un utilisateur se déconnecte, mais quelqu'un avait copié son JWT juste avant. Que peut faire cette personne ?",
+   "choices": [
+    "Rien : la déconnexion invalide le JWT côté serveur",
+    "Agir jusqu'à l'expiration du refresh token",
+    "Agir jusqu'à `exp`, soit 15 minutes au plus",
+    "Agir jusqu'au prochain appel de l'utilisateur légitime"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le serveur ne consulte rien pour vérifier un JWT : il reste valide jusqu'à `exp`. La déconnexion ne révoque que le refresh token. Une révocation immédiate demanderait une liste consultée à chaque requête, ce qui retire une partie de l'intérêt du JWT."
+  },
+  {
+   "text": "Lors d'une revue de code, quelles modifications posent problème vis-à-vis des bonnes pratiques JWT ?",
+   "choices": [
+    "Passer le JWT dans l'URL de la connexion WebSocket",
+    "Garder le JWT en mémoire JavaScript côté front",
+    "Mettre dans le JWT le rôle de l'utilisateur, qu'un admin peut modifier",
+    "Limiter la durée du JWT à 15 minutes avec un refresh token"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Une URL finit dans les logs, et un droit stocké dans le jeton reste périmé jusqu'à `exp`. Garder le JWT en mémoire et limiter sa durée sont au contraire les pratiques recommandées."
+  },
+  {
+   "text": "Un développeur place l'adresse postale de l'utilisateur dans le payload du JWT, en pensant que la signature la protège. Pourquoi est-ce une erreur ?",
+   "choices": [
+    "Le Base64URL chiffre le contenu, mais avec un algorithme trop faible",
+    "Le payload n'est lisible que par le serveur, mais il devient trop volumineux",
+    "Le serveur doit interroger la base pour lire le payload, ce qui annule l'intérêt",
+    "La signature empêche la modification, mais le contenu reste lisible par tous"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "La signature garantit l'intégrité, pas la confidentialité : rien n'est chiffré et n'importe qui peut décoder les deux premières parties. Aucun secret ni donnée sensible ne doit donc s'y trouver."
+  }
+ ]
+}

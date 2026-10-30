@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Dans la fixture, la transaction est stockée dans un `std::optional<pg::Transaction>`, créé dans `SetUp` et réinitialisé dans `TearDown`. Pourquoi ce choix ?",
+   "choices": [
+    "Une `Transaction` ne peut pas exister vide ni être réaffectée : `optional` permet de la créer et de la détruire aux moments voulus.",
+    "Parce que `optional` valide la transaction automatiquement à sa destruction.",
+    "Parce que `optional` rend la transaction partageable entre plusieurs tests en parallèle.",
+    "Parce que `optional` empêche `BEGIN` d'être envoyé avant que le test ne démarre."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "La durée de vie doit être contrôlée : la destruction de la `Transaction` déclenche le `ROLLBACK`. `optional` permet cela sans exiger de constructeur vide. Elle n'est évidemment pas validée, et aucun partage n'est en jeu."
+  },
+  {
+   "text": "Un test insère une ligne, attend 2 secondes, insère une seconde ligne, puis compare leurs dates générées avec `NOW()`. Il les trouve identiques. Pourquoi, et que faire ?",
+   "choices": [
+    "La base ignore les secondes ; il faut stocker les dates en texte.",
+    "Dans une transaction, `NOW()` renvoie le début de la transaction ; il faut utiliser `clock_timestamp()`.",
+    "Le `ROLLBACK` remet les horloges à zéro ; il faut valider la transaction.",
+    "Le `sleep` n'a pas fonctionné ; il faut l'augmenter à 5 secondes."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`NOW()` est figé au début de la transaction et reste identique pendant tout le test. `clock_timestamp()` donne l'heure réelle. Valider la transaction annulerait justement l'intérêt de la technique."
+  },
+  {
+   "text": "Un test écrit `EXPECT_EQ(*id, 1)` après avoir créé un compte dans la transaction annulée. Il passe la première fois, puis échoue aux lancements suivants. Quelle est la cause ?",
+   "choices": [
+    "Le `ROLLBACK` n'a pas fonctionné, donc les anciens comptes sont encore là.",
+    "Le test doit utiliser `ASSERT_EQ` à la place pour que l'identifiant soit remis à zéro.",
+    "Les séquences `BIGSERIAL` ne sont pas annulées : il ne faut jamais tester une valeur précise d'id.",
+    "`findById` lit le cache du pool, qui garde l'ancien identifiant."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Les séquences ne reviennent pas en arrière avec le rollback, donc l'id continue de grandir d'un lancement à l'autre. On vérifie plutôt que le compte est retrouvé via l'id obtenu, sans présumer sa valeur."
+  },
+  {
+   "text": "Quels tests ne peuvent pas utiliser la fixture en transaction annulée, et demandent une vraie validation ?",
+   "choices": [
+    "Un test vérifiant que `findById` retrouve un compte créé juste avant.",
+    "Un test vérifiant qu'un doublon d'email renvoie une erreur, avec un `SAVEPOINT` par requête.",
+    "Un test de `commit()` lui-même.",
+    "Un test d'un trigger différé, qui ne se déclenche qu'au commit."
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Si la transaction n'est jamais validée, `commit()` et un trigger différé ne s'exécutent jamais, donc rien n'est testé. Les deux autres cas fonctionnent dans la transaction, la violation de contrainte étant gérée grâce au `SAVEPOINT`."
+  }
+ ]
+}

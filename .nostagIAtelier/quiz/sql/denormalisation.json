@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un service met à jour `fame_rating` avec `fame = fame + 2` à chaque like. Après quelques mois, des notes sont fausses, car un chemin de code a oublié de gérer l'`unlike`. Que changes-tu ?",
+   "choices": [
+    "Tu relis les totaux depuis les tables sources et tu recalcules la note, qui se corrige alors d'elle-même.",
+    "Tu gardes l'incrémentation, car `n = n + 1` perd des mises à jour en concurrence.",
+    "Tu transformes `fame_rating` en colonne générée sur `matcha_profiles`.",
+    "Tu supprimes la colonne et tu recalcules la note à chaque recherche, sur tous les profils."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Une incrémentation dérive : l'erreur d'un `unlike` oublié reste pour toujours. Un recalcul depuis la source se corrige à l'événement suivant. Une colonne générée ne peut pas lire d'autres tables, et tout recalculer à chaque recherche annule l'intérêt de la dénormalisation."
+  },
+  {
+   "text": "Parmi ces valeurs à stocker, laquelle convient à une colonne `GENERATED ALWAYS AS (...) STORED` ?",
+   "choices": [
+    "`like_count`, le nombre de lignes de `profile_likes` pour un profil.",
+    "`display_name`, formé de `first_name || ' ' || last_name` dans la même ligne.",
+    "`fame_rating`, calculé depuis les likes, les matchs et les visites.",
+    "`last_visit_at`, la date maximale des visites d'un profil."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Une colonne générée ne peut dépendre que de la même ligne. Dans ce cas la base la calcule et aucune incohérence n'est possible. Les autres valeurs viennent d'autres tables : elles demandent un trigger, un recalcul applicatif ou périodique."
+  },
+  {
+   "text": "Un service met à jour `like_count` en deux requêtes : `SELECT like_count ...`, puis `UPDATE ... SET like_count = $1 + 1`. Deux likes arrivent en même temps sur le même profil, et le compteur n'augmente que de 1. Quelle correction choisis-tu ?",
+   "choices": [
+    "Tu lis la valeur deux fois avant d'écrire, pour vérifier qu'elle n'a pas bougé.",
+    "Tu déplaces la lecture dans un CTE, qui s'exécute avant l'`UPDATE`.",
+    "Tu ajoutes un index sur `like_count` pour accélérer la lecture.",
+    "Tu écris `UPDATE matcha_profiles SET like_count = like_count + 1 WHERE account_id = $1` en une seule requête."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Lire puis écrire en deux requêtes perd des mises à jour, car chaque transaction part de la valeur qu'elle a lue. L'incrément fait dans l'`UPDATE` lui-même est sûr. Un CTE ne crée pas d'étape dans le temps, et un index ne change rien à la concurrence."
+  },
+  {
+   "text": "Trois chemins de code (API, script d'import, outil d'admin) écrivent dans `profile_likes`, et l'un d'eux oublie de mettre à jour `like_count`. Quelles solutions règlent cet oubli, et à quel prix ?",
+   "choices": [
+    "Un trigger `AFTER INSERT` : aucun chemin ne peut l'oublier, mais la logique est cachée et plus difficile à tester.",
+    "Un recalcul applicatif dans chaque service : aucun chemin ne peut l'oublier, puisque le code est visible.",
+    "Un recalcul périodique en arrière-plan : l'oubli est rattrapé, mais la valeur affichée est en retard.",
+    "Une colonne générée sur `profile_likes` : la base la tient à jour, au prix d'une écriture plus lente."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Le trigger s'exécute quel que soit le chemin, et le recalcul périodique rattrape tout, avec du retard. Le recalcul applicatif, lui, oblige chaque chemin à y penser, donc l'oubli reste possible. Une colonne générée ne peut pas compter des lignes d'une autre table."
+  }
+ ]
+}

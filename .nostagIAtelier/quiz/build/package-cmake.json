@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Tous les tests passent dans le monorepo, mais un projet externe qui fait `find_package(cpp-pg)` échoue car PostgreSQL est introuvable. Quelles réponses de la fiche s'appliquent ?",
+   "choices": [
+    "Le fichier `cpp-pgConfig.cmake` n'est jamais lu en sous-projet, donc le `find_dependency(PostgreSQL)` manquant n'est pas détecté.",
+    "Un projet `tests/package-consumer`, qui installe la lib puis compile contre elle, aurait révélé le problème.",
+    "Les tests unitaires ne compilent pas avec libpq, d'où l'erreur, qu'il faut corriger dans le code C++.",
+    "Il suffit d'augmenter la version du package pour que `find_package` retrouve toutes les dépendances."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "En sous-projet, les cibles existent déjà dans le même build, donc le Config.cmake n'est pas utilisé. Seul un consommateur externe passe par `find_package`. La version n'a aucun effet sur la recherche des dépendances."
+  },
+  {
+   "text": "Que permet de détecter un projet comme `tests/package-consumer`, compilé contre la lib installée dans un dossier temporaire ?",
+   "choices": [
+    "Un en-tête public qui n'a pas été installé.",
+    "Un chemin absolu vers les sources, écrit dans les propriétés exportées.",
+    "Une fuite mémoire dans le pool de connexions.",
+    "Une requête SQL incorrecte dans `Connection.cpp`."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Le consommateur n'a accès qu'à ce qui a été installé et exporté. Il révèle donc les en-têtes oubliés, les `find_dependency` manquants et les chemins qui pointent encore vers les sources. Il ne teste pas le comportement runtime de la lib."
+  },
+  {
+   "text": "Pourquoi écrire `$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>` à côté de `$<INSTALL_INTERFACE:include>` ?",
+   "choices": [
+    "Le chemin des en-têtes diffère entre une compilation depuis les sources et l'usage de la version installée.",
+    "CMake peut ainsi choisir automatiquement entre une lib statique et une lib dynamique selon le contexte.",
+    "Le premier sert au compilateur et le second à l'éditeur de liens, qui ne lisent pas les mêmes dossiers.",
+    "Cela remplace l'alias `cpp-pg::cpp-pg`, qui n'est plus nécessaire pour les consommateurs."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Depuis les sources, les en-têtes sont dans le dépôt. Après installation, ils sont dans le dossier d'installation. Les deux expressions décrivent le bon chemin selon le contexte, sans lien avec le type de lib ni avec l'éditeur de liens."
+  },
+  {
+   "text": "Tu veux que le code CMake d'un consommateur soit identique, qu'il utilise `add_subdirectory(cpp-pg)` ou `find_package(cpp-pg)`. Que mettre en place ?",
+   "choices": [
+    "Deux noms de cibles différents, choisis avec un `if` selon que la lib est trouvée ou non.",
+    "L'alias `add_library(cpp-pg::cpp-pg ALIAS cpp-pg)`, plus `NAMESPACE cpp-pg::` dans l'export installé.",
+    "Une copie des sources de la lib dans chaque projet, pour ne plus dépendre de l'installation.",
+    "Un fichier `cpp-pgConfig.cmake` écrit à la main, qui redéfinit la cible sous un nom unique."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "L'alias donne le nom `cpp-pg::cpp-pg` en sous-projet, et le namespace de l'export donne le même nom après installation. Le consommateur écrit donc `target_link_libraries(... cpp-pg::cpp-pg)` dans les deux cas."
+  }
+ ]
+}

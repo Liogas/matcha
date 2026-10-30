@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Pour le like croisé, tu prends un verrou par paire d'utilisateurs, mais en `REPEATABLE READ`. B attend le verrou pendant que A valide son like, puis B ne voit pas le like d'Alice et le match n'est pas créé. Pourquoi ?",
+   "choices": [
+    "Le verrou consultatif est libéré au `COMMIT` de A, avant que le like de A soit réellement visible pour les autres transactions.",
+    "La photo de B a été prise à sa première instruction, la prise du verrou, donc avant le `COMMIT` de A.",
+    "`REPEATABLE READ` interdit à une transaction de lire les lignes insérées par une autre, même après le `COMMIT` de celle-ci.",
+    "B a mal écrit sa requête : il faudrait refaire un `SELECT` dans une nouvelle transaction pour voir le like."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "En `REPEATABLE READ`, la photo est prise à la première instruction puis conservée. Ici cette première instruction est l'attente du verrou, donc B lit une vieille photo. En `READ COMMITTED`, l'instruction suivante prend une photo neuve et voit le like."
+  },
+  {
+   "text": "En `READ COMMITTED`, deux transactions font chacune `SELECT fame_rating` (elles lisent 10), puis `UPDATE ... SET fame_rating = 11`. Le résultat final est 11 au lieu de 12. Quelles corrections sont valables ?",
+   "choices": [
+    "Passer la base en `SERIALIZABLE` et supprimer toute gestion d'erreur, car PostgreSQL rejoue tout seul les transactions annulées.",
+    "Calculer dans l'`UPDATE`, avec `SET fame_rating = fame_rating + 1`, qui relit la ligne à jour après l'attente du verrou.",
+    "Ajouter un second `SELECT` juste avant l'`UPDATE`, ce qui garantit que la valeur lue est encore la bonne.",
+    "Verrouiller la ligne avec `SELECT ... FOR UPDATE` avant de lire, pour que la seconde transaction attende la première."
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Lire puis écrire une valeur calculée côté client perd une mise à jour, car les deux transactions partent de 10. L'`UPDATE` relatif ou `FOR UPDATE` forcent la seconde à travailler sur la ligne à jour. `SERIALIZABLE` n'est pas rejoué automatiquement : l'application doit gérer `40001`."
+  },
+  {
+   "text": "Tu passes une opération en `SERIALIZABLE` pour résoudre le like croisé sans verrou. Quelle précaution est indispensable côté application ?",
+   "choices": [
+    "Rejouer toute la transaction quand PostgreSQL renvoie `40001`, sinon des utilisateurs verront des erreurs au hasard.",
+    "Rejouer uniquement la dernière instruction qui a échoué, puisque les précédentes de la transaction sont déjà validées.",
+    "Ignorer l'erreur `40001`, car elle signale seulement un avertissement et la transaction est quand même validée.",
+    "Ouvrir une seconde transaction `READ COMMITTED` en parallèle, pour comparer ses résultats avec ceux de la première."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Quand PostgreSQL ne peut pas garantir un résultat équivalent à une exécution en série, il annule une transaction avec `40001`. Elle est annulée en entier, donc il faut rejouer toute la transaction, et pas seulement sa dernière instruction."
+  },
+  {
+   "text": "T1 exécute `SELECT nb FROM t` et lit 10. T2 fait `UPDATE t SET nb = 20` et valide. T1 relit `nb` et obtient 20. Quelles affirmations sont justes ?",
+   "choices": [
+    "C'est une lecture sale, et PostgreSQL l'autorise en `READ COMMITTED` parce que T2 n'a pas encore validé.",
+    "C'est une lecture non répétable, autorisée en `READ COMMITTED` où chaque instruction prend une nouvelle photo.",
+    "En `REPEATABLE READ`, T1 lirait encore 10 au second `SELECT`, car sa photo est gardée depuis la première instruction.",
+    "En `REPEATABLE READ`, T1 verrait 20 aussi, mais PostgreSQL l'annulerait ensuite avec `40001` au `COMMIT`."
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "En `READ COMMITTED`, T2 avait validé avant le second `SELECT`, donc ce n'est pas une lecture sale : c'est une lecture non répétable, permise à ce niveau. En `REPEATABLE READ`, la photo reste fixe, donc T1 relit 10. Le `40001` n'apparaît que si T1 tente de modifier une ligne changée depuis sa photo."
+  }
+ ]
+}

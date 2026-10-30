@@ -1,0 +1,59 @@
+{
+ "questions": [
+  {
+   "text": "Le limiteur de connexion doit faire `INCR` puis `EXPIRE` sur la clé au premier essai. Pourquoi passer par un script Lua plutôt que deux appels séparés depuis le C++ ?",
+   "choices": [
+    "Lua est plus rapide que les commandes natives, donc le débit du limiteur augmente nettement",
+    "Le script s'exécute d'un bloc : aucun autre client ne peut s'intercaler entre `INCR` et `EXPIRE`",
+    "Lua écrit le compteur sur disque, ce qui le rend durable après un redémarrage de Redis",
+    "Sans script, `INCR` ne serait pas atomique entre plusieurs threads et perdrait des incréments"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le script groupe les deux étapes en une seule exécution, sans intercalation possible. `INCR` seul est déjà atomique, car Redis exécute ses commandes une par une. Lua n'apporte ni durabilité ni gain de vitesse particulier ici."
+  },
+  {
+   "text": "Après le déploiement, un développeur lance `KEYS *` en production pour lister les clés, et toute l'application se met à ramer. Que doit-on retenir ?",
+   "choices": [
+    "Redis exécute les commandes l'une après l'autre : un parcours long de `KEYS *` bloque tous les autres clients",
+    "`KEYS *` supprime les clés expirées pendant son passage, ce qui verrouille la base le temps du nettoyage",
+    "Il faut utiliser `SCAN`, qui parcourt les clés par étapes au lieu de tout bloquer d'un coup",
+    "Il suffit de mettre `KEYS *` dans un script Lua, ce qui le rend atomique et donc inoffensif"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Redis tourne sur un seul thread, donc une commande lente fait attendre tout le monde. `SCAN` répartit le parcours sur plusieurs appels courts. Un script Lua s'exécute aussi d'un bloc, ce qui bloquerait encore plus."
+  },
+  {
+   "text": "Tu dois choisir où stocker plusieurs données de l'application. Lesquelles conviennent à Redis plutôt qu'à PostgreSQL ?",
+   "choices": [
+    "Le compteur d'essais de connexion sur une fenêtre de 5 minutes, avec expiration automatique",
+    "L'historique des messages privés entre deux utilisateurs, consulté plusieurs mois plus tard",
+    "La présence en ligne, posée avec une expiration et rafraîchie régulièrement par le heartbeat",
+    "Le profil de chaque utilisateur, qui doit rester la source de vérité même après un incident"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Redis convient aux données rapides, temporaires et reconstruisibles, comme un compteur d'essais ou une présence. Les messages et les profils sont des données dont la perte est grave : elles restent dans PostgreSQL, qui est la source de vérité."
+  },
+  {
+   "text": "La présence est stockée sans expiration, et passe hors ligne quand l'utilisateur se déconnecte. Le serveur plante en pleine journée. Quelles affirmations sont justes ?",
+   "choices": [
+    "Redis détecte la perte du client et repasse tout seul la présence à hors ligne",
+    "Personne n'écrit la déconnexion : les utilisateurs restent en ligne indéfiniment",
+    "Les clés expirent seulement après un redémarrage de Redis, qui vide les clés temporaires",
+    "Avec `SET presence:7 1 EX 60` rafraîchi par le heartbeat, la clé disparaît seule sans rafraîchissement"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Quand le serveur plante, le code de déconnexion ne s'exécute pas, et l'état reste figé. Avec un TTL, c'est l'absence de rafraîchissement qui suffit à faire disparaître la clé. Redis ne sait pas qu'un client a disparu."
+  }
+ ]
+}

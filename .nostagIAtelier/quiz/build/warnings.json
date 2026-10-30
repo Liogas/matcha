@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Pour que le projet soit plus strict, un collègue ajoute `-Werror` directement dans `cmake/Warnings.cmake` d'une lib destinée à être publiée. Quel est le problème ?",
+   "choices": [
+    "`-Werror` ne fonctionne que si `-Wpedantic` n'est pas activé en même temps.",
+    "Un nouveau compilateur peut ajouter des warnings, et le consommateur de la lib ne pourrait plus compiler.",
+    "`-Werror` empêche CMake d'inclure les en-têtes tiers en `-isystem`.",
+    "Un preset ne peut pas définir `CMAKE_COMPILE_WARNING_AS_ERROR` si la lib l'impose déjà."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Imposer `-Werror` dans la lib donne aux utilisateurs une contrainte qu'ils ne contrôlent pas. On le place dans le preset, côté développeur. Les options `-Wall`, `-Wextra` et `-Wpedantic` restent dans `Warnings.cmake`."
+  },
+  {
+   "text": "La compilation échoue avec `comparison of integer expressions of different signedness [-Werror=sign-compare]` sur `if (size == vec.size())`, où `size` est un `int`. Quelle est la meilleure réaction ?",
+   "choices": [
+    "Ajouter `#pragma GCC diagnostic ignored` autour de la ligne.",
+    "Ajouter `-Wno-sign-compare` dans `Warnings.cmake` pour tout le projet.",
+    "Écrire un cast C `(int)vec.size()` pour faire taire le message.",
+    "Se demander quel type est correct : ici, `size` devrait être un `std::size_t`."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Un warning signale souvent un vrai problème, et il faut corriger la cause plutôt que le symptôme. Choisir le bon type supprime l'ambiguïté. Les pragmas et les options globales cachent le message sans rien régler, et un cast aveugle masque une éventuelle perte de données."
+  },
+  {
+   "text": "Un warning vient d'un en-tête d'une bibliothèque tierce que tu ne peux pas modifier, et il casse le build à cause de `-Werror`. Que fais-tu ?",
+   "choices": [
+    "Tu inclus cet en-tête en `-isystem`, ce que CMake fait pour les cibles importées.",
+    "Tu retires `-Werror` du preset, puisque la règle ne vaut que pour ton code.",
+    "Tu copies l'en-tête dans ton dépôt pour y corriger le warning.",
+    "Tu ajoutes `-Wno-all` globalement pour cette bibliothèque et toutes les autres."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Les en-têtes inclus en `-isystem` sont considérés comme des en-têtes système : leurs warnings sont muets, sans affaiblir les règles pour ton propre code. Retirer `-Werror` ou désactiver `-Wall` ferait perdre la garantie « zéro warning » partout."
+  },
+  {
+   "text": "Un `switch` sur une `enum class` traite chaque valeur et possède aussi un `default`. Tu ajoutes ensuite une valeur à l'énumération sans toucher au `switch`. Que se passe-t-il, et que faire ?",
+   "choices": [
+    "`-Wswitch` signale le cas manquant, donc le `default` est utile pour le garder.",
+    "Le compilateur ne dit rien, car le `default` masque `-Wswitch` : mieux vaut retirer le `default`.",
+    "Le compilateur signale une erreur de type, car la nouvelle valeur n'est pas convertible.",
+    "`-Wswitch` signale le cas manquant uniquement avec `-Wpedantic`."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Sans `default`, `-Wswitch` désigne chaque `switch` à compléter quand l'énumération grandit. Le `default` fait taire ce contrôle et le nouveau cas tombe silencieusement dans une branche générique. Le contrôle est actif avec `-Wall`, pas seulement avec `-Wpedantic`."
+  }
+ ]
+}

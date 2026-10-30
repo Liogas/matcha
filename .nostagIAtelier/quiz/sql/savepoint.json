@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un test de repository est exécuté dans une transaction annulée à la fin. Après un `create` qui échoue sur un doublon (`23505`), la requête suivante répond `current transaction is aborted`. Que faut-il faire ?",
+   "choices": [
+    "Faire un `COMMIT` juste après l'erreur, pour sortir de l'état d'échec avant la requête suivante",
+    "Poser un `SAVEPOINT` avant chaque requête et faire `ROLLBACK TO` si elle échoue",
+    "Relancer un `BEGIN` dans le test, ce qui remplace la transaction en échec par une neuve",
+    "Faire un `RELEASE SAVEPOINT` après l'erreur, ce qui annule la requête fautive"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le `ROLLBACK TO SAVEPOINT` annule ce qui suit le point et sort la transaction de l'état d'échec, sans la terminer. `RELEASE` oublie le point sans rien annuler, et un `COMMIT` ou un nouveau `BEGIN` casserait l'idée d'une seule transaction annulée à la fin."
+  },
+  {
+   "text": "Que contient la table `t` à la fin ?\n\n```sql\nBEGIN;\nINSERT INTO t VALUES (1);\nSAVEPOINT s;\nINSERT INTO t VALUES (2);\nRELEASE SAVEPOINT s;\nINSERT INTO t VALUES (3);\nCOMMIT;\n```",
+   "choices": [
+    "1 et 3, car le savepoint isole la ligne 2",
+    "1, 2 et 3",
+    "Seulement 1, car le savepoint crée une transaction qui n'est pas validée",
+    "Aucune ligne, car `RELEASE` annule la sous-transaction"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`RELEASE SAVEPOINT` oublie simplement le point, sans annuler. Les trois insertions restent dans la transaction et sont validées par `COMMIT`. Seul `ROLLBACK TO` aurait annulé la ligne 2."
+  },
+  {
+   "text": "Un import traite 100 000 lignes dans une seule transaction. Un dev pose un `SAVEPOINT` avant chaque ligne pour ignorer les doublons. Que lui dire ?",
+   "choices": [
+    "C'est la bonne méthode : un savepoint par ligne garantit l'atomicité de chaque ligne sans coût",
+    "Chaque savepoint crée une sous-transaction, et des milliers dégradent les performances",
+    "Si le but est d'ignorer les conflits d'unicité, `ON CONFLICT` est plus simple et plus rapide",
+    "Il faut remplacer les savepoints par des `COMMIT` successifs, car ils sont gratuits"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "PostgreSQL met en œuvre les savepoints comme des sous-transactions, ce qui coûte cher en grand nombre. Pour un doublon prévu, `ON CONFLICT` évite l'erreur et n'empoisonne pas la transaction. Le savepoint n'est pas gratuit, et des `COMMIT` changeraient les garanties."
+  },
+  {
+   "text": "Dans une transaction, on fait `INSERT` (A), `SAVEPOINT s`, un `INSERT` en échec, `ROLLBACK TO SAVEPOINT s`, puis `COMMIT`. Quel est le résultat ?",
+   "choices": [
+    "Tout est annulé, car `ROLLBACK TO` met fin à la transaction",
+    "`COMMIT` échoue, car la transaction est déjà terminée après le `ROLLBACK TO`",
+    "Seul ce qui suit le savepoint est validé, le reste est annulé",
+    "A est validé : la transaction a continué après le `ROLLBACK TO`, puis `COMMIT` valide tout ce qui reste"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "`ROLLBACK TO SAVEPOINT` n'annule que ce qui suit le point et laisse la transaction ouverte et utilisable. Le `COMMIT` valide donc tout ce qui n'a pas été annulé, y compris A. Croire que le savepoint termine la transaction ou ne valide que la partie suivante est l'erreur fréquente."
+  }
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Pour trier des profils par proximité, un développeur applique Pythagore directement sur les latitudes et longitudes en degrés. Pourquoi les résultats sont-ils faux ?",
+   "choices": [
+    "Les latitudes sont limitées à 90 degrés, ce qui fausse les différences de longitude.",
+    "Pythagore ne fonctionne que sur des angles exprimés en radians.",
+    "Un degré de longitude couvre moins de distance quand on s'éloigne de l'équateur, donc l'erreur grandit avec la latitude.",
+    "Pythagore donne toujours une distance trop grande, par construction du calcul."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un degré de longitude vaut environ 111 km à l'équateur, 71 km à Paris et 0 au pôle. Le `cos(lat)` de Haversine corrige cette différence, ce que Pythagore ne fait pas. L'erreur n'est donc pas constante mais s'aggrave vers les pôles."
+  },
+  {
+   "text": "Ta fonction `haversineKm` renvoie plusieurs milliers de kilomètres pour Paris-Lyon, alors que la valeur attendue est d'environ 391 km. Quelle(s) cause(s) vérifier en premier ?",
+   "choices": [
+    "L'oubli de la conversion des degrés en radians avant `sin` et `cos`.",
+    "L'inversion de la latitude et de la longitude dans le `GeoPoint`.",
+    "Le rayon de la Terre, qui doit être exprimé en mètres.",
+    "Le type `double`, qui est trop précis pour les petites distances."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Oublier les radians et inverser latitude et longitude sont deux erreurs fréquentes qui donnent des distances absurdes. Le rayon de 6371 est bien en km, puisque le résultat est lui aussi en km. C'est `float` qui serait insuffisant, pas `double`."
+  },
+  {
+   "text": "Pourquoi utiliser la forme haversine plutôt que la loi des cosinus pour afficher des distances comme « à 3 km » ?",
+   "choices": [
+    "Elle évite d'utiliser le rayon de la Terre dans le calcul.",
+    "Elle tient compte de l'aplatissement de la Terre et donne une erreur nulle.",
+    "Elle reste précise pour de petites distances, alors que l'`acos` proche de 1 perd sa précision.",
+    "Elle n'utilise que des opérations simples, donc elle s'exécute en SQL sans fonction."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Pour des points proches, la loi des cosinus appelle `acos` près de 1, où la précision numérique s'effondre. La forme à base de `sin²(x/2)` reste stable. L'erreur de l'ordre de 0,5 % due à l'aplatissement subsiste dans les deux cas."
+  },
+  {
+   "text": "Un test avec (0, 179) et (0, -179) donne bien 222 km. Un collègue veut quand même ajouter un cas particulier pour l'antiméridien dans `haversineKm`. Que lui répondre ?",
+   "choices": [
+    "C'est nécessaire : sans lui, Δlon vaudrait 358° et le résultat serait d'environ 39 000 km.",
+    "C'est inutile : le sinus est périodique, donc `sin(179°)` vaut `sin(1°)` et la formule retrouve les 2° réels.",
+    "C'est utile seulement près de l'équateur, car ailleurs `cos(lat)` annule l'erreur.",
+    "C'est inutile uniquement parce que le type `double` normalise automatiquement les longitudes."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Δlon vaut 358°, mais `sin(Δlon/2) = sin(179°)` est égal à `sin(1°)`. La formule retombe donc sur les 2° d'écart réels, soit environ 222 km, sans cas particulier. Le piège de l'antiméridien concerne la bounding box, pas Haversine."
+  }
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "`cpp-pg` utilise libpq dans ses fichiers `.cpp`, mais `Pool.hpp` expose `core::Result` de cpp-core. Quelle déclaration est la bonne ?",
+   "choices": [
+    "`target_link_libraries(cpp-pg PUBLIC cpp-core::cpp-core PRIVATE PostgreSQL::PostgreSQL)`",
+    "`target_link_libraries(cpp-pg PRIVATE cpp-core::cpp-core PUBLIC PostgreSQL::PostgreSQL)`",
+    "`target_link_libraries(cpp-pg PUBLIC cpp-core::cpp-core PUBLIC PostgreSQL::PostgreSQL)`",
+    "`target_link_libraries(cpp-pg PRIVATE cpp-core::cpp-core PRIVATE PostgreSQL::PostgreSQL)`"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Un type qui apparaît dans un en-tête public impose une dépendance PUBLIC : c'est le cas de `core::Result`. libpq n'apparaît que dans les `.cpp`, donc PRIVATE suffit et évite de l'imposer aux utilisateurs."
+  },
+  {
+   "text": "Le backend lie `cpp-pg` et la compilation échoue avec `core/Result.hpp: No such file or directory`. Quelle est la cause la plus probable ?",
+   "choices": [
+    "libpq est déclarée PUBLIC dans `cpp-pg`, ce qui pollue les chemins d'inclusion du backend.",
+    "`cpp-core` est déclaré PRIVATE dans `cpp-pg`, alors que `Pool.hpp` inclut `Result.hpp`.",
+    "L'alias `cpp-pg::cpp-pg` manque, donc CMake ne propage plus les chemins d'inclusion.",
+    "`CMakeLists.txt` n'est pas réexécuté pendant la compilation, donc les chemins ne sont pas mis à jour."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Un chemin d'inclusion PRIVATE sert à compiler `cpp-pg` seulement et n'est pas hérité. Le backend inclut `Pool.hpp`, qui inclut `Result.hpp` : la dépendance doit être PUBLIC pour se propager."
+  },
+  {
+   "text": "libpq est PRIVATE pour la lib statique `cpp-pg`, et le backend lie `cpp-pg`. Que se passe-t-il pour le backend ?",
+   "choices": [
+    "libpq n'apparaît nulle part dans son build, puisqu'elle est PRIVATE et qu'il ne s'en sert pas.",
+    "CMake ajoute quand même libpq à l'édition de liens, car un `.a` ne contient pas ses dépendances.",
+    "Les chemins d'inclusion de libpq ne sont pas hérités par le backend, qui n'en a pas besoin.",
+    "CMake échoue à la configuration, car une dépendance PRIVATE ne peut pas exister dans une lib statique."
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "PRIVATE concerne la compilation : les chemins d'inclusion de libpq ne remontent pas au backend. Mais l'archive `.a` ne contient pas le code de libpq, donc le programme final doit tout de même la lier."
+  },
+  {
+   "text": "Pour faire disparaître une erreur d'en-tête introuvable, un développeur ajoute `include_directories(...)` à la racine du projet. Quel est le problème ?",
+   "choices": [
+    "Le chemin n'est visible que par le backend, donc `cpp-pg` ne compile plus.",
+    "CMake ignore cette commande dès qu'une cible utilise `target_link_libraries`.",
+    "Toutes les cibles héritent du chemin : on perd la distinction PUBLIC/PRIVATE et chacun voit tout.",
+    "Le chemin n'est utilisé qu'à l'édition de liens, donc l'erreur du compilateur resterait la même."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Une commande globale s'applique à toutes les cibles, sans exprimer qui a besoin de quoi. Le CMake moderne passe par les propriétés des cibles, qui se propagent selon PUBLIC, PRIVATE ou INTERFACE."
+  }
+ ]
+}

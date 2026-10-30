@@ -1,0 +1,59 @@
+{
+ "questions": [
+  {
+   "text": "Pour la requête `SELECT ... FROM messaging_messages WHERE conversation_id = $1 ORDER BY id DESC LIMIT 50`, quel index choisis-tu ?",
+   "choices": [
+    "`(id DESC, conversation_id)` : on parcourt dans l'ordre du tri, puis on filtre.",
+    "Deux index séparés, l'un sur `conversation_id`, l'autre sur `id`.",
+    "`(conversation_id, id DESC)` : on trouve la conversation, puis on lit dans l'ordre.",
+    "`(conversation_id)` seul : le tri des lignes trouvées reste peu coûteux."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "L'égalité vient d'abord, puis la colonne de tri : PostgreSQL trouve la conversation et lit 50 entrées déjà ordonnées, sans tri. Deux index séparés ou un index sur la seule égalité obligent à trier ou à combiner. Mettre `id` en premier ne permet pas de cibler la conversation."
+  },
+  {
+   "text": "Tu as un index sur `email`, mais `WHERE LOWER(email) = $1` reste lente. Quelles affirmations sont justes ?",
+   "choices": [
+    "L'index sur `email` ne sert pas, car la colonne est transformée par `LOWER`.",
+    "Il faut créer un index d'expression sur `LOWER(email)`.",
+    "Il faut remplacer l'index par un index GIN sur `email`.",
+    "L'index est inutilisé parce que la table est trop grande pour un B-tree."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Quand la colonne est transformée dans le filtre, l'index sur la valeur brute n'est pas utilisable. L'index d'expression stocke justement `LOWER(email)`. Un GIN sert aux tableaux, au JSONB ou aux trigrammes, et un B-tree supporte très bien les grandes tables."
+  },
+  {
+   "text": "Tu as un index composite sur `(a, b)`. Quelles requêtes en profitent bien ?",
+   "choices": [
+    "`WHERE b = 2 ORDER BY a`",
+    "`WHERE a = 1 ORDER BY b`, sans tri supplémentaire",
+    "`WHERE b = 2`",
+    "`WHERE a = 1 AND b = 2`"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "L'index est trié par `a`, puis par `b` à `a` égal, comme un annuaire par nom puis prénom. Il sert donc quand `a` est fixé, avec `b` en égalité ou en tri. Filtrer sur `b` seul est très peu utile, comme chercher un prénom dans un annuaire classé par nom."
+  },
+  {
+   "text": "Tu crées un index sur une table de 10 profils, et `EXPLAIN ANALYZE` montre quand même un `Seq Scan`. Quelles conclusions sont justes ?",
+   "choices": [
+    "L'index est mal créé : un `Seq Scan` signale toujours un index inutilisable.",
+    "Il faut supprimer l'index, car ce test prouve qu'il est inutile.",
+    "Sur une petite table, tout lire est plus rapide que de passer par l'index.",
+    "Un filtre qui garde une grande partie de la table donne aussi un `Seq Scan`, même avec un index."
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "PostgreSQL choisit le plan le moins cher : sur 10 lignes, ou quand le filtre garde presque tout, lire la table est plus rapide. Conclure sur 10 lignes est une erreur fréquente, et il faut tester sur un volume réaliste. Un `Seq Scan` n'est donc pas toujours un défaut."
+  }
+ ]
+}

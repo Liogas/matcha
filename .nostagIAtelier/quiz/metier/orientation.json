@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un filtre de suggestions ne regarde que ce que cherche l'utilisateur connecté. Une femme homosexuelle y voit des femmes hétérosexuelles qui ne s'intéressent pas à elle. Quelle règle corrige le problème ?",
+   "choices": [
+    "La compatibilité doit être vraie dans les deux sens : A cherche le genre de B et B cherche le genre de A.",
+    "Il faut retirer du filtre toutes les personnes hétérosexuelles quand l'utilisateur est homosexuel.",
+    "Il faut ne regarder que l'orientation de l'autre profil, puisque c'est lui qui doit être intéressé.",
+    "Il faut afficher les deux types de profils et laisser l'utilisateur choisir en cliquant."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Une relation de compatibilité est symétrique : `compatibles(A, B) = cherche(A, B) ET cherche(B, A)`. Ne regarder qu'un seul sens est l'erreur fréquente. Regarder seulement l'autre profil reproduirait le même défaut à l'envers."
+  },
+  {
+   "text": "Le filtre de compatibilité est appliqué en C++ sur les 20 lignes renvoyées par une requête avec `LIMIT 20`. Quel problème en résulte ?",
+   "choices": [
+    "Les profils incompatibles s'affichent quand même, car C++ ne peut pas les filtrer.",
+    "La requête devient plus lente, car PostgreSQL doit trier deux fois les résultats.",
+    "Les profils de la page suivante sont dupliqués dans la page courante.",
+    "Beaucoup de lignes sont retirées après coup, donc certaines pages sont presque vides."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "La pagination s'applique avant le filtre C++ : sur 20 lignes reçues, beaucoup peuvent être écartées. Le filtre doit être appliqué avant le `LIMIT`, donc dans la requête SQL."
+  },
+  {
+   "text": "La règle de compatibilité existe à la fois en C++ et en SQL. Quelle(s) pratique(s) évite(nt) que les deux versions divergent ?",
+   "choices": [
+    "Générer le fragment SQL à partir de la même table de règles que le C++.",
+    "Écrire la règle uniquement en SQL et supprimer la version C++ sans test.",
+    "Tester que le C++ et le SQL donnent les mêmes résultats sur toutes les combinaisons.",
+    "Copier la règle à la main dans les deux langages et relire le code avant chaque livraison."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Il y a peu de combinaisons, donc on peut soit générer le SQL depuis la table, soit comparer les deux implémentations sur chaque cas. Copier à la main sans test laisse les deux versions dériver au premier changement. Une règle sans test n'est pas fiable."
+  },
+  {
+   "text": "Un profil existant n'a aucune orientation renseignée (`NULL`). Comment le traiter dans le filtre de compatibilité ?",
+   "choices": [
+    "Comme non compatible avec tout le monde, par prudence.",
+    "Comme hétérosexuel, car c'est le cas le plus fréquent.",
+    "Comme bisexuel, car c'est la valeur par défaut demandée quand rien n'est renseigné.",
+    "Il faut exclure ce profil de la base tant que l'orientation n'est pas remplie."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le sujet prévoit un défaut bisexuel si rien n'est renseigné. Traiter `NULL` comme non compatible est une erreur fréquente : ces profils disparaîtraient des suggestions sans raison."
+  }
+ ]
+}

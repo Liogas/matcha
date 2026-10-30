@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Dans ton Dockerfile, un `COPY . .` de tout le backend précède `vcpkg install`. À chaque modification d'un `.cpp`, toutes les dépendances sont recompilées. Que corriges-tu ?",
+   "choices": [
+    "Tu copies seulement `vcpkg.json` avant l'installation, puis le reste du code après.",
+    "Tu supprimes la ligne `vcpkg install` et tu laisses CMake tout installer.",
+    "Tu ajoutes une `builtin-baseline` pour que Docker garde la couche en cache.",
+    "Tu mets `VCPKG_MANIFEST_INSTALL` à `ON` dans le preset pour éviter la réinstallation."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Docker réutilise une couche tant que ses entrées ne changent pas. En ne copiant que le manifeste avant l'installation, la couche coûteuse ne dépend plus des sources. La baseline fixe les versions mais n'influence pas le cache Docker."
+  },
+  {
+   "text": "Deux développeurs compilent le même projet à deux semaines d'écart et obtiennent des versions différentes de `libpq`. Quelle est la cause la plus probable ?",
+   "choices": [
+    "Le manifeste ne déclare pas de `builtin-baseline` qui fixe les versions.",
+    "La dépendance est déclarée avec une feature, ce qui rend la version aléatoire.",
+    "Le `toolchainFile` n'utilise pas `$env{VCPKG_ROOT}` mais un chemin relatif.",
+    "vcpkg ne compile pas les bibliothèques depuis leurs sources, il télécharge la dernière version."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "La `builtin-baseline` est un commit de vcpkg qui fige les versions de toutes les dépendances. Sans elle, la date de compilation influence ce qui est installé. Les features activent des options mais ne changent pas la version."
+  },
+  {
+   "text": "`find_package(PostgreSQL)` ne trouve pas la `libpq` installée par vcpkg, alors que le paquet est bien dans `vcpkg.json`. Que vérifies-tu en premier ?",
+   "choices": [
+    "Que `libpq` figure aussi dans la liste `features` de `curl`.",
+    "Que le preset renseigne bien le `toolchainFile` de vcpkg, pour que CMake sache où chercher.",
+    "Que le `CHANGELOG` mentionne la version de `libpq` utilisée.",
+    "Que `-Werror` est désactivé, car il bloque la recherche des paquets."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "C'est la toolchain vcpkg qui indique à CMake où chercher les paquets installés. Sans elle, `find_package` regarde seulement les emplacements système. Les warnings et le CHANGELOG n'interviennent pas dans cette recherche."
+  },
+  {
+   "text": "Tu ajoutes un paquet au `vcpkg.json` du backend, mais le build dans le conteneur ne le trouve pas, alors que `VCPKG_MANIFEST_INSTALL` est à `OFF` dans le preset. Quelle est l'explication ?",
+   "choices": [
+    "Le mode manifeste ne permet pas d'ajouter de paquet après la première installation.",
+    "Le paquet doit aussi être déclaré dans `CMakePresets.json` pour être pris en compte.",
+    "L'installation a eu lieu à la construction de l'image `deps`, qui n'a pas été reconstruite.",
+    "`OFF` impose de recompiler les dépendances à la main dans le conteneur de développement."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Avec `VCPKG_MANIFEST_INSTALL` à `OFF`, CMake n'installe rien : il suppose que l'étape précédente l'a déjà fait. Ajouter un paquet sans reconstruire l'image `deps` laisse donc l'installation obsolète. Le preset ne déclare pas les dépendances, c'est le rôle du manifeste."
+  }
+ ]
+}

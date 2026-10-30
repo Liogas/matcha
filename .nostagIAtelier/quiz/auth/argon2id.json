@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un collègue stocke `SHA-256(sel + mot_de_passe)` avec un sel unique par compte. La base fuit. Pourquoi est-ce encore insuffisant ?",
+   "choices": [
+    "SHA-256 est réversible : l'attaquant retrouve le mot de passe à partir du hash",
+    "Un sel stocké dans la base n'a aucun effet sur la sécurité",
+    "SHA-256 est conçu pour être rapide : une carte graphique teste des milliards d'essais par seconde",
+    "SHA-256 produit des hashs trop courts pour contenir un sel"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un hachage est à sens unique, mais SHA-256 est rapide, donc un dictionnaire entier passe en quelques heures. Argon2id impose un coût en temps et en mémoire à chaque essai, ce qui ruine l'attaquant et reste invisible pour l'utilisateur."
+  },
+  {
+   "text": "Un développeur veut stocker le sel dans un coffre séparé de la base, pour qu'il reste secret. Que lui réponds-tu ?",
+   "choices": [
+    "Bonne idée : sans sel secret, une table précalculée redevient utilisable",
+    "Inutile : le sel n'est pas secret, il est stocké avec le hash et force une attaque par compte",
+    "Il faut au contraire le même sel pour tous les comptes, afin de simplifier la vérification",
+    "Le secret global gardé hors de la base s'appelle le poivre : il est optionnel et complique la rotation"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Le sel rend les hashs différents d'un compte à l'autre et inutilise les tables précalculées, même s'il est lisible. Ce qu'on garde hors de la base est le poivre, pas le sel, et un sel commun annulerait son intérêt."
+  },
+  {
+   "text": "Tu veux passer la mémoire d'Argon2id de 64 Mo à 128 Mo. Que devient un hash existant `$argon2id$v=19$m=65536,t=2,p=1$...` ?",
+   "choices": [
+    "Il devient invalide : tous les utilisateurs doivent réinitialiser leur mot de passe",
+    "Il reste vérifiable, car la chaîne stocke les paramètres et le sel",
+    "Il reste vérifiable, mais seulement si les anciens paramètres sont gardés dans un fichier de config",
+    "Il faut le recalculer en masse, car le hash ne contient pas le sel"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "La chaîne contient l'algorithme, la version, la mémoire, le nombre de passes et le sel. `crypto_pwhash_str_verify` les relit, donc on peut renforcer les paramètres plus tard sans casser les anciens hashs."
+  },
+  {
+   "text": "Pendant une attaque, 200 tentatives de connexion arrivent en même temps et le serveur sature en mémoire et en CPU. Que faire ?",
+   "choices": [
+    "Passer à SHA-256, qui consomme beaucoup moins de ressources",
+    "Réduire la mémoire d'Argon2 à quelques Ko pour que chaque vérification soit instantanée",
+    "Garder les paramètres tels quels et ne rien limiter, la lenteur protège déjà",
+    "Ajouter un limiteur de débit, car chaque vérification coûte 64 Mo et du CPU"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Le coût d'Argon2id est voulu, mais il pèse aussi sur ton serveur : le limiteur borne le nombre de vérifications simultanées. Affaiblir les paramètres ou revenir à SHA-256 supprimerait la protection contre un attaquant qui a la base."
+  }
+ ]
+}

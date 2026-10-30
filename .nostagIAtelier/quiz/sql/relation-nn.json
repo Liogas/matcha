@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Pour gérer les tags, un collègue propose une colonne `tags TEXT` contenant `\"vegan,geek\"`. Quels problèmes réels cela pose-t-il ?",
+   "choices": [
+    "Le type `TEXT` est limité à 255 caractères, donc au plus quelques tags par profil",
+    "Trouver les profils `geek` ou compter les tags communs devient difficile, car la base ne voit pas la liste",
+    "Renommer un tag oblige à modifier du texte dans chaque ligne qui le contient",
+    "PostgreSQL refuse les virgules dans une colonne, ce qui oblige à choisir un autre séparateur"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Une liste dans une case est invisible pour la base : pas d'index, pas de jointure, pas de contrainte, et un renommage touche toutes les lignes. Les deux autres propositions sont fausses : `TEXT` n'a pas cette limite et les virgules sont acceptées."
+  },
+  {
+   "text": "Alice a `vegan` et `geek`, Bob a `geek`, Chloé a `vegan` et `geek`. On exécute l'auto-jointure des tags communs pour Alice (`me.profile_account_id = $1 AND other.profile_account_id <> $1`, `GROUP BY other.profile_account_id ORDER BY common DESC`). Quel résultat obtient-on ?",
+   "choices": [
+    "Bob 2, Chloé 1",
+    "Chloé 2, Bob 1",
+    "Chloé 3, Bob 1",
+    "Chloé 2, Bob 1, Alice 2"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Chloé partage deux tags avec Alice, Bob en partage un. Alice n'apparaît pas grâce à `other.profile_account_id <> $1` : sans cette condition, elle figurerait dans le résultat avec 2."
+  },
+  {
+   "text": "`PUT /api/profile/interests` exécute `DELETE` des liens du profil, puis `INSERT` des nouveaux. Le dernier `INSERT` échoue à cause d'une contrainte, sans transaction. Quel est l'état du profil ?",
+   "choices": [
+    "Les anciens tags sont restaurés automatiquement, car PostgreSQL annule l'ensemble des requêtes de la route",
+    "Le profil garde ses anciens tags, car un `DELETE` n'est validé qu'avec le `INSERT` suivant",
+    "Le profil se retrouve sans aucun tag : le `DELETE` a déjà été validé et rien ne le défait",
+    "Seul le tag fautif manque, les autres nouveaux tags ont été insérés normalement"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Sans transaction, chaque requête est validée séparément : le `DELETE` est définitif quand l'`INSERT` échoue. Il faut regrouper les trois requêtes dans une transaction pour que l'échec annule tout. Les autres réponses supposent une atomicité qui n'existe pas ici."
+  },
+  {
+   "text": "La table de liaison a pour clé primaire `(profile_account_id, interest_id)`. La requête « tous les profils ayant le tag X » est lente sur une grosse table. Quelle est la cause probable et la correction ?",
+   "choices": [
+    "La clé primaire n'aide que dans l'ordre `(profile_account_id, interest_id)` : il faut un index sur `interest_id`",
+    "La clé primaire sert dans les deux sens, donc le problème vient plutôt du `DISTINCT`",
+    "Il faut supprimer la clé primaire, car elle ralentit les lectures sur la table de liaison",
+    "Il faut stocker le nom du tag dans la table de liaison pour éviter la jointure"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "L'index de la clé primaire est trié d'abord par profil : chercher par `interest_id` seul ne peut pas l'exploiter efficacement. Un index sur `interest_id` règle le problème. Supprimer la clé primaire casserait l'unicité des liens, et dupliquer le nom réintroduirait le défaut de la normalisation."
+  }
+ ]
+}

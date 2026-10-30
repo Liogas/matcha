@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un développeur remplace `10 × log2(1 + likes)` par `likes` directement dans la note de popularité. Quel effet est à craindre ?",
+   "choices": [
+    "Un profil à 1000 likes écrase les autres, il est sans cesse mis en avant par le tri et gagne encore plus de likes.",
+    "La note devient négative pour les profils sans like, car le `1 +` n'est plus là pour l'éviter.",
+    "Les nouveaux profils progressent trop vite et atteignent la note de 100 après quelques likes.",
+    "Le recalcul n'est plus possible depuis les tables sources, car la somme dépend de l'historique."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Avec une somme, 1000 likes valent 100 fois plus que 10, et le tri amplifie cet avantage. Le logarithme a un rendement décroissant : il réduit l'écart et laisse leur chance aux autres profils. Le `1 +` sert à éviter `log(0)`, pas à empêcher une note négative."
+  },
+  {
+   "text": "Un utilisateur retire son like sur un profil, mais la note affichée de ce profil ne baisse pas. Quelle(s) correction(s) respecte(nt) la fiche ?",
+   "choices": [
+    "Ne rien changer : une note de popularité ne doit jamais diminuer, sinon elle devient imprévisible.",
+    "Recalculer seulement à la lecture du profil et ignorer les événements, pour limiter les écritures.",
+    "Décrémenter la note de 10 points à chaque unlike, quel que soit le nombre de likes.",
+    "Recalculer aussi sur `unlike`, en relisant les totaux depuis les tables sources plutôt qu'en les incrémentant."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "L'oubli du recalcul sur `unlike` est une erreur fréquente : à chaque événement (like, unlike, visite, signalement) la note doit être recalculée. Relire les totaux depuis les tables sources corrige toute dérive. Retirer 10 points fixes serait faux, puisque le logarithme donne des gains variables."
+  },
+  {
+   "text": "La note tient compte des visites uniques des 30 derniers jours. Un profil n'a plus été visité depuis deux mois et garde pourtant sa note élevée, puisqu'aucun événement ne la recalcule. Quelle(s) solution(s) convient/conviennent ?",
+   "choices": [
+    "Un recalcul périodique des notes.",
+    "Un recalcul à la lecture de la note.",
+    "Compter toutes les visites depuis la création du compte, sans fenêtre de temps.",
+    "Faire croître la note au fil du temps pour compenser les visites perdues."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Les visites anciennes sortent de la fenêtre sans qu'aucun événement ne se produise, donc il faut un recalcul périodique ou à la lecture. Supprimer la fenêtre ferait perdre le sens de « récent » et fausserait la note."
+  },
+  {
+   "text": "Avec la formule de la fiche, un profil incomplet a 15 likes, 3 matchs, 7 visites uniques et 1 signalement validé. Quelle note obtient-il ?",
+   "choices": [
+    "79",
+    "59",
+    "64",
+    "39"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Les likes donnent `10 × log2(16) = 40`, les matchs `15 × log2(4) = 30`, les visites `3 × log2(8) = 9`. Il n'y a pas de bonus de profil complet et le signalement retire 20. On obtient 40 + 30 + 9 - 20 = 59, soit 64 si le bonus de 5 s'appliquait, ce qui n'est pas le cas ici."
+  }
+ ]
+}

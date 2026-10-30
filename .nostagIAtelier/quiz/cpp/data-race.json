@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Deux onglets d'un même utilisateur se ferment en même temps et exécutent `_compteurs[id] -= 1;` sans protection. Le compteur passe de 2 à 1 au lieu de 0. Quelle est la cause ?",
+   "choices": [
+    "L'entier est trop petit pour être modifié correctement par deux threads à la fois",
+    "Le compilateur a supprimé l'une des deux soustractions parce qu'elles sont identiques",
+    "Les deux requêtes SQL se sont exécutées dans le mauvais ordre, ce qui est une race condition sans data race",
+    "La ligne lit, calcule puis écrit en plusieurs étapes, et les deux threads ont lu 2 avant que l'un des deux n'écrive"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Un `-=` n'est pas une action unique : c'est une lecture, un calcul et une écriture. Si deux threads lisent la même valeur avant d'écrire, une mise à jour est perdue. Le problème est en mémoire C++ et non dans l'ordre de requêtes SQL, et la taille de l'entier n'y change rien."
+  },
+  {
+   "text": "Un thread fait `donnee = 42; pret = true;` et un autre fait `while (!pret) {} use(donnee);`, avec `bool pret` ordinaire. Quelles corrections sont valides ?",
+   "choices": [
+    "Déclarer `pret` en `volatile bool`, ce qui force la lecture à chaque tour",
+    "Remplacer `pret` par `std::atomic<bool>`, avec écriture et lecture atomiques",
+    "Protéger l'écriture et la lecture de `pret` avec le même mutex",
+    "Ajouter un `sleep` court dans la boucle pour laisser le temps à l'écriture de se propager"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Il faut une synchronisation qui crée une relation « arrive avant » : un atomique ou un mutex utilisé des deux côtés. `volatile` ne synchronise rien en C++, et un `sleep` ne garantit ni la visibilité ni l'ordre des écritures. Protéger seulement l'écriture laisserait aussi un data race."
+  },
+  {
+   "text": "TSan ne signale rien sur le bug du like mutuel, alors que deux likes simultanés créent un résultat incohérent. Pourquoi, et que faire ?",
+   "choices": [
+    "TSan ne fonctionne qu'avec `-fsanitize=address`, il faut donc le combiner avec ASan pour voir le bug",
+    "Aucune mémoire C++ n'est partagée sans synchronisation : le problème est l'ordre des transactions dans PostgreSQL, qu'un test d'intégration à deux threads peut révéler",
+    "Le programme tourne trop lentement sous TSan, donc la fenêtre de concurrence disparaît et le bug ne s'y produit plus",
+    "Les accès sont protégés par un mutex qui masque le bug : il suffit de le retirer pour que TSan le détecte"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "C'est une race condition, pas un data race : chaque thread a sa connexion et ses objets, et le désordre se passe dans PostgreSQL, un processus que TSan n'observe pas. Il faut un test d'intégration avec deux threads et une vérification du résultat, par exemple le nombre de matchs. TSan ne se combine d'ailleurs pas avec ASan."
+  },
+  {
+   "text": "Tu veux utiliser TSan sur un projet déjà configuré avec ASan. Quelles pratiques sont justes ?",
+   "choices": [
+    "Créer un preset séparé avec `-fsanitize=thread`, car TSan ne se combine pas avec ASan",
+    "Activer les deux dans le même build pour gagner du temps, TSan et ASan étant complémentaires",
+    "Écrire un test qui lance plusieurs threads, car TSan ne voit que le code réellement exécuté",
+    "Lancer la suite existante à un seul thread : TSan déduit les accès concurrents à partir du code source"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "TSan instrumente les accès réellement exécutés, donc sans test multi-thread il n'a rien à comparer. Il est incompatible avec ASan et demande un preset à part, avec un programme 5 à 15 fois plus lent. Il ne fait pas d'analyse statique du code source."
+  }
+ ]
+}

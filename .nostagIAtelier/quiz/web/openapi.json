@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Tu ajoutes la route `POST /api/profiles/{id}/like` et tu comptes mettre à jour `docs/openapi.yaml` plus tard, quand tu auras un moment. Quelle pratique recommande la fiche ?",
+   "choices": [
+    "Mettre à jour le fichier chaque semaine, pour regrouper les changements",
+    "Générer le fichier à la main à la fin du projet, avant l'entretien",
+    "Modifier le fichier dans le même commit que la route, et le valider en CI",
+    "Laisser le README décrire les nouvelles routes, le YAML ne servant qu'aux outils"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un fichier écrit à la main dérive dès qu'on le repousse. La règle est de le modifier dans le même commit que la route, et de le valider en CI. Un README dispersé est justement le problème que le contrat veut résoudre."
+  },
+  {
+   "text": "Dans le fichier OpenAPI de `POST /api/profiles/{id}/like`, seules les réponses `200` et `403` sont décrites. Que reproche-t-on à cette spécification ?",
+   "choices": [
+    "Elle ne documente pas les erreurs communes comme `401` et `429`, que le front doit pourtant gérer",
+    "Elle devrait décrire un `200` par cas métier, comme « liké » et « match »",
+    "Elle devrait supprimer le `403`, qui relève d'une règle interne",
+    "Elle est correcte : un contrat ne décrit que les cas où l'action réussit"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Ne documenter que les cas réussis et oublier les erreurs communes comme `401` et `429` fait partie des erreurs fréquentes. Un contrat sert justement à ne pas deviner le comportement du serveur en cas d'échec."
+  },
+  {
+   "text": "Trois routes renvoient le même objet `{liked, matched}`. Comment éviter de répéter ce schéma dans le YAML ?",
+   "choices": [
+    "Le déclarer dans `components/schemas` et y renvoyer avec `$ref`",
+    "Le copier dans chaque réponse, pour que chaque route reste lisible seule",
+    "Le décrire une fois dans le champ `summary` de la première route",
+    "Le déplacer dans `securitySchemes`, qui est partagé par toutes les routes"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "`components/schemas` accueille les schémas réutilisables, et `$ref` permet de les référencer sans les répéter. `securitySchemes` sert à l'authentification, et `summary` n'est qu'un texte descriptif."
+  },
+  {
+   "text": "Tu veux indiquer dans le fichier OpenAPI que le like exige un jeton `Authorization: Bearer`. Comment le décrire ?",
+   "choices": [
+    "Ajouter un paramètre `Authorization` de type `path` à la route",
+    "Écrire « jeton requis » dans la `description` de la réponse `401`",
+    "Déclarer un `bearerAuth` dans `securitySchemes`, puis `security: [{bearerAuth: []}]` sur la route",
+    "Ajouter `bearerAuth` aux propriétés du schéma `LikeResult`"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "OpenAPI décrit l'authentification en deux temps : le schéma dans `components/securitySchemes`, puis son usage via `security` sur la route. Un texte libre n'est pas exploitable par les outils, et `LikeResult` ne décrit que le corps de la réponse."
+  }
+ ]
+}

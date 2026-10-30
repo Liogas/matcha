@@ -5,3 +5,8 @@
 tests/certs/test-key.pem
 /backend/build/
 /backend/.bash_history
+
+/.nostagIAtelier/site/
+/.nostagIAtelier/runs/*.log
+/.nostagIAtelier/layout.json
+/.nostagIAtelier/chat/

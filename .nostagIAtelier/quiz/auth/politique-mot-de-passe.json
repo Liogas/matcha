@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Vous définissez la politique de mot de passe d'un nouveau service en suivant le NIST SP 800-63B. Quelles règles retenir ?",
+   "choices": [
+    "Exiger une majuscule, un chiffre et un symbole",
+    "Vérifier le mot de passe contre une liste de mots compromis ou courants",
+    "Forcer un changement de mot de passe tous les 90 jours",
+    "Accepter des mots de passe d'au moins 64 caractères"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Le NIST recommande une liste de mots interdits et l'acceptation de longues phrases. Les règles de composition et l'expiration périodique poussent vers des motifs prévisibles comme `Password1!` ou `Printemps2026!`."
+  },
+  {
+   "text": "`DictionaryPasswordPolicy` contient `password` dans sa liste, mais `P4ssw0rd123` est accepté. Quelle est la cause la plus probable ?",
+   "choices": [
+    "La liste est chargée une seule fois au démarrage au lieu de chaque requête",
+    "La recherche est faite avant la normalisation (minuscules, chiffres de fin, leet speak)",
+    "Le `std::unordered_set` est trop lent pour comparer des chaînes de cette taille",
+    "La politique est injectée au lieu d'être codée en dur dans la route"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Il faut d'abord passer en minuscules, retirer les chiffres de fin et inverser le leet speak pour obtenir `password`, puis chercher dans la liste. Tester avant la normalisation laisse passer les variantes courantes. Le chargement unique et l'injection sont des choix corrects."
+  },
+  {
+   "text": "Le formulaire React refuse les mots de passe courants à l'inscription, et l'équipe considère la règle comme appliquée. Quels problèmes reste-t-il ?",
+   "choices": [
+    "Un appel direct à l'API avec `curl` contourne totalement le formulaire",
+    "La règle de la liste n'a pas besoin d'être vérifiée à chaque requête",
+    "Le reset et le changement de mot de passe ne sont pas couverts",
+    "React ne sait pas comparer un mot de passe à une liste de mots"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Seule la validation serveur est une garantie, car un client peut appeler l'API sans passer par le front. La règle doit aussi couvrir l'inscription, le reset et le changement de mot de passe : un seul oubli suffit à la faire tomber."
+  },
+  {
+   "text": "Vous voulez vérifier un mot de passe auprès de l'API HaveIBeenPwned sans le révéler. Comment procéder ?",
+   "choices": [
+    "Envoyer le SHA-1 complet et lire un booléen en réponse",
+    "Calculer le SHA-1, envoyer ses 5 premiers caractères, puis comparer les suffixes reçus localement",
+    "Envoyer le mot de passe en clair, car la connexion HTTPS suffit à le protéger",
+    "Envoyer les 5 premiers caractères du mot de passe et laisser le service deviner le reste"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Avec le k-anonymat, le service ne reçoit qu'un préfixe de hachage et renvoie tous les suffixes correspondants. La comparaison finale se fait chez vous. Envoyer le SHA-1 complet ou un préfixe du mot de passe expose bien davantage."
+  }
+ ]
+}

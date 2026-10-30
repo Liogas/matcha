@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Pour un rayon de 50 km autour de Paris, un développeur calcule `dLon = rayon / 111`, comme pour la latitude. Des profils situés à 40 km plein est n'apparaissent jamais dans les résultats. Quelle est la cause ?",
+   "choices": [
+    "Le rectangle est trop étroit en longitude : à cette latitude un degré de longitude vaut moins de 111 km, il manque le facteur `cos(latitude)`.",
+    "Le rectangle est trop large en latitude, donc l'index ne peut plus servir à filtrer les profils proches.",
+    "Haversine arrondit la distance vers le bas, ce qui écarte les profils à la limite du rayon de recherche.",
+    "La longitude doit être calculée avant la latitude, sinon les bornes du rectangle sont inversées."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Un degré de longitude fait `111 × cos(latitude)` km, soit environ 73 km à Paris. Avec 111 km, `dLon` est trop petit et le rectangle ne couvre plus tout le cercle : ce sont des faux négatifs, que Haversine ne peut plus rattraper puisqu'il ne voit que les candidats du rectangle."
+  },
+  {
+   "text": "Autour de la longitude 179 avec un rayon de 150 km, la requête `longitude BETWEEN 178 AND -179` ne renvoie aucun profil, alors que des profils existent à cet endroit. Quelle correction est la bonne ?",
+   "choices": [
+    "Remplacer par `longitude BETWEEN -179 AND 178` pour remettre les bornes dans l'ordre croissant.",
+    "Calculer `maxLon` sans le ramener dans l'intervalle, soit `BETWEEN 178 AND 181`.",
+    "Couper en deux plages : `(longitude >= 178 OR longitude <= -179)`.",
+    "Supprimer la condition sur la longitude et ne garder que celle sur la latitude."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le rectangle franchit l'antiméridien : la longitude saute de 180 à -180, donc `BETWEEN 178 AND -179` est toujours faux. Inverser les bornes sélectionnerait presque tout le globe. Il faut deux plages reliées par un `OR`. Une borne à 181 n'existe pas dans les données."
+  },
+  {
+   "text": "Pour gagner du temps, un collègue propose de retirer `distance_km(...) <= $7` de la requête et de ne garder que le `BETWEEN` sur latitude et longitude. Quelle conséquence aura ce changement ?",
+   "choices": [
+    "Des profils situés dans le rayon seront perdus, car le rectangle est plus petit que le cercle.",
+    "Les résultats seront corrects, mais la requête cessera d'utiliser l'index sur la latitude.",
+    "Les profils dans les coins du rectangle, au-delà du rayon, seront renvoyés comme s'ils étaient proches.",
+    "La requête échouera, car `BETWEEN` ne peut pas s'utiliser sans fonction de distance."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le rectangle contient tout le cercle mais aussi ses coins, qui sont trop loin. Sans le test de distance, ces faux positifs restent dans les résultats. Il n'y a pas de faux négatif : c'est la précision qui manque, pas la couverture."
+  },
+  {
+   "text": "Sur une table de 500 profils, on veut les profils à moins de 50 km. Pourquoi ajouter une bounding box avant le calcul de distance ?",
+   "choices": [
+    "Elle remplace Haversine, qui n'est utile que pour les distances supérieures à 100 km.",
+    "Elle se traduit en `BETWEEN`, qu'un index sait exploiter, et Haversine ne s'applique plus qu'aux candidats restants.",
+    "Elle évite les faux positifs, ce qui rend le calcul précis inutile pour les profils retenus.",
+    "Elle permet d'éviter la conversion en radians, puisque les degrés sont comparés directement."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Un index ne peut pas accélérer un calcul Haversine, mais il répond à `latitude BETWEEN a AND b`. Le rectangle réduit donc vite les candidats, et la formule précise n'est appliquée qu'à ceux-là. Il ne remplace pas Haversine : il garde des faux positifs dans les coins."
+  }
+ ]
+}

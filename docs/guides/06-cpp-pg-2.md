@@ -153,6 +153,8 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml ps
 ✅ **Attendu** : la ligne `matcha_postgres_test` affiche `Up … (healthy)` dans la colonne
 `STATUS`.
 
+<!-- atelier contient: Up … (healthy) … matcha_postgres_test -->
+
 > Ne passe **pas** de nom de service à `ps` (`… ps postgres-test`) : chez toi,
 > `docker compose` est en réalité `podman-compose` (le message « Emulate Docker CLI
 > using podman » le dit), et sa commande `ps` refuse les noms de service
@@ -1756,6 +1758,8 @@ rm -rf /tmp/core /tmp/pg /tmp/libs-inst /tmp/pg-cons
 fichiers (les 13 du guide 05, plus `Executor.hpp`, `Migrations.hpp` et
 `QueryBuilder.hpp`), puis `OK`.
 
+<!-- atelier lieu: conteneur -->
+
 ### Commit 1 : la lib
 
 Sur l'hôte, depuis `~/matcha` :
@@ -1768,6 +1772,8 @@ git status
 ✅ **Attendu** : sous `Changes to be committed`, 7 nouveaux fichiers (`Executor.hpp`,
 `QueryBuilder.hpp`, `Migrations.hpp`, leurs deux `.cpp`, et les deux fichiers de tests)
 et 11 fichiers modifiés, tous dans `backend/libs/cpp-pg/`.
+
+<!-- atelier contient: Changes to be committed -->
 
 ```sh
 git commit -m "cpp-pg 0.2.0 : Executor, QueryBuilder, migrations (audit 4.16, 4.17)"
@@ -4497,6 +4503,9 @@ l'étape F (les 6 tests d'`AccountRepository` y sont toujours, déplacés dans
 `repository_tests` sous le même nom), plus 2 de `ProfileRepositoryTest` et 3 de
 `MatchServiceTest`.
 
+<!-- atelier contient: Total Tests: 243 -->
+<!-- atelier absent: warning: -->
+
 ### ❓ Point d'arrêt J
 
 **J1.** Tu lances `matcha_backend --migrations-dry-run` sur ta base de dev, **avant**
@@ -4539,6 +4548,8 @@ for i in 1 2 3; do ctest --preset debug -j8 | tail -3 | head -1; done
 ✅ **Attendu** : trois fois `100% tests passed, 0 tests failed out of 243`. Les deux
 `RESOURCE_LOCK` (celui de cpp-pg, celui de `repository_tests`) font passer les tests à
 base un par un ; tout le reste tourne en parallèle.
+
+<!-- atelier contient: 100% tests passed, 0 tests failed out of 243 -->
 
 > **Si `LocalImageStorageTest.RemovesOnlyUnreferencedFiles` échoue en `-j`** (je l'ai vu
 > une fois, en `sanitize -j8`) : c'est un défaut **antérieur**, sans rapport avec ce
@@ -4674,6 +4685,8 @@ git status
 ```
 
 ✅ **Attendu** : sous `Changes to be committed` :
+
+<!-- atelier contient: Changes to be committed -->
 
 - **supprimés** : les 6 fichiers de `backend/src/database/`, `UserRepository.hpp/.cpp`,
   et les 3 fichiers de tests de l'étape F ;

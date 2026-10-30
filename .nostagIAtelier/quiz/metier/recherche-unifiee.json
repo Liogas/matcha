@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Pour livrer vite, un développeur écrit pour `/api/search` sa propre requête SQL, copiée de celle des suggestions. Trois semaines plus tard, un filtre est corrigé d'un seul côté. Quel risque est le plus grave ?",
+   "choices": [
+    "Les deux pages divergent, et le blocage peut manquer dans l'une d'elles.",
+    "La base refuse d'exécuter deux requêtes presque identiques.",
+    "Le tri par défaut diffère, ce qui oblige à dupliquer les index.",
+    "Le `QueryBuilder` ne gère pas deux requêtes qui ont les mêmes filtres."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Des requêtes écrites séparément divergent : un filtre corrigé ici est oublié là. Le pire cas est un utilisateur bloqué qui réapparaît dans une des deux pages, ce qu'un moteur unique évite."
+  },
+  {
+   "text": "Pour un écran d'administration, un développeur ajoute un paramètre `includeBlocked` à la fonction de recherche de profils. Pourquoi la fiche déconseille-t-elle cela ?",
+   "choices": [
+    "Un paramètre booléen empêche PostgreSQL d'utiliser ses index.",
+    "Les règles fixes doivent rester sans paramètre pour les désactiver, sinon on peut les contourner ou les oublier.",
+    "Le blocage est un filtre choisi : il devrait passer par `ProfileQuery`, pas par un booléen.",
+    "L'administration doit passer par la route des suggestions, qui contient déjà le blocage."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Les règles fixes (profil complet, pas soi-même, compatibilité, pas de blocage) sont dans la fonction, sans moyen de les désactiver. Rendre une règle fixe désactivable fait revenir le risque de l'oubli, et c'est une erreur fréquente listée dans la fiche."
+  },
+  {
+   "text": "La route reçoit `tags=vegan,geek` et doit renvoyer les profils qui ont les deux tags. Quelle condition SQL convient ?",
+   "choices": [
+    "`LOWER(i.name) = ANY($n)` sur la jointure, sans autre condition.",
+    "Un `COUNT(*)` des intérêts du profil dont le nom est dans `$n`, comparé au nombre de tags demandés.",
+    "`LOWER(i.name) = $n` répété pour chaque tag, relié par des `OR`.",
+    "Un `LIMIT 2` sur la jointure pour ne garder que deux intérêts."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Pour exiger tous les tags, on compte les intérêts du profil qui figurent dans la liste et on compare au nombre de tags demandés. `ANY` seul, ou des `OR`, ne vérifie que la présence d'au moins un tag."
+  },
+  {
+   "text": "Avant de remplir `ProfileQuery` à partir de l'URL, que doit vérifier la route ?",
+   "choices": [
+    "Que `age_min <= age_max`, sinon la demande est rejetée.",
+    "Que la clé `sort` est transmise telle quelle à `ORDER BY`, le repository échappant la valeur.",
+    "Que la clé de tri fait partie d'une liste de clés connues.",
+    "Que chaque tag est conservé tel que saisi, pour respecter la casse de l'utilisateur."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "La validation est stricte : bornes d'âge cohérentes, clé de tri connue, tags normalisés. Passer la clé de tri brute à `ORDER BY` est dangereux, et conserver la casse des tags empêche la normalisation."
+  }
+ ]
+}

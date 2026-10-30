@@ -1,0 +1,16 @@
+{
+  "claude": {
+    "command": "claude",
+    "permissionMode": "acceptEdits",
+    "allowedTools": [],
+    "quizModel": "sonnet"
+  },
+  "guides": {
+    "dir": "docs/guides",
+    "container": "docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend sh -c",
+    "containerRoot": "/app",
+    "hostRoot": "backend"
+  },
+  "editor": "code -g {file}:{line}",
+  "statusCommand": "docker compose -f docker-compose.yml -f docker-compose.dev.yml ps"
+}

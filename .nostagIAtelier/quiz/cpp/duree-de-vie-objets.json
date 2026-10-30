@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "`std::string_view prenom(pg::Rows &rows)` copie le prénom dans une `std::string nom` locale puis fait `return nom;`. En production, le texte devient du charabia. Que se passe-t-il ?",
+   "choices": [
+    "`nom` est détruite au `}` et son tampon est libéré, donc le `string_view` renvoyé désigne une mémoire qui ne lui appartient plus",
+    "`string_view` copie le contenu à la construction, mais la copie est tronquée à la taille de la chaîne d'origine",
+    "Le compilateur déplace `nom` dans le `string_view`, qui devient alors le propriétaire du tampon",
+    "`rows` est détruit avant `nom`, donc le prénom lu en base n'existe plus au moment du `return`"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Un `string_view` n'est qu'un pointeur et une taille : il observe et ne possède pas. Quand `nom` meurt à la fin de la fonction, le pointeur devient pendant. La correction consiste à renvoyer un possesseur, `std::string`."
+  },
+  {
+   "text": "Le code `const std::string &ref = pool.acquire()->name();` est suivi d'un affichage de `ref`. Quelles affirmations sont justes ?",
+   "choices": [
+    "La prolongation de vie de la référence `const` protège le champ, puisque `ref` est liée à un temporaire",
+    "Le temporaire `PooledConnection` meurt au `;` et rend la connexion au pool, alors que `ref` pointe encore dans cette connexion",
+    "Nommer la connexion avec `auto connection = pool.acquire();` avant de prendre `ref` règle le problème",
+    "Remplacer `const std::string &` par `std::string_view` règle le problème, car il prolonge la vie du temporaire"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "La prolongation de vie ne s'applique que si la référence est liée directement au temporaire, pas à une référence renvoyée par l'une de ses méthodes. Au `;`, la connexion repart au pool et `ref` peut désigner une connexion utilisée ailleurs. Donner un nom à la connexion la garde vivante jusqu'au `}`, alors qu'un `string_view` ne prolonge rien."
+  },
+  {
+   "text": "Dans `main.cpp`, le pool est déclaré avant le serveur. Pourquoi cet ordre de déclaration compte-t-il ?",
+   "choices": [
+    "Le compilateur initialise toujours en premier l'objet dont le type est le plus gros",
+    "Les objets sont détruits dans l'ordre inverse de leur création, donc le serveur meurt avant le pool dont il dépend",
+    "Le pool doit être détruit en premier pour libérer ses connexions avant que le serveur ne s'arrête",
+    "Un objet déclaré en premier vit plus longtemps car il est alloué de façon dynamique"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Dans un bloc, la destruction se fait à l'envers de la création. En déclarant le pool avant le serveur, le serveur est détruit en premier tandis que le pool existe encore pour ses références. Inverser l'ordre laisserait le serveur avec des références sur un pool déjà mort."
+  },
+  {
+   "text": "Parmi ces usages dans le projet, lesquels sont sûrs du point de vue de la durée de vie ?",
+   "choices": [
+    "Passer une `std::string` locale à `Executor::query(std::string_view)`, la chaîne n'ayant besoin de vivre que pendant l'appel",
+    "Stocker un `string_view` en membre d'un objet qui survit à la chaîne d'origine",
+    "Utiliser `[&]` dans les routes Crow, car tout ce qui est capturé vit dans `main` jusqu'à l'arrêt du serveur",
+    "Garder un itérateur de `vector` après y avoir ajouté des éléments, puisque l'itérateur observe le même conteneur"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Un observateur est sûr tant que ce qu'il observe vit au moins aussi longtemps que lui : pendant l'appel pour `query`, jusqu'à l'arrêt du serveur pour les routes. Un `string_view` en membre peut survivre à sa chaîne. Un itérateur peut aussi être invalidé par une modification du `vector`."
+  }
+ ]
+}

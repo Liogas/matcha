@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Pour enregistrer le tag `vegan`, le code fait un `SELECT` puis un `INSERT` si rien n'est trouvé. Sous charge, certains utilisateurs reçoivent l'erreur `23505`. Pourquoi ?",
+   "choices": [
+    "Entre le `SELECT` et l'`INSERT`, une autre transaction peut insérer le même tag, et `READ COMMITTED` ne l'empêche pas.",
+    "Le niveau `READ COMMITTED` laisse lire des lignes non validées, donc le `SELECT` voit un tag fantôme.",
+    "L'`INSERT` est exécuté deux fois par la même transaction à cause d'une relance automatique de libpq.",
+    "La séquence de l'identifiant n'est pas assez grande et déborde sous charge."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Le motif tester-puis-agir n'est pas atomique, même dans une transaction. Deux transactions peuvent toutes deux répondre non au `SELECT`, puis la seconde insère en conflit. `ON CONFLICT` règle cela en une seule instruction."
+  },
+  {
+   "text": "L'index unique porte sur `LOWER(name)`. Ce code échoue avec l'erreur `42P10` :\n\n`INSERT INTO matcha_interests (name) VALUES ($1) ON CONFLICT (name) DO NOTHING;`\n\nQuelle est la cause ?",
+   "choices": [
+    "`DO NOTHING` n'est pas autorisé sur une colonne texte.",
+    "La cible `(name)` ne correspond à aucun index unique, car celui-ci porte sur l'expression `LOWER(name)`.",
+    "La valeur `$1` n'est pas convertie en minuscules par le serveur avant l'insertion.",
+    "Il manque un `RETURNING id` pour que PostgreSQL accepte la clause."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "La cible de `ON CONFLICT` doit désigner l'index unique, ici l'expression `LOWER(name)`. Sans correspondance, PostgreSQL lève `42P10`. `RETURNING` n'a aucun rôle dans l'acceptation de la clause."
+  },
+  {
+   "text": "Tu veux récupérer l'id d'un tag que tu l'aies inséré ou qu'il existe déjà. `INSERT ... ON CONFLICT DO NOTHING RETURNING id` ne renvoie aucune ligne quand le tag existe. Que faire ?",
+   "choices": [
+    "Relancer le même `INSERT` jusqu'à ce qu'il renvoie une ligne.",
+    "Remplacer par un `SELECT` seul, sans insertion, puis insérer si besoin dans une seconde requête.",
+    "Utiliser un `WITH` qui tente l'`INSERT ... RETURNING id`, puis un `UNION ALL` avec un `SELECT` de l'id existant et `LIMIT 1`.",
+    "Ignorer l'id et faire un `COUNT(*)` pour savoir si le tag existe."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "En cas de conflit, rien n'est inséré donc `RETURNING` ne renvoie rien. La requête `WITH` complète le résultat avec l'id existant, en une seule instruction. Refaire un `SELECT` séparé rétablirait la course entre les deux étapes."
+  },
+  {
+   "text": "Ce compteur de visites est écrit ainsi :\n\n`ON CONFLICT (viewer_id, viewed_id) DO UPDATE SET view_count = EXCLUDED.view_count + 1`\n\nL'insertion initiale vaut `view_count = 1`. Bob visite Alice trois fois. Quelle valeur finale obtient-on ?",
+   "choices": [
+    "3, car chaque conflit ajoute 1 à la valeur précédente.",
+    "1, car un conflit annule la mise à jour.",
+    "Une erreur `23505`, car la ligne existe déjà.",
+    "2, car `EXCLUDED` désigne la ligne qu'on tentait d'insérer, donc la valeur vaut toujours 1 + 1."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "`EXCLUDED` est la ligne proposée à l'insertion, pas la ligne existante. Pour incrémenter, il faut écrire `profile_views.view_count + 1`. Aucune erreur n'est levée, car `DO UPDATE` traite le conflit."
+  }
+ ]
+}

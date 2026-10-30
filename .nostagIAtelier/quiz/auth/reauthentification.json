@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Quelqu'un trouve un téléphone déverrouillé avec matcha ouvert et veut changer l'email du compte pour prendre le contrôle. Quelle étape du changement d'email l'arrête ?",
+   "choices": [
+    "Basculer l'email tout de suite, puis laisser l'utilisateur annuler",
+    "Faire confiance à la session, car elle est valide et authentifiée",
+    "Envoyer le lien de confirmation à l'ancienne adresse uniquement",
+    "Vérifier le mot de passe avant de créer le token"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Une session prouve qu'un navigateur s'est connecté un jour, pas que la personne actuelle est la bonne. Redemander le mot de passe bloque le voleur de session. Sans cette étape, un reset vers sa propre adresse lui donne le compte."
+  },
+  {
+   "text": "Dans le flux de changement d'email, le lien de confirmation va à la nouvelle adresse et une alerte à l'ancienne. Quelles justifications sont correctes ?",
+   "choices": [
+    "Le lien va à la nouvelle adresse pour prouver que l'utilisateur la contrôle",
+    "Le lien va à l'ancienne adresse pour que le propriétaire valide le changement",
+    "L'alerte va à l'ancienne adresse pour que la victime puisse réagir",
+    "L'alerte est facultative, car le lien de confirmation suffit à tout protéger"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Le but du lien est de prouver le contrôle de la nouvelle adresse, et l'ancienne pourrait être perdue ou inutilisable. L'alerte informe le propriétaire légitime en cas de vol de session. La traiter comme optionnelle est une erreur fréquente."
+  },
+  {
+   "text": "Entre la demande de changement et le clic sur le lien, un autre compte a pris la nouvelle adresse. Que se passe-t-il au moment de `UPDATE auth_accounts SET email = $1 WHERE id = $2` ?",
+   "choices": [
+    "L'UPDATE écrase l'autre compte, puisque le token est encore valide",
+    "Le serveur renvoie `503`, car la base est jugée indisponible",
+    "L'index unique sur `LOWER(email)` refuse avec `23505`, traduit en `409`",
+    "Le token reste valide et la requête est rejouée automatiquement plus tard"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "L'unicité est garantie par la base, pas par une vérification faite en amont qui pourrait être périmée. L'erreur SQLSTATE `23505` se traduit naturellement en `409`. Rejouer ou écraser ne ferait que créer un conflit de comptes."
+  },
+  {
+   "text": "Au clic sur le lien, le serveur effectue la bascule d'email. Que doit-il faire dans la même transaction ?",
+   "choices": [
+    "Laisser les autres sessions ouvertes pour ne pas déconnecter l'utilisateur",
+    "Garder le token valide pour permettre d'annuler le changement ensuite",
+    "Révoquer uniquement la session courante, puisque c'est elle qui a demandé le changement",
+    "Consommer le token, puis révoquer les autres sessions"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Consommer le token empêche de rejouer le lien, et révoquer les autres sessions fait tomber celle d'un éventuel attaquant déjà connecté. Un lien resté valide ou des sessions conservées laissent une porte ouverte après le changement."
+  }
+ ]
+}

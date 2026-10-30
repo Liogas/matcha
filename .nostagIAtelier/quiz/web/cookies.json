@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Une faille XSS permet d'exécuter du JavaScript sur la page de matcha. Le refresh token est dans un cookie `HttpOnly`. Que peut faire l'attaquant ?",
+   "choices": [
+    "Lire `document.cookie` pour envoyer le refresh token à son propre serveur",
+    "Lancer depuis la page un `fetch` vers `/api/auth/refresh`, qui partira avec le cookie",
+    "Rien du tout, car `HttpOnly` bloque aussi les requêtes émises depuis la page",
+    "Récupérer le cookie en lisant `localStorage`, car les deux stockages sont partagés"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`HttpOnly` empêche le JavaScript de lire le cookie, donc de voler le secret. Il n'empêche pas la page compromise d'envoyer des requêtes, et le navigateur y joindra le cookie. Croire que `HttpOnly` neutralise totalement une XSS est l'erreur tentante."
+  },
+  {
+   "text": "Le refresh token est posé avec `Path=/api/auth`. Parmi ces requêtes envoyées par le navigateur, lesquelles portent le cookie ?",
+   "choices": [
+    "`POST /api/auth/refresh`",
+    "`GET /api/profile`",
+    "`POST /api/auth/logout`",
+    "`GET /api/profiles/7/photos`"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Le cookie n'est envoyé que pour les routes situées sous `/api/auth`, soit `refresh` et `logout`. Les appels vers `/api/profile` ou les photos n'en voient jamais la couleur, ce qui réduit son exposition."
+  },
+  {
+   "text": "Le cookie a été posé avec `Path=/api/auth`. À la déconnexion, le serveur renvoie `Set-Cookie: refresh=; Max-Age=0; HttpOnly; Secure`. Pourtant le refresh token reste utilisable. Pourquoi ?",
+   "choices": [
+    "Le navigateur ignore `Max-Age=0` et attend la fin de la durée de vie initiale",
+    "Le `Path` est absent, donc le navigateur voit un autre cookie et ne supprime pas l'original",
+    "`Max-Age=0` demande seulement de ne plus envoyer le cookie en HTTPS",
+    "Il faudrait ajouter `SameSite=None` pour que la suppression soit acceptée"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Pour supprimer un cookie, on renvoie le même cookie avec `Max-Age=0` et les mêmes `Path` et `Domain`. Sans le `Path` d'origine, le navigateur crée ou cible un cookie différent, et l'ancien survit."
+  },
+  {
+   "text": "Pour simplifier le front, un collègue propose de mettre aussi le jeton d'accès dans un cookie. Quel est le problème principal ?",
+   "choices": [
+    "Le cookie serait joint automatiquement à toutes les routes, y compris sur une requête déclenchée par un site tiers",
+    "Un JWT ne peut pas tenir dans un cookie, car il dépasse la taille autorisée",
+    "Le cookie resterait lisible par le JavaScript de la page malgré `HttpOnly`",
+    "Le serveur ne pourrait plus lire le jeton, puisque `HttpOnly` le lui cache aussi"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Un cookie est ajouté automatiquement par le navigateur, ce qui expose toutes les actions au CSRF. Avec `Authorization: Bearer`, seul notre JavaScript ajoute le jeton, donc une page tierce ne peut pas s'en servir."
+  }
+ ]
+}

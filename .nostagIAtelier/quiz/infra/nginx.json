@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un script envoie 50 requêtes `GET /api/auth/login` en une minute depuis la même IP. La zone utilise `$login_limit_key`, qui vaut vide pour tout ce qui n'est pas un POST. Que se passe-t-il ?",
+   "choices": [
+    "Les GET reçoivent un `429` après 5 requêtes par minute, exactement comme les POST",
+    "Les GET ne sont pas comptés, car Nginx ne suit pas une clé vide dans la zone",
+    "Les GET sont refusés immédiatement, car la zone `login_per_ip` n'accepte que des POST",
+    "Les GET consomment le `burst` de 5 puis sont retardés, car `nodelay` ne vaut que pour les POST"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "La clé est vide pour les requêtes qui ne sont pas des POST, et Nginx ne compte pas une clé vide : ces requêtes ne sont jamais limitées par cette zone. Le `burst` et `nodelay` ne concernent que les requêtes qui ont une clé non vide."
+  },
+  {
+   "text": "Un attaquant tente quelques mots de passe sur 1000 comptes différents depuis une seule IP, à un volume élevé. Le limiteur Redis compte les échecs par compte et IP. Qui voit cette attaque ?",
+   "choices": [
+    "Nginx avec `limit_req`, qui compte le volume venant de l'IP, sans coût pour le backend",
+    "Seulement le limiteur Redis, car il connaît les comptes visés et applique la logique métier",
+    "Les deux la voient de la même façon, donc garder les deux est redondant et inutile",
+    "Aucun des deux : seul le coût d'Argon2 dans le backend peut ralentir une attaque de ce type"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Chaque couple compte et IP n'a que peu d'échecs, donc Redis ne déclenche rien, alors que Nginx voit le volume total venant de l'IP. Les deux protections sont complémentaires. Argon2 coûte du temps de calcul au backend, ce que Nginx évite justement."
+  },
+  {
+   "text": "Le WebSocket fonctionne en se connectant directement au backend, mais l'échange de connexion échoue via Nginx. Que dois-tu ajouter à la configuration du proxy ?",
+   "choices": [
+    "Un `client_max_body_size` plus grand, pour laisser passer la requête d'ouverture du WebSocket",
+    "Un `limit_req` avec un `burst` plus élevé, pour que la connexion ne soit plus refusée",
+    "`proxy_http_version 1.1`, pour que le proxy parle une version de HTTP qui permet la mise à niveau",
+    "`proxy_set_header Upgrade $http_upgrade` et un `Connection` calculé par un `map`, pour transmettre la demande"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Sans HTTP/1.1 ni transmission des en-têtes `Upgrade` et `Connection`, la demande de passage en WebSocket n'atteint pas le backend. La taille du corps et le débit ne concernent pas ce handshake."
+  },
+  {
+   "text": "Un client envoie lui-même un en-tête `X-Real-IP: 1.2.3.4` pour échapper à une règle basée sur son IP. Nginx a `proxy_set_header X-Real-IP $remote_addr;`. Que voit le backend ?",
+   "choices": [
+    "La valeur envoyée par le client, car Nginx ne modifie jamais les en-têtes déjà présents",
+    "Deux valeurs concaténées, celle du client suivie de l'adresse réelle vue par Nginx",
+    "L'adresse réelle vue par Nginx, car ce réglage écrase la valeur envoyée par le client",
+    "Une erreur `400`, car Nginx rejette les requêtes qui portent déjà cet en-tête"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "`proxy_set_header` remplace la valeur reçue du client par `$remote_addr`. C'est ce remplacement qui rend l'en-tête utilisable par le backend. Sans lui, n'importe quel client pourrait choisir l'IP qu'on voit."
+  }
+ ]
+}

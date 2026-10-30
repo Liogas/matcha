@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "`ProfileRoutes.cpp` accepte `licorne` comme orientation. Quelle correction suit la fiche ?",
+   "choices": [
+    "Interdire les mots suspects dans une liste noire, complétée au fil des abus",
+    "Ajouter la vérification dans le front, qui bloque déjà la saisie des valeurs inconnues",
+    "Revérifier la valeur à chaque endroit où elle est utilisée, pour ne rien oublier plus loin",
+    "Parser vers une `enum class` avec `parseOrientation` : une valeur invalide n'existe plus ensuite"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Une liste blanche décrit ce qui est accepté, et le parsing produit un type fort que le reste du code ne peut plus mal utiliser. Une liste noire oublie toujours quelque chose, et le front ne protège pas contre un `curl`."
+  },
+  {
+   "text": "Dans `validateBiography`, le test `input.size() > 4 * 500` précède l'appel à `utf8::length`. Un client envoie 8 Mo de texte. Pourquoi ce test est-il placé en premier, et pourquoi est-il sûr ?",
+   "choices": [
+    "Il compte les caractères plus vite que `utf8::length`, avec exactement le même résultat",
+    "Il est en temps constant et rejette l'énorme entrée sans la parcourir ; 500 points de code tiennent en 2000 octets au plus",
+    "Il remplace la limite de 500 caractères, qui n'est donc plus vérifiée après",
+    "Il sert à valider l'UTF-8, car un octet isolé dépasse toujours la limite"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Un point de code occupe au plus 4 octets, donc plus de 2000 octets dépassent forcément 500 caractères. Le test borne le travail avant de parcourir des mégaoctets. La limite en points de code reste vérifiée ensuite, car une entrée de moins de 2000 octets peut encore la dépasser."
+  },
+  {
+   "text": "Un client s'inscrit avec `  Alice@Example.COM `. Le code valide le format de l'email, puis met en minuscules et retire les espaces avant de stocker. Quel est le défaut ?",
+   "choices": [
+    "Aucun : le format est vérifié, donc la valeur stockée est forcément valide",
+    "La valeur validée n'est pas celle qui est stockée ; il faut normaliser d'abord, puis valider cette forme",
+    "Il faut stocker l'email brut et normaliser à chaque lecture, pour ne rien perdre",
+    "Il faut refuser tout email contenant des majuscules ou des espaces au lieu de le corriger"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "On valide après normalisation et on stocke la forme normalisée, sinon on valide une valeur et on en utilise une autre. Ici les espaces initiaux feraient échouer le format alors que l'email est corrigeable."
+  },
+  {
+   "text": "Une biographie passe `validateBiography` (UTF-8 valide, 500 points de code au plus). Un dev propose de l'insérer telle quelle dans le HTML des emails. Que répondre ?",
+   "choices": [
+    "Oui : une entrée validée à la frontière peut être affichée sans risque",
+    "Non : la validation ne remplace pas l'échappement, la XSS se traite à l'affichage",
+    "Oui, tant que la longueur est limitée, car un script court ne peut rien faire",
+    "Non : il faut supprimer `<` et `>` à l'écriture et stocker la version nettoyée"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Valider la longueur et l'encodage ne dit rien du contexte d'insertion : `<img onerror=...>` tient en peu de caractères. Il faut échapper à l'affichage. Nettoyer à l'écriture abîme la donnée pour les autres usages."
+  }
+ ]
+}

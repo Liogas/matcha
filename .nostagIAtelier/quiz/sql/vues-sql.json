@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Une requête de suggestions contient `WHERE p.account_id NOT IN (SELECT blocked_id FROM user_blocks WHERE blocker_id = $1)`. Si la sous-requête renvoie un `NULL`, que renvoie la requête ?",
+   "choices": [
+    "Tous les profils, car le `NULL` est ignoré par la sous-requête",
+    "Tous les profils sauf celui du `NULL`, qui est traité comme un identifiant",
+    "Aucune ligne, à cause de la logique à trois valeurs ; `NOT EXISTS` évite ce piège",
+    "Une erreur d'exécution, car `NOT IN` refuse les `NULL`"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Avec un `NULL` dans la liste, la comparaison n'est jamais vraie et `NOT IN` ne renvoie rien. `NOT EXISTS` n'a pas ce défaut et devient une anti-jointure efficace."
+  },
+  {
+   "text": "La table `user_blocks` contient une seule ligne : Alice a bloqué Bob. Les requêtes lisent la vue `blocked_pairs`. Pour que Bob ne voie pas non plus Alice, que fait la vue ?",
+   "choices": [
+    "Elle expose aussi la ligne inversée, grâce à un `UNION ALL` qui échange les deux colonnes",
+    "Rien de plus : le blocage ne concerne que celui qui a bloqué",
+    "Elle exige une seconde ligne dans `user_blocks`, car une vue ne peut pas inverser des colonnes",
+    "Elle utilise `UNION` plutôt que `UNION ALL`, ce qui rend la lecture symétrique"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "La table garde qui a décidé, utile pour débloquer, mais l'effet va dans les deux sens. Le `UNION ALL` de la vue exprime cette symétrie sans maintenir deux lignes cohérentes."
+  },
+  {
+   "text": "Pour aller plus vite, un collègue transforme `blocked_pairs` en `MATERIALIZED VIEW`. Pourquoi est-ce un mauvais choix ici ?",
+   "choices": [
+    "Elle ne peut pas contenir de `UNION ALL`, donc la symétrie serait perdue",
+    "Elle stocke le résultat et doit être rafraîchie : un blocage ne s'appliquerait pas tout de suite",
+    "Elle recalcule sa requête à chaque appel, ce qui coûte plus cher qu'une vue ordinaire",
+    "Elle n'utilise jamais les index des tables d'origine, donc la lecture serait plus lente"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Une vue matérialisée stocke vraiment le résultat et demande un `REFRESH`. Or un blocage doit agir immédiatement. La lecture y serait rapide, mais le résultat serait périmé."
+  },
+  {
+   "text": "Un développeur ajoute un nouveau point d'entrée de recherche et écrit sa requête sans passer par `blocked_pairs`. Un utilisateur bloqué réapparaît. Que montre ce cas ?",
+   "choices": [
+    "La vue s'applique automatiquement à toute requête sur `matcha_profiles`, donc le bug vient d'un cache",
+    "La vue centralise le fragment SQL mais n'impose pas son usage ; il faut des tests par point d'entrée",
+    "Une fonction `STABLE` comme `is_blocked` serait appliquée automatiquement, contrairement à la vue",
+    "Il faut passer à une vue matérialisée, qui s'impose à toutes les requêtes"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Une vue écrit la règle une seule fois, mais rien n'oblige à l'utiliser : un développeur peut l'oublier. Ni une fonction ni une vue matérialisée n'ont ce pouvoir. D'où les tests par point d'entrée."
+  }
+ ]
+}

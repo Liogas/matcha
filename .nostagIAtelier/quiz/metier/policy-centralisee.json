@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Les tests unitaires de `is_blocked` passent tous. Pourtant, en production, Bob, bloqué par Alice, peut encore lui envoyer un message HTTP. Quelle est l'explication la plus probable ?",
+   "choices": [
+    "La fonction `is_blocked` contient un cas limite que les tests n'ont pas couvert.",
+    "La route d'envoi de message n'appelle pas la règle, et aucun test de route ne l'a détecté.",
+    "Le blocage ne s'applique qu'aux recherches, pas aux messages HTTP.",
+    "La vue SQL est mise en cache et n'a pas encore vu le nouveau blocage."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Une règle parfaite ne protège rien si une route oublie de l'appeler : le risque est dans l'application de la règle, pas dans sa définition. Seul un test qui passe par la route, et non par `is_blocked`, détecte cet oubli."
+  },
+  {
+   "text": "Alice bloque Bob. Le moteur de recherche filtre avec `NOT is_blocked(viewer, p.account_id)`, mais `is_blocked` ne regarde que les blocages posés par le viewer lui-même. Que se passe-t-il ?",
+   "choices": [
+    "Alice ne voit plus Bob, mais Bob voit encore Alice dans ses résultats.",
+    "Ni Alice ni Bob ne voient l'autre, ce qui est le comportement attendu.",
+    "Bob voit Alice seulement si elle a déjà liké son profil.",
+    "La requête échoue, car la fonction attend un blocage dans les deux sens."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Le sens inverse fait partie des erreurs fréquentes : si A bloque B, B ne doit pas voir A non plus. Une fonction qui ne regarde qu'un sens laisse la personne bloquée voir la personne qui voulait s'en protéger."
+  },
+  {
+   "text": "Bob, bloqué par Alice, ouvre directement l'URL du profil d'Alice. Quelle réponse faut-il renvoyer, et pourquoi ?",
+   "choices": [
+    "`403`, pour dire clairement à Bob qu'il n'a pas le droit de voir ce profil.",
+    "`200` avec un profil vide, pour ne pas casser l'affichage côté client.",
+    "`404`, pour que Bob ne puisse pas deviner qu'il a été bloqué.",
+    "`401`, pour inviter Bob à se reconnecter avec un autre compte."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un `404` ne révèle pas le blocage : la personne bloquée ne sait pas qu'elle l'est. Un `403` serait tentant parce qu'il est explicite, mais il confirmerait justement l'existence du blocage."
+  },
+  {
+   "text": "La messagerie doit refuser l'envoi si l'expéditeur est bloqué, tout en restant indépendante des règles de Matcha. Quelle conception respecte la fiche ?",
+   "choices": [
+    "La messagerie lit elle-même la table `user_blocks` avant chaque envoi.",
+    "Chaque route de messagerie recopie sa propre condition de blocage.",
+    "Le blocage désactive la conversation une fois, puis plus rien n'est revérifié.",
+    "La messagerie appelle `IConversationPolicy::canSend`, que Matcha implémente avec match actif et absence de blocage."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "La messagerie ne doit rien savoir du blocage : elle demande à une interface de politique, et Matcha répond avec ses règles. Recopier la condition ou la lire directement disperse la règle, donc multiplie les risques d'oubli."
+  }
+ ]
+}

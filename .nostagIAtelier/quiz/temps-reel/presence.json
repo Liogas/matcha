@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Une utilisatrice a deux onglets ouverts et en ferme un. Avec un simple booléen `online`, que se passe-t-il ?",
+   "choices": [
+    "Rien de particulier, car le booléen n'est modifié qu'à la fermeture du dernier onglet.",
+    "Elle reste en ligne, car le booléen est protégé par un `lock_guard`.",
+    "Elle repasse en ligne automatiquement dès que l'autre onglet envoie un `pong`.",
+    "Elle passe hors ligne alors qu'elle est encore présente dans l'autre onglet ; il faut un compteur de connexions."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Un booléen ne sait pas combien de connexions sont ouvertes : la première fermeture suffit à le mettre à faux. Avec un compteur, on ne passe hors ligne que sur la transition de 1 à 0. Le verrou protège contre les data races, pas contre cette erreur de modèle."
+  },
+  {
+   "text": "Dans `onClose`, le rappel `_onOffline(id)`, qui écrit `last_seen_at` en base, est appelé à l'intérieur du `lock_guard`. Quelles affirmations sont justes ?",
+   "choices": [
+    "Le rappel doit sortir du verrou, car une écriture en base sous verrou bloque les autres connexions.",
+    "Le test de passage à zéro doit aussi sortir du verrou, pour ne pas le garder trop longtemps.",
+    "Le décrément et le test de passage à zéro doivent rester sous verrou, sinon deux threads pourraient déclencher le rappel.",
+    "Le verrou est inutile si le compteur est dans une `std::map`."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "On garde sous verrou ce qui touche au compteur, et on mémorise le résultat dans un booléen. Le rappel qui écrit en base est appelé ensuite, hors verrou. Sortir aussi le test créerait une data race sur le compteur."
+  },
+  {
+   "text": "L'application tourne sur plusieurs instances, et l'une d'elles plante. Pourquoi une clé Redis `presence:{id}` avec un TTL rafraîchi par le heartbeat est-elle préférable à un état écrit à la déconnexion ?",
+   "choices": [
+    "Parce que Redis détecte lui-même le plantage du serveur et efface toutes les clés de cette instance.",
+    "Parce que le TTL rend inutile le compteur de connexions de chaque instance.",
+    "Parce que Redis garantit qu'une seule instance écrit `last_seen_at` pour un même utilisateur.",
+    "Parce que la clé expire seule si plus personne ne la rafraîchit, alors qu'un état écrit à la déconnexion resterait en ligne."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Un serveur planté n'écrit jamais l'état hors ligne, qui resterait donc faux. Avec un TTL, l'absence de rafraîchissement par le heartbeat suffit à faire disparaître la présence. Le TTL ne remplace pas le comptage local."
+  },
+  {
+   "text": "Un utilisateur actualise sa page : son unique onglet se ferme, puis un nouveau s'ouvre 100 ms plus tard. Que se passe-t-il, et que peut-on faire ?",
+   "choices": [
+    "Il passe hors ligne puis en ligne, avec une écriture de `last_seen_at` ; on peut attendre quelques secondes avant de déclarer le passage hors ligne.",
+    "Il reste en ligne sans interruption, car le compteur ignore les fermetures très rapides.",
+    "Il passe hors ligne puis en ligne, et la présence est notifiée deux fois ; ce clignotement est évitable avec un court délai.",
+    "Il reste hors ligne jusqu'au prochain `ping`, car le compteur ne gère pas les réouvertures."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Le compteur passe de 1 à 0, ce qui déclenche l'état hors ligne et l'écriture, puis de 0 à 1 à la réouverture. Pour éviter le clignotement, on attend quelques secondes avant de déclarer le départ. Le compteur ne filtre pas les fermetures rapides."
+  }
+ ]
+}

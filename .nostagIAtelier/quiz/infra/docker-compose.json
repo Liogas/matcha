@@ -1,0 +1,59 @@
+{
+ "questions": [
+  {
+   "text": "Dans ton compose, le backend déclare `depends_on: [database]` sans `condition`. Au premier `docker compose up`, il plante parce que PostgreSQL n'accepte pas encore de connexions. Quelles actions corrigent le problème ?",
+   "choices": [
+    "Ajouter un `healthcheck` avec `pg_isready` à `database`, puis `condition: service_healthy` dans `depends_on`.",
+    "Garder des tentatives de connexion dans le pool du backend, car un service peut redémarrer à tout moment.",
+    "Ajouter `ports: 5432:5432` à la base pour que le backend puisse la joindre plus vite.",
+    "Passer `depends_on` en liste de deux services : cela force Compose à attendre que chacun soit prêt."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Sans `condition`, `depends_on` attend seulement que le conteneur démarre, pas que le service soit prêt. Le healthcheck et `service_healthy` règlent le démarrage, et les tentatives du pool protègent contre les redémarrages ultérieurs. Publier un port n'a aucun effet sur l'ordre de démarrage."
+  },
+  {
+   "text": "Sur un serveur, tu écris `ports: - \"5432:5432\"` pour la base PostgreSQL de matcha. Quelle conséquence la fiche te fait-elle redouter ?",
+   "choices": [
+    "Le backend ne peut plus joindre la base par son nom, car le DNS interne est désactivé.",
+    "La base est accessible sur toutes les interfaces, donc seul son mot de passe la protège.",
+    "La base perd ses données au prochain `docker compose down`, car le port publié est volatil.",
+    "Rien de grave, puisque le pare-feu de l'hôte bloque toujours les ports publiés par Docker."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Sans préfixe `127.0.0.1`, le port est ouvert sur toutes les interfaces, parfois même malgré le pare-feu. Avec `127.0.0.1:5432:5432`, seule la machine y accède, et en production on ne publierait pas le port du tout. Publier un port n'affecte ni le DNS interne ni les données."
+  },
+  {
+   "text": "Tu veux comprendre où vivent les données de PostgreSQL dans le compose de matcha. Quelles affirmations sont justes ?",
+   "choices": [
+    "Le volume nommé `postgres_data` survit à `docker compose down`, mais pas à `docker compose down -v`.",
+    "Le volume nommé `postgres_data` est supprimé dès le premier `docker compose down`.",
+    "Un `tmpfs`, comme celui de `postgres-test`, garde les données en mémoire pour des tests rapides et jetables.",
+    "Un bind mount garde les données dans la mémoire vive de l'hôte et les efface à l'arrêt."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Un volume nommé persiste jusqu'à ce qu'on utilise `down -v`, ce qui explique les bases qu'on croit vides à tort ou qu'on croit conservées. Le `tmpfs` vit en mémoire, d'où des tests rapides et jetables. Un bind mount, lui, est un dossier de l'hôte."
+  },
+  {
+   "text": "Le service `backend` n'a aucune ligne `ports` dans le compose, et nginx doit lui envoyer les requêtes. Qu'est-ce qui est vrai ?",
+   "choices": [
+    "Nginx peut joindre le backend par son nom, par exemple `http://backend:18080`, grâce au DNS interne.",
+    "Le backend reste interne au réseau du compose, donc l'hôte ne peut pas le joindre directement.",
+    "Nginx ne peut joindre le backend qu'avec l'adresse `localhost:18080` depuis son propre conteneur.",
+    "Sans `ports`, le backend n'est joignable par aucun autre service du compose."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Les services partagent un réseau privé où chacun est joignable par son nom. Sans `ports`, le service n'est simplement pas publié sur l'hôte : ce qui n'est pas publié n'est pas exposé. `localhost` désignerait le conteneur nginx lui-même."
+  }
+ ]
+}

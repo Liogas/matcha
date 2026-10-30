@@ -1,0 +1,59 @@
+{
+ "questions": [
+  {
+   "text": "Le healthcheck Docker appelle `/health`, qui exécute un `SELECT 1` sur PostgreSQL. PostgreSQL tombe. Quelles affirmations sont justes ?",
+   "choices": [
+    "Le backend est redémarré en boucle, sans que cela répare la base, ce qui aggrave l'incident",
+    "Docker attend le retour de la base et ne redémarre jamais le backend dans ce cas",
+    "Le test de la base devrait être dans `/ready`, qui retire le service du trafic sans le redémarrer",
+    "`/health` renvoie encore `200`, car il ne regarde que si le processus répond"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Un `/health` qui interroge la base transforme une panne de base en redémarrages inutiles du backend. La liveness ne doit vérifier que le processus. Les dépendances relèvent de `/ready`, qui sert à décider d'envoyer ou non du trafic."
+  },
+  {
+   "text": "Un script d'entrée lance `./matcha_backend` sans `exec`, et `docker stop` met toujours 10 secondes avant de terminer le conteneur. Quelles affirmations expliquent et corrigent le problème ?",
+   "choices": [
+    "Crow ignore `SIGTERM` tant qu'on n'a pas fait `app.signal_add(SIGKILL)` dans `main`",
+    "Le script shell est le processus principal, donc `SIGTERM` n'arrive pas au binaire",
+    "Il faut écrire `exec ./matcha_backend`, ou utiliser la forme exec `CMD [\"./matcha_backend\"]`",
+    "Il suffit d'augmenter le délai d'attente de `docker stop` pour laisser le temps au binaire"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Sans `exec`, le shell garde le PID 1 et le signal n'est pas transmis au binaire, qui attend alors `SIGKILL`. `exec` remplace le shell par le binaire. `SIGKILL` ne s'intercepte pas, et allonger le délai ne fait que retarder la fin."
+  },
+  {
+   "text": "Dans `main`, le pool est déclaré avant le serveur Crow. Après le retour de `app.run()`, dans quel ordre les objets sont-ils détruits, et pourquoi est-ce voulu ?",
+   "choices": [
+    "Le pool d'abord, car il a été créé en premier, puis le serveur ferme les connexions restantes",
+    "Dans un ordre indéterminé, ce qui oblige à écrire des `delete` explicites pour fermer proprement",
+    "Les deux en même temps, dès la réception de `SIGTERM`, pour accélérer l'arrêt du conteneur",
+    "Le serveur d'abord, puis le pool : le pool survit à ce qui l'utilise et ferme ses connexions en dernier"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Les objets de `main` meurent dans l'ordre inverse de leur déclaration. Le pool, déclaré avant, survit donc au serveur qui s'en sert. C'est la gestion de durée de vie appliquée à tout un programme."
+  },
+  {
+   "text": "Le backend ne gère pas `SIGTERM`. Un `docker stop` arrive pendant qu'une transaction est en cours. Que se passe-t-il ?",
+   "choices": [
+    "Après 10 secondes, `SIGKILL` coupe le processus et PostgreSQL annule la transaction, ce qui reste cohérent mais brutal",
+    "Docker attend indéfiniment que la transaction se termine avant d'arrêter le conteneur",
+    "`SIGKILL` ne peut pas être intercepté : aucun code de nettoyage du backend ne s'exécute",
+    "La transaction est validée en partie, car PostgreSQL enregistre ce qui avait déjà été écrit"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Sans gestion du signal, `docker stop` attend 10 secondes puis envoie `SIGKILL`, que le programme ne peut pas intercepter. La connexion disparaît et PostgreSQL annule la transaction : les données restent cohérentes, mais l'utilisateur voit un échec."
+  }
+ ]
+}

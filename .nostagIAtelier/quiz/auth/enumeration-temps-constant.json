@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Ton login renvoie « identifiants invalides » dans tous les cas, mais un compte inconnu répond en 2 ms et un compte réel en 80 ms. Que faire ?",
+   "choices": [
+    "Rien : le message est identique, donc rien ne fuit",
+    "La durée est un canal auxiliaire : vérifier un hash factice quand le compte est absent",
+    "La durée trahit le compte : renvoyer tôt dès que le compte est absent",
+    "Le statut trahit le compte : renvoyer 404 pour un compte inconnu"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Un script qui compare les durées sait quels comptes existent, même avec un message identique. En vérifiant un hash calculé d'avance, le coût d'Argon2 est payé dans tous les cas. Retourner tôt est justement l'erreur à éviter."
+  },
+  {
+   "text": "Pour économiser du CPU, tu génères `_hashFactice` avec `m=8192` alors que les vrais hashs utilisent `m=65536`. Quel est le problème ?",
+   "choices": [
+    "Aucun : le hash factice n'est jamais comparé à un vrai mot de passe",
+    "La vérification factice est plus rapide, donc la durée diffère encore",
+    "Le hash factice doit utiliser les mêmes paramètres que les vrais hashs",
+    "Le hash factice doit être recalculé à chaque requête avec un sel aléatoire"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Le but du hash factice est que le coût soit identique pour un compte réel et pour un compte absent. Avec des paramètres plus légers, la différence de durée réapparaît et l'énumération redevient possible."
+  },
+  {
+   "text": "La route de reset répond toujours « Si ce compte existe, un email a été envoyé. », mais elle prend 600 ms pour un compte existant et 3 ms sinon. Quelle correction ?",
+   "choices": [
+    "Envoyer l'email via une file (outbox), hors de la requête, pour que la durée soit la même",
+    "Rien : le message est identique, donc rien ne fuit",
+    "Renvoyer une erreur 404 pour un compte inconnu, afin d'être cohérent avec la durée",
+    "Retourner la réponse immédiatement seulement quand le compte n'existe pas"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "L'envoi d'email dans la requête fait fuiter l'existence du compte par la durée. Une file d'envoi rend les deux cas aussi rapides. Répondre plus vite pour un compte absent aggraverait la fuite."
+  },
+  {
+   "text": "Pour un compte « non vérifié », le login renvoie « compte non vérifié » avant de contrôler le mot de passe, pour aider l'utilisateur. Pourquoi est-ce un défaut ?",
+   "choices": [
+    "Le message est trop long et ralentit la réponse",
+    "N'importe qui apprend l'état d'un compte en donnant un mauvais mot de passe",
+    "Il faut contrôler le mot de passe d'abord : on parle alors au vrai propriétaire et le message est sans risque",
+    "Un compte non vérifié ne doit jamais pouvoir se connecter, donc le message est inutile"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Avant la vérification du mot de passe, ce message dévoile qu'un compte existe à quelqu'un qui n'est pas son propriétaire. Après la vérification, il reste utile et ne fuit plus rien."
+  }
+ ]
+}

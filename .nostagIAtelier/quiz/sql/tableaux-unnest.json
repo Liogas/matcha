@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Tu écris `SELECT unnest($1)` et tu passes un `std::vector<std::string>` en paramètre. Le serveur répond `could not determine data type of parameter $1`. Quelle correction appliquer ?",
+   "choices": [
+    "Passer le paramètre en format binaire, qui n'a pas besoin de type",
+    "Convertir le vecteur en `{...}` à la main dans le code appelant",
+    "Écrire `unnest($1::text[])` pour que le serveur connaisse le type",
+    "Ajouter un `ORDER BY` pour que le serveur déduise le type des lignes"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le serveur doit connaître le type du paramètre, et le cast `::text[]` le lui donne. Écrire le tableau à la main ne règle pas le problème de type et déplace une responsabilité qui appartient à `Params`."
+  },
+  {
+   "text": "Un développeur construit le paramètre à la main : il concatène les tags entre `{` et `}`, séparés par des virgules. Un utilisateur saisit le tag `rock,pop`. Que se passe-t-il ?",
+   "choices": [
+    "Le tag est lu en entier, car PostgreSQL devine les virgules internes à un texte",
+    "Le tag est lu comme deux éléments, `rock` et `pop` ; `Params` aurait dû mettre les guillemets",
+    "La requête échoue avec une erreur de syntaxe, car la virgule est interprétée comme du SQL",
+    "Le tag est coupé en deux, et c'est à l'appelant d'ajouter les guillemets autour de chaque tag"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Une chaîne contenant une virgule doit être entre guillemets dans le tableau, sinon elle devient deux éléments. Cette écriture est la responsabilité de `Params`, jamais de l'appelant. Il n'y a pas d'injection SQL, car la valeur reste un paramètre."
+  },
+  {
+   "text": "Tu fais `INSERT ... SELECT unnest($1::text[]) ON CONFLICT (LOWER(name)) DO UPDATE SET ...`, et le tableau contient `vegan` deux fois. Que se passe-t-il ?",
+   "choices": [
+    "Le second `vegan` est ignoré en silence, comme avec `DO NOTHING`",
+    "Les deux lignes sont traitées l'une après l'autre, et la requête réussit",
+    "Le second `vegan` écrase le premier, et la requête réussit",
+    "Erreur, car une même ligne est touchée deux fois ; il faut dédoublonner le tableau avant"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Avec `DO UPDATE`, un doublon dans le tableau fait toucher la même ligne deux fois dans une seule instruction, ce que PostgreSQL refuse. Avec `DO NOTHING` le doublon serait simplement ignoré, d'où la confusion. La solution est de dédoublonner avant l'envoi."
+  },
+  {
+   "text": "Le paramètre `$1` est un tableau vide. Quelles affirmations sont vraies ?",
+   "choices": [
+    "`WHERE id = ANY($1)` renvoie toutes les lignes, faute de valeur à comparer",
+    "`WHERE id = ANY($1)` ne renvoie aucune ligne, sans erreur de syntaxe",
+    "`WHERE name <> ALL($1)` ne renvoie aucune ligne, comme `ANY`",
+    "`WHERE name <> ALL($1)` est vrai pour toutes les lignes"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Aucune valeur n'est égale à un élément d'une liste vide, donc `ANY` ne renvoie rien. À l'inverse, `<> ALL` sur une liste vide est vrai partout, ce qui peut surprendre. Il faut donc penser au cas vide dans chaque requête de ce type."
+  }
+ ]
+}

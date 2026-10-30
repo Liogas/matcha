@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Le `Hub` de `cpp-realtime` prend un `crow::websocket::connection &` dans son en-tête public. Quelle est la conséquence ?",
+   "choices": [
+    "Rien de grave, tant que le backend est le seul à utiliser la lib",
+    "Les tests deviennent plus simples, car on utilise la vraie connexion",
+    "Le `Hub` hérite de tout Crow et ne se teste qu'avec un vrai serveur",
+    "La lib est découplée du backend, ce qui évite un cycle de dépendances"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Une lib qui expose un type de Crow dans un en-tête public hérite de Crow et ne se teste plus sans serveur. Le cœur doit définir `ISession`, et un adaptateur comme `CrowSession` fait le lien."
+  },
+  {
+   "text": "Selon la règle de découpage, quels éléments peuvent aller dans une lib générique ?",
+   "choices": [
+    "Un `Hub` qui diffuse des messages à des sessions",
+    "Un `PresenceTracker` qui suit qui est connecté",
+    "La règle « il faut un match pour discuter »",
+    "Un `LikeRepository` qui écrit les likes en base"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Le code sans notion de Matcha ni de like va dans une lib. La règle du match et le dépôt des likes restent dans `src/`, la règle entrant dans la messagerie par une `IConversationPolicy`."
+  },
+  {
+   "text": "Pour réutiliser un helper de `cpp-pg`, tu ajoutes un `#include` de `cpp-pg` dans `cpp-core`. Pourquoi est-ce refusé ?",
+   "choices": [
+    "`cpp-core` ne dépend de rien et `cpp-pg` dépend déjà de lui : cela crée un cycle",
+    "Une lib ne peut inclure que des en-têtes du backend, jamais ceux d'une autre lib",
+    "`cpp-pg` est trop volumineuse et il faudrait d'abord la découper en plusieurs libs",
+    "Seul le backend a le droit de dépendre de plusieurs libs en même temps"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Les flèches de dépendance vont vers le plus stable, et `cpp-core` est tout en bas. Le backend dépend des libs, jamais l'inverse, et aucun cycle n'est toléré."
+  },
+  {
+   "text": "Tu as extrait `cpp-mail` : elle compile, mais aucun code du backend ne l'utilise encore et elle n'a pas de README. Est-elle terminée ?",
+   "choices": [
+    "Oui, dès qu'elle compile et que ses tests passent",
+    "Oui, le README peut venir plus tard et l'usage dans le backend est facultatif",
+    "Non : il manque entre autres un README, un CHANGELOG et le remplacement de vrai code du backend",
+    "Non : elle doit aussi passer `-Werror`, `sanitize` et le package-consumer"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Une lib est finie quand elle passe `-Werror`, `sanitize` et le package-consumer, a un README et un CHANGELOG, et remplace du vrai code dans le backend. Sans usage réel, c'est un squelette de plus, et mieux vaut 5 bibliothèques solides que 12 squelettes."
+  }
+ ]
+}

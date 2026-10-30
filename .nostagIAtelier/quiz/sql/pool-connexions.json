@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Le serveur renvoie des `503` sous charge, alors que PostgreSQL est à 5 % de CPU. Quelle est la meilleure première hypothèse ?",
+   "choices": [
+    "Le pool est trop petit, donc il faut le passer à 100 connexions.",
+    "PostgreSQL est saturé et ne répond plus assez vite.",
+    "Des requêtes gardent une connexion sans travailler en base, par exemple pendant un envoi d'email ou une transaction restée ouverte.",
+    "Le `max_connections` de PostgreSQL est dépassé par le nombre de threads HTTP."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un CPU base faible avec des `503` indique que les connexions sont occupées sans calcul côté base. Il faut chercher ce qui garde une connexion trop longtemps. Agrandir le pool ne ferait que repousser le problème."
+  },
+  {
+   "text": "Dans une transaction, on écrit :\n\n`auto tx = pool->begin(); LikeRepository likes(*tx); ProfileRepository profiles(*pool);`\n\nQuels problèmes ce code pose-t-il ?",
+   "choices": [
+    "`profiles` ne voit pas les écritures de `tx`, car il utilise une seconde connexion.",
+    "`profiles` partage la connexion de `tx` et en bloque l'accès.",
+    "Si tous les threads font cela, chacun tient une connexion et en attend une autre : un deadlock de pool.",
+    "`pool->begin()` ne peut être appelé qu'une seule fois par programme."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "`*pool` emprunte une seconde connexion, indépendante de la transaction. Elle ne voit donc pas les écritures non validées, et le pool peut se bloquer quand chaque thread attend une connexion qu'il ne rend pas. Dans une transaction, tout doit passer par `*tx`."
+  },
+  {
+   "text": "Pour ne manquer de connexions sous aucun prétexte, un développeur propose un pool de 100 connexions pour matcha, « pour être tranquille ». Pourquoi est-ce une mauvaise idée ?",
+   "choices": [
+    "Au-delà d'un certain nombre, les processus de la base se disputent le CPU et les verrous, donc plus de connexions ne donne pas plus de débit.",
+    "PostgreSQL refuse toute valeur supérieure à 10 pour un pool.",
+    "Chaque connexion supplémentaire ralentit le démarrage du backend de façon linéaire.",
+    "Le pool ne peut pas dépasser le nombre de threads du serveur HTTP."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Chaque connexion correspond à un processus PostgreSQL avec sa mémoire, et `max_connections` vaut 100 par défaut. Au-delà du nombre de cœurs, les processus se gênent. Une taille de 4 convient très bien pour matcha."
+  },
+  {
+   "text": "PostgreSQL redémarre pendant une panne puis revient. Les connexions du pool sont devenues inutilisables. Comment le pool se répare-t-il sans redémarrer le backend ?",
+   "choices": [
+    "À chaque requête, il ferme tout puis ouvre une nouvelle connexion.",
+    "Il relance les `connectAttempts = 12`, utilisés aussi après le démarrage.",
+    "Il attend que le délai `acquireTimeout` expire pour jeter toutes les connexions.",
+    "Au retour d'une connexion, il vérifie `PQstatus` et appelle `PQreset` si elle est cassée."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Le pool contrôle chaque connexion rendue et la réinitialise si elle est cassée, ce qui répare la panne tout seul. `connectAttempts` ne sert qu'au démarrage, quand Docker lance le backend avant PostgreSQL."
+  }
+ ]
+}

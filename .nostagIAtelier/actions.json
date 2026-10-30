@@ -1,0 +1,66 @@
+{
+  "links": [
+    {
+      "label": "Application",
+      "url": "http://localhost:18080"
+    },
+    {
+      "label": "Front (Vite)",
+      "url": "http://localhost:5173"
+    },
+    {
+      "label": "Mailpit",
+      "url": "http://localhost:8025"
+    }
+  ],
+  "actions": [
+    {
+      "label": "make test",
+      "type": "shell",
+      "command": "make test",
+      "group": "Tests"
+    },
+    {
+      "label": "make sanitize",
+      "type": "shell",
+      "command": "make sanitize",
+      "group": "Tests"
+    },
+    {
+      "label": "make up",
+      "type": "shell",
+      "command": "make up",
+      "group": "Services"
+    },
+    {
+      "label": "make down",
+      "type": "shell",
+      "command": "make down",
+      "group": "Services"
+    },
+    {
+      "label": "make rebuild",
+      "type": "shell",
+      "command": "make rebuild",
+      "group": "Services"
+    },
+    {
+      "label": "make logs",
+      "type": "shell",
+      "command": "make logs",
+      "group": "Services"
+    },
+    {
+      "label": "git status",
+      "type": "shell",
+      "command": "git status --short",
+      "group": "Projet"
+    },
+    {
+      "label": "Résumer les décisions",
+      "type": "prompt",
+      "prompt": "Résume .nostagIAtelier/decisions.md et liste les décisions encore ouvertes.",
+      "group": "Projet"
+    }
+  ]
+}

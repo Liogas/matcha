@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Le hub garde un `std::vector<ISession *>` brut. `publish()` copie la liste, et pendant ce temps un client se ferme et sa session est détruite. Le thread d'envoi appelle ensuite `send()` sur un pointeur invalide. Quelle correction garde l'envoi hors verrou et le rend sûr ?",
+   "choices": [
+    "Stocker des `std::weak_ptr<ISession>` et appeler `lock()` avant chaque `send()`, en ignorant les pointeurs vides",
+    "Stocker des `std::unique_ptr<ISession>` dans le hub et en copier la liste avant la boucle d'envoi",
+    "Tester `session != nullptr` avant d'appeler `send()`, car un pointeur brut devient nul à la destruction",
+    "Garder le verrou du hub pendant toute la boucle d'envoi et ne rien changer aux types"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "`lock()` renvoie un `shared_ptr` vide si la session est morte, et sinon il en fait un copropriétaire jusqu'à la fin du bloc : la session ne peut plus disparaître pendant `send()`. Un pointeur brut ne devient jamais nul tout seul, donc le test contre `nullptr` ne protège de rien. Un `unique_ptr` ne se copie pas, et garder le verrou pendant l'envoi bloque les autres threads sans corriger le fond du problème."
+  },
+  {
+   "text": "Un développeur écrit `Session *brut = new Session; std::shared_ptr<Session> a(brut); std::shared_ptr<Session> b(brut);`. Que se passe-t-il, et que faut-il faire ?",
+   "choices": [
+    "Les deux partagent un compteur commun : tout va bien, l'objet est détruit à la mort du dernier",
+    "Il y a deux compteurs indépendants, donc une double destruction ; il faut créer `a` avec `make_shared` puis copier `a` dans `b`",
+    "Le compilateur refuse le second `shared_ptr`, car un pointeur brut ne peut être adopté qu'une fois",
+    "Il y a deux compteurs indépendants, donc une double destruction ; il faut remplacer `b` par un `weak_ptr` créé depuis `brut`"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Chaque `shared_ptr` construit depuis un pointeur brut crée son propre bloc de contrôle, et chacun détruira l'objet : c'est une double destruction. On crée l'objet avec `make_shared`, puis on copie le `shared_ptr` pour partager le même compteur. Un `weak_ptr` ne se construit pas depuis un pointeur brut : il faut partir d'un `shared_ptr`."
+  },
+  {
+   "text": "Une `Session` garde un `std::shared_ptr<Hub>` et le `Hub` garde des `std::shared_ptr<Session>`. Après la fermeture du serveur, la mémoire n'est jamais libérée. Quelles corrections sont valables ?",
+   "choices": [
+    "Passer les `shared_ptr<Session>` du hub en `unique_ptr` et laisser la session en `shared_ptr<Hub>`",
+    "Remplacer le pointeur de la session vers le hub par un `Hub &` si le hub vit toujours plus longtemps",
+    "Ajouter un destructeur explicite dans `Hub` qui remet à zéro ses pointeurs vers les sessions",
+    "Remplacer le pointeur de la session vers le hub par un `std::weak_ptr<Hub>` si le hub peut disparaître avant elle"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Le cycle empêche les compteurs de tomber à zéro, car chaque côté garde l'autre en vie. Il faut que la session, l'enfant, observe le hub sans le posséder : par référence si le hub la dépasse toujours, par `weak_ptr` sinon. Un destructeur de `Hub` ne sera jamais appelé tant que le cycle existe, donc il ne résout rien."
+  },
+  {
+   "text": "Deux threads possèdent chacun leur copie du même `std::shared_ptr<Session>` et exécutent `session->nbMessages++` sur un `int` ordinaire. Un collègue dit que c'est sûr, puisque `shared_ptr` est thread-safe. Que lui répondre ?",
+   "choices": [
+    "Seul le compteur de références est atomique : l'objet pointé doit être protégé par un mutex ou un `std::atomic`",
+    "C'est sûr, car l'atomicité du compteur s'étend aux écritures faites dans l'objet pointé",
+    "C'est sûr, puisque chaque thread a sa propre copie du `shared_ptr` et donc son propre compteur",
+    "Il faut passer à `unique_ptr`, qui sérialise les accès à l'objet pointé"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Le bloc de contrôle est protégé, ce qui rend sûres les copies et les destructions de `shared_ptr` depuis plusieurs threads. L'objet lui-même n'est pas protégé : deux écritures concurrentes sur `nbMessages` sont une course de données. Les copies partagent un seul compteur, et `unique_ptr` n'ajoute aucune synchronisation."
+  }
+ ]
+}

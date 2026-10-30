@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Dans un middleware Crow, `before_handle` détecte un jeton invalide et exécute `res.code = 401; res.end(); return;`. Que se passe-t-il ensuite ?",
+   "choices": [
+    "Le handler est quand même appelé, avec `ctx.accountId` valant 0",
+    "Le handler est appelé, mais sa réponse est ignorée par Crow",
+    "Le handler n'est pas appelé, puisque la réponse est déjà terminée",
+    "Le handler est appelé seulement si la route n'a pas activé le middleware"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Si `before_handle` termine la réponse avec `res.end()`, Crow n'appelle pas le handler. C'est ce qui permet de traiter les cas `401` et `503` une seule fois, en un seul endroit."
+  },
+  {
+   "text": "Pour gagner du temps, un développeur stocke l'identifiant du compte authentifié dans une variable globale écrite par `before_handle` et lue par les handlers. Quels sont les problèmes ?",
+   "choices": [
+    "Une requête simultanée peut écraser la valeur, et l'utilisateur A agirait au nom de B",
+    "Des accès concurrents non protégés à une même variable constituent un data race",
+    "Crow interdit les variables globales et refuse de compiler le middleware",
+    "La variable serait remise à zéro à chaque `after_handle`, donc toujours vide"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Crow traite des requêtes en parallèle : un champ partagé est écrasé par une autre requête, ce qui est grave pour l'authentification, en plus d'être un data race. C'est pour cela que le `context` est créé pour chaque requête."
+  },
+  {
+   "text": "Un développeur ajoute `RequireAuth` et s'attend à ce que la route WebSocket soit authentifiée automatiquement. Qu'est-ce qui est vrai ?",
+   "choices": [
+    "Le middleware s'applique, car le WebSocket démarre par une requête HTTP ordinaire",
+    "Le middleware s'applique seulement à l'ouverture, puis plus aucun contrôle ne s'exécute",
+    "Le middleware refuse les WebSocket, il faut passer par `after_handle`",
+    "Le WebSocket ne passe pas par cette chaîne : l'authentification se fait dans ses callbacks, comme `onaccept`"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Le WebSocket a ses propres callbacks et ne traverse pas `before_handle` ni `after_handle`. Il faut donc authentifier dans `onaccept`, par exemple avec un ticket WebSocket. S'en remettre au middleware laisserait cette route ouverte."
+  },
+  {
+   "text": "Les middlewares sont activés route par route avec `CROW_MIDDLEWARES`. Quelles pratiques réduisent les risques ?",
+   "choices": [
+    "Un test qui parcourt toutes les routes et vérifie qu'aucune n'est restée publique par oubli",
+    "Garder `before_handle` léger, sans requêtes coûteuses imposées à toutes les routes",
+    "Compter sur Crow pour refuser toute route déclarée sans middleware",
+    "Stocker le compte courant dans une variable globale plus simple à relire"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Une route oubliée reste publique, et seul un test systématique la détecte. Un `before_handle` coûteux ralentit chaque requête de tout le monde. Crow ne refuse pas une route sans middleware, et une variable globale casserait l'isolation entre requêtes."
+  }
+ ]
+}

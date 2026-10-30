@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Dans `handleRefreshSession`, le code appelle d'abord `rotateRefreshToken`, puis `tokenGenerator.generate`. La génération du JWT lève une exception, et le client ne reçoit rien. Que se passe-t-il quand il retente avec son ancien refresh token ?",
+   "choices": [
+    "Le serveur voit un token déjà consommé, croit à un vol et révoque la session du client.",
+    "L'ancien token reste valable jusqu'à son expiration, donc la nouvelle tentative réussit normalement.",
+    "Le serveur reconnaît le cookie de session et régénère un JWT sans vérifier le token.",
+    "Le nouveau token a été enregistré en base, donc le client le récupère à la requête suivante."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "La rotation avait déjà marqué l'ancien token comme consommé avant l'échec. Sa réutilisation ressemble donc à un vol, et la session est révoquée. La correction consiste à générer le JWT d'abord, car cette étape peut échouer sans effet de bord."
+  },
+  {
+   "text": "Un attaquant et sa victime possèdent le même refresh token R1. L'attaquant l'utilise en premier et obtient R2. La victime présente ensuite R1. Que doit faire le serveur ?",
+   "choices": [
+    "Refuser uniquement la requête de la victime et laisser R2 valable, puisque R1 était arrivé en premier côté attaquant.",
+    "Révoquer toute la session : R2 devient inutile et la victime doit se reconnecter.",
+    "Repérer l'attaquant par son adresse IP et ne bloquer que lui, en laissant la victime continuer.",
+    "Émettre un R3 à la victime, car R1 est son token légitime et l'attaquant n'a pas encore été identifié."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Un token consommé qui réapparaît prouve que deux personnes le détiennent, mais le serveur ne sait pas laquelle est légitime. Il révoque donc toute la session. L'attaquant perd R2, et la victime se reconnecte."
+  },
+  {
+   "text": "Un collègue propose de hacher les refresh tokens avec Argon2, comme les mots de passe. Quelles réponses de la fiche s'appliquent ?",
+   "choices": [
+    "C'est inutile : un token de 256 bits aléatoires n'est dans aucun dictionnaire, donc SHA-256 suffit.",
+    "C'est indispensable : SHA-256 est trop rapide, et un attaquant pourrait tester tous les tokens possibles.",
+    "Stocker l'empreinte et non le token protège les sessions si la table fuit.",
+    "On peut stocker le token en clair, puisqu'il est aléatoire et donc impossible à deviner."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Le mot de passe a peu d'entropie, d'où Argon2. Un token de 256 bits ne se devine pas, donc une fonction rapide suffit. Le hachage reste indispensable : sans lui, une fuite de la table donnerait des sessions utilisables. Les tokens en clair sont une erreur fréquente."
+  },
+  {
+   "text": "Deux onglets du même navigateur rafraîchissent en même temps avec le même refresh token. Le second est traité comme un vol et la session est révoquée. Quelles solutions la fiche propose-t-elle ?",
+   "choices": [
+    "Accepter l'ancien token quelques secondes après sa rotation.",
+    "Mettre un verrou côté front pour qu'un seul onglet rafraîchisse à la fois.",
+    "Désactiver la détection de réutilisation, qui produit trop de faux positifs.",
+    "Rallonger le JWT à plusieurs jours, pour éviter d'avoir à rafraîchir."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Une courte tolérance côté serveur ou un verrou côté front évite le faux positif sans perdre la détection de vol. Désactiver la détection supprime l'intérêt de la rotation. Rallonger le JWT revient au problème de départ : un jeton volé reste utile longtemps."
+  }
+ ]
+}

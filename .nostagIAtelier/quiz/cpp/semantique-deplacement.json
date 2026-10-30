@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Une fonction construit un objet local `Rows rows = lireResultats();` puis écrit `return std::move(rows);`. Le type `Rows` est déplaçable et non copiable. Que penser de ce `return` ?",
+   "choices": [
+    "Il est nécessaire : sans `std::move`, le compilateur essaierait de copier `rows` et refuserait de compiler",
+    "Il est inutile mais sans effet sur les performances, car `std::move` ne fait rien de plus",
+    "Il est utile, car `std::move` garantit que la construction se fait directement chez l'appelant",
+    "Il est à retirer : `return rows;` déplace déjà, et `std::move` empêche la construction directe chez l'appelant"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Le retour d'une variable locale est déjà traité comme un déplacement, et le compilateur peut même construire l'objet directement chez l'appelant. En ajoutant `std::move`, on supprime cette optimisation. Il faut simplement écrire `return rows;`."
+  },
+  {
+   "text": "Le constructeur de déplacement de `PooledConnection` copie `_pool` depuis `other` et déplace `_connection`, mais oublie la ligne qui met `other._pool` à `nullptr`. Que se passe-t-il à l'exécution ?",
+   "choices": [
+    "La connexion est copiée au lieu d'être déplacée, ce qui n'a pas d'autre effet",
+    "La connexion est rendue deux fois au pool : par l'objet déplacé, puis par l'objet destination",
+    "Le compilateur refuse le constructeur, car un déplacement doit annuler la source",
+    "L'objet source est détruit plus tôt, ce qui évite la double libération"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le destructeur de la source s'exécute toujours. Si `_pool` n'est pas annulé, la source croit encore posséder la connexion et la rend, puis la destination la rend à son tour. La ligne `other._pool = nullptr` rend la source inoffensive : son destructeur n'a plus rien à rendre."
+  },
+  {
+   "text": "Un type `Rows` possède un constructeur de déplacement non marqué `noexcept`, mais il est aussi copiable. On l'insère dans un `std::vector<Rows>` qui doit grandir. Que fait le vecteur et que faut-il corriger ?",
+   "choices": [
+    "Il déplace quand même les éléments ; le `noexcept` n'a d'effet que sur les fonctions libres",
+    "Il copie les éléments, car un déplacement susceptible de lever une exception laisserait le vecteur à moitié transféré ; il faut marquer le déplacement `noexcept`",
+    "Il refuse de compiler tant que le constructeur de déplacement n'est pas `noexcept`",
+    "Il copie les éléments ; il faut supprimer le constructeur de copie pour forcer le déplacement"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Pour conserver sa garantie en cas d'exception, le vecteur ne déplace que si le déplacement est `noexcept`, sinon il copie. Le type perd alors tout l'intérêt du déplacement. Marquer le constructeur `noexcept` suffit, il n'est pas nécessaire de supprimer la copie."
+  },
+  {
+   "text": "On écrit `const std::string x = grosseValeur(); auto y = std::move(x);`. Le développeur pense avoir évité une copie coûteuse. Que se passe-t-il vraiment ?",
+   "choices": [
+    "`x` est vidé et `y` récupère le tampon, comme prévu",
+    "Le programme ne compile pas, car on ne peut pas déplacer un objet `const`",
+    "C'est une copie silencieuse, car un objet `const` ne peut pas être vidé et ne peut donc pas être volé",
+    "`x` est vidé mais reste lisible, puisque son état après déplacement est garanti identique à l'état d'origine"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "`std::move` convertit seulement en `T &&`, ici `const std::string &&`, qui ne peut pas se lier au constructeur de déplacement. C'est donc le constructeur de copie qui est choisi, sans aucun avertissement. Un objet que l'on veut déplacer ne doit pas être `const`."
+  }
+ ]
+}

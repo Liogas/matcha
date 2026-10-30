@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Deux personnes s'inscrivent avec le même email, et l'index unique en refuse une. Le client doit recevoir `409`. Quelle détection est la plus fiable ?",
+   "choices": [
+    "Chercher le mot `duplicate` dans le message d'erreur de PostgreSQL",
+    "Lire le SQLSTATE `23505` et le traduire en `Conflict`, donc en `409`",
+    "Renvoyer le message SQL au client pour qu'il décide lui-même du statut",
+    "Traiter toute erreur de classe `08` comme un conflit d'unicité"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le message dépend de `lc_messages` et peut changer, alors que SQLSTATE est un contrat stable. `23505` signifie violation d'unicité. Renvoyer le message SQL au client est une erreur, et la classe `08` concerne la connexion, pas les doublons."
+  },
+  {
+   "text": "Une insertion de photo avec `position = 6` échoue sur `CHECK (position BETWEEN 1 AND 5)`. Quel est le SQLSTATE et que renvoie l'API via `errorCodeFor` ?",
+   "choices": [
+    "`23505`, `Conflict`, donc `409`",
+    "`23514`, `Invalid`, donc `400`",
+    "`22001`, `Unavailable`, donc `503`",
+    "`23514`, `Internal`, donc `500`"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Une violation de `CHECK` donne `23514`. La classe `23` autre que `23505` est traduite en `Invalid`, soit `400`. `23505` concerne l'unicité, et `Internal` est réservé aux bugs de ton code comme une erreur de syntaxe."
+  },
+  {
+   "text": "Le code fait `if (accounts.exists(email)) return conflit(); accounts.insert(email);`. Quels reproches justifiés peut-on faire ?",
+   "choices": [
+    "Une autre requête peut insérer le même email entre le test et l'insertion",
+    "Le test `exists` rend inutile la contrainte d'unicité, qu'on peut donc supprimer",
+    "Il vaut mieux tenter l'`INSERT` et traduire l'erreur `23505` en `Conflict`",
+    "Le premier appel est toujours plus rapide, donc il vaut mieux le garder seul"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Entre le test et l'insertion, une autre requête peut passer : seule la contrainte en base est atomique. Il faut donc laisser la base trancher et traduire `23505`. La vérification préalable peut rester pour un meilleur message, mais pas remplacer la contrainte."
+  },
+  {
+   "text": "Lesquelles de ces traductions de SQLSTATE sont cohérentes avec `errorCodeFor` ?",
+   "choices": [
+    "`42601` (erreur de syntaxe) vers `Internal`, `500` : c'est un bug du code, à tracer",
+    "`23502` (`NOT NULL`) vers `Conflict`, `409`, comme pour un doublon",
+    "`40P01` (deadlock) vers `Unavailable`, `503` : on peut réessayer plus tard",
+    "`22P02` (conversion impossible) vers `Internal`, `500`, car c'est une erreur de la base"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Une erreur de syntaxe est un bug de ton code : `Internal` avec une trace. Un deadlock ou un échec de sérialisation est transitoire : `Unavailable`. Les autres classes `22` et `23` donnent `Invalid`, sauf `23505` qui donne `Conflict`."
+  }
+ ]
+}

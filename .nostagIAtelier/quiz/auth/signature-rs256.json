@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un second service doit vérifier les JWT émis par ton backend. Pourquoi choisir RS256 plutôt que HS256 ?",
+   "choices": [
+    "Il reçoit seulement la clé publique : il peut vérifier, mais pas fabriquer de jeton.",
+    "Les jetons RS256 sont chiffrés, donc seul le second service peut lire leur contenu.",
+    "RS256 n'utilise aucune clé, la signature étant calculée à partir du seul contenu du jeton.",
+    "Avec HS256, un second service ne pourrait techniquement jamais vérifier une signature."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Avec HS256, vérifier exige le secret partagé, ce qui permet aussi de signer. Avec RS256, la clé publique vérifie sans permettre de signer. La signature ne chiffre rien : le contenu reste lisible."
+  },
+  {
+   "text": "Un attaquant décode un JWT signé en RS256, change la valeur de `sub` puis renvoie le jeton avec l'ancienne signature. Que fait le serveur ?",
+   "choices": [
+    "Il accepte le jeton tant que l'entête est intact, car la signature couvre seulement l'entête.",
+    "Il recalcule l'empreinte du contenu, constate qu'elle ne correspond plus à la signature et répond `401`.",
+    "Il ne peut rien détecter, car le contenu d'un JWT est public et donc modifiable sans conséquence.",
+    "Il rejette le jeton parce que l'attaquant n'a pas pu lire le contenu avant de le modifier."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "La signature porte sur `entête.contenu`. Modifier le contenu change l'empreinte, et sans clé privée l'attaquant ne peut pas produire la signature correspondante. Que le contenu soit lisible n'implique pas qu'il soit modifiable."
+  },
+  {
+   "text": "Lors d'une revue de code d'un module JWT, quelles pratiques sont des erreurs fréquentes à corriger ?",
+   "choices": [
+    "Choisir l'algorithme de vérification d'après le champ indiqué dans l'entête du jeton reçu.",
+    "Committer `secrets/jwt-private.pem` dans le dépôt Git pour que toute l'équipe l'ait.",
+    "Exposer la clé publique sur `/.well-known/jwks.json` pour que d'autres services vérifient.",
+    "Utiliser une clé de signature différente pour chaque environnement."
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Faire confiance à l'algorithme annoncé par le jeton et committer la clé privée figurent dans les erreurs fréquentes. Publier la clé publique est le but de RS256, et séparer les clés par environnement est recommandé."
+  },
+  {
+   "text": "Un développeur place le numéro de carte d'un client dans le contenu d'un JWT RS256, en pensant que la signature le protège. Pourquoi est-ce une erreur ?",
+   "choices": [
+    "La signature garantit l'origine et l'intégrité, mais ne cache rien : n'importe qui peut lire le contenu.",
+    "La clé publique permet de déchiffrer le contenu, donc tout service qui la possède peut le lire.",
+    "Base64URL chiffre le contenu avec une clé faible, qu'un attaquant peut casser assez facilement.",
+    "RS256 limite la taille du contenu à quelques octets, ce qui empêche d'y mettre un numéro de carte."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Base64URL est un simple encodage réversible sans clé, et la signature n'ajoute aucune confidentialité. La clé publique sert à vérifier, pas à déchiffrer. Il ne faut donc jamais mettre de donnée sensible dans un JWT."
+  }
+ ]
+}

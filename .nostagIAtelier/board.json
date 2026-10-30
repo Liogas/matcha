@@ -1,0 +1,1425 @@
+{
+  "columns": [
+    {
+      "cards": [
+        {
+          "dependsOn": [
+            12
+          ],
+          "description": "Guide 06, étape H. Fixture avec SAVEPOINT. Audit 5.2 : aucun test sur Profile, Like et Messaging.",
+          "detect": {
+            "done": [
+              "exists:backend/tests/support/DatabaseTest.hpp",
+              "contains:backend/tests|ProfileRepositoryTest"
+            ],
+            "started": [
+              "exists:backend/tests/support/DatabaseTest.hpp"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "06-cpp-pg-2#10"
+          ],
+          "id": 13,
+          "journal": ".nostagIAtelier/journal/13.md",
+          "name": "Tests de repositories en transaction annulée",
+          "notions": [
+            "tests/transaction-annulee",
+            "sql/savepoint",
+            "tests/gtest"
+          ],
+          "priority": "haute",
+          "type": "Test"
+        },
+        {
+          "dependsOn": [
+            14
+          ],
+          "description": "Guide 06, étapes J et K. Ordre de destruction, dry-run sur une copie de la base, vrai serveur.",
+          "detect": {
+            "done": [
+              "contains:backend/src/main.cpp|pg::migrate",
+              "lacks:backend/src/main.cpp|DatabaseInitializer",
+              "commit:cpp-pg partout"
+            ],
+            "started": [
+              "contains:backend/src/main.cpp|pg::migrate"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "06-cpp-pg-2#12",
+            "06-cpp-pg-2#13"
+          ],
+          "id": 15,
+          "journal": ".nostagIAtelier/journal/15.md",
+          "name": "main.cpp, CMake et vérification de cpp-pg",
+          "notions": [
+            "cpp/duree-de-vie-objets",
+            "infra/sante-arret-propre"
+          ],
+          "priority": "haute",
+          "type": "Dette"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Guide 07. Audit 4.3 : échappement de la page de vérification d'email. Sortir les regex des routes.",
+          "detect": {
+            "done": [
+              "exists:backend/libs/cpp-validation/tests",
+              "contains:backend/CMakeLists.txt|cpp-validation"
+            ],
+            "started": [
+              "exists:backend/libs/cpp-validation"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 16,
+          "journal": ".nostagIAtelier/journal/16.md",
+          "name": "cpp-validation : UTF-8, validateurs, HtmlEscaper",
+          "notions": [
+            "cpp/utf-8",
+            "cpp/std-regex",
+            "web/validation-entrees",
+            "web/xss-echappement"
+          ],
+          "priority": "critique",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [
+            16
+          ],
+          "description": "Guide 07. Exigé par le sujet : refuser les mots anglais courants. Aujourd'hui 7 mots en dur dans AuthRouteSupport.cpp.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/libs/cpp-validation|PasswordPolicy"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 17,
+          "journal": ".nostagIAtelier/journal/17.md",
+          "name": "Politique de mot de passe avec dictionnaire",
+          "notions": [
+            "auth/politique-mot-de-passe",
+            "cpp/interfaces-injection"
+          ],
+          "priority": "critique",
+          "type": "Sécurité"
+        },
+        {
+          "dependsOn": [
+            16
+          ],
+          "description": "Audit 4.13 et 4.14. Énumérations et CHECK pour genre et orientation, longueur maximale de biographie, ville sans plage non ASCII.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 18,
+          "journal": ".nostagIAtelier/journal/18.md",
+          "name": "Validation stricte du profil",
+          "notions": [
+            "web/validation-entrees",
+            "sql/contraintes",
+            "cpp/std-regex",
+            "cpp/utf-8"
+          ],
+          "priority": "critique",
+          "type": "Sécurité"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Guide 07. Haversine, bounding box, arrondi à 1 km, IGeocoder et TableGeocoder (GeoNames). Aucune dépendance à Crow ni PostgreSQL.",
+          "detect": {
+            "done": [
+              "exists:backend/libs/cpp-geo/tests",
+              "contains:backend/CMakeLists.txt|cpp-geo"
+            ],
+            "started": [
+              "exists:backend/libs/cpp-geo"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 19,
+          "journal": ".nostagIAtelier/journal/19.md",
+          "name": "cpp-geo",
+          "notions": [
+            "metier/haversine",
+            "metier/bounding-box",
+            "metier/geocodage",
+            "metier/rgpd"
+          ],
+          "priority": "critique",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Guide 08. Envelope, ISession, Hub, PresenceTracker, IBroker. Envoi hors verrou, plus de pointeurs bruts.",
+          "detect": {
+            "done": [
+              "exists:backend/libs/cpp-realtime/tests",
+              "contains:backend/CMakeLists.txt|cpp-realtime"
+            ],
+            "started": [
+              "exists:backend/libs/cpp-realtime"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 20,
+          "journal": ".nostagIAtelier/journal/20.md",
+          "name": "cpp-realtime : Hub, sessions, présence",
+          "notions": [
+            "temps-reel/fan-out",
+            "temps-reel/presence",
+            "cpp/pointeurs-intelligents",
+            "cpp/mutex-contention",
+            "cpp/data-race",
+            "archi/lib-coeur-adaptateur",
+            "tests/faux-objets"
+          ],
+          "priority": "critique",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [
+            20
+          ],
+          "description": "Guide 08. Audit 4.12 : plus de JWT dans l'URL (MessagingWebSocket.cpp:32). Heartbeat, routage par type, erreurs renvoyées au client, limite de débit.",
+          "detect": {
+            "done": [
+              "exists:backend/libs/cpp-realtime-crow/tests",
+              "contains:backend/CMakeLists.txt|cpp-realtime-crow"
+            ],
+            "started": [
+              "exists:backend/libs/cpp-realtime-crow"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 21,
+          "journal": ".nostagIAtelier/journal/21.md",
+          "name": "cpp-realtime-crow : /api/ws et ticket",
+          "notions": [
+            "temps-reel/websocket",
+            "temps-reel/heartbeat",
+            "temps-reel/ticket-websocket"
+          ],
+          "priority": "critique",
+          "type": "Sécurité"
+        },
+        {
+          "dependsOn": [
+            20
+          ],
+          "description": "Guide 09. Notification, INotificationStore, NotificationDispatcher, filtre fourni par l'application, publication après le commit.",
+          "detect": {
+            "done": [
+              "exists:backend/libs/cpp-notify/tests",
+              "contains:backend/CMakeLists.txt|cpp-notify"
+            ],
+            "started": [
+              "exists:backend/libs/cpp-notify"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 22,
+          "journal": ".nostagIAtelier/journal/22.md",
+          "name": "cpp-notify : stockage et diffusion",
+          "notions": [
+            "temps-reel/notifications-stockees",
+            "temps-reel/outbox",
+            "sql/jsonb",
+            "sql/index",
+            "cpp/interfaces-injection"
+          ],
+          "priority": "critique",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Guide 09. Exigé par le sujet : aujourd'hui login par email (AuthSessionRoutes.cpp:34). Hash factice pour un temps constant, clé du limiteur par username.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 23,
+          "journal": ".nostagIAtelier/journal/23.md",
+          "name": "Login par nom d'utilisateur",
+          "notions": [
+            "auth/enumeration-temps-constant",
+            "auth/argon2id",
+            "auth/rate-limiting"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            17,
+            23
+          ],
+          "description": "Guide 09. Audit 6.1 #3 et #4 : injecter IPasswordPolicy et IEmailValidator, supprimer les doublons de validation.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/src|RegistrationService"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 24,
+          "journal": ".nostagIAtelier/journal/24.md",
+          "name": "Séparer LoginService et RegistrationService",
+          "notions": [
+            "cpp/interfaces-injection",
+            "archi/couche-services"
+          ],
+          "priority": "normale",
+          "type": "Dette"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Guide 09. Audit 4.9 : le backend ne se télécharge plus lui-même, allowInsecureHttp disparaît.",
+          "detect": {
+            "done": [
+              "contains:backend/src|StaticJwksProvider"
+            ],
+            "started": [
+              "contains:backend/src|StaticJwksProvider"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 25,
+          "journal": ".nostagIAtelier/journal/25.md",
+          "name": "StaticJwksProvider",
+          "notions": [
+            "auth/jwks",
+            "cpp/interfaces-injection"
+          ],
+          "priority": "haute",
+          "type": "Sécurité"
+        },
+        {
+          "dependsOn": [
+            24
+          ],
+          "description": "Guide 10. Audit 6.1 #2 et #10. Fusion OpaqueToken et EmailVerificationToken, IAttemptLimiter. Bonus : RefreshTokenService.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/libs/cpp-auth|IAttemptLimiter"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 26,
+          "journal": ".nostagIAtelier/journal/26.md",
+          "name": "Module sodium de cpp-auth",
+          "notions": [
+            "auth/tokens-opaques",
+            "auth/argon2id",
+            "auth/rate-limiting",
+            "tests/faux-objets"
+          ],
+          "priority": "normale",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [
+            25
+          ],
+          "description": "Guide 10. Audit 4.8. Remplit ctx.accountId, table ErrorCode vers HTTP à un seul endroit, naissance du request_id.",
+          "detect": {
+            "done": [
+              "exists:backend/libs/cpp-auth-crow/tests",
+              "contains:backend/CMakeLists.txt|cpp-auth-crow"
+            ],
+            "started": [
+              "exists:backend/libs/cpp-auth-crow"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 27,
+          "journal": ".nostagIAtelier/journal/27.md",
+          "name": "cpp-auth-crow : RequireAuth et 503",
+          "notions": [
+            "web/middleware-crow",
+            "web/http-bases",
+            "cpp/result-expected",
+            "infra/logs-structures"
+          ],
+          "priority": "haute",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [
+            27
+          ],
+          "description": "Guide 10. Audit 4.10. AuthRouteSupport.cpp:166 lit l'en-tête sans vérifier l'appelant. TRUSTED_PROXIES, backend non publié.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/src|TRUSTED_PROXIES"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 28,
+          "journal": ".nostagIAtelier/journal/28.md",
+          "name": "Proxies de confiance pour X-Real-IP",
+          "notions": [
+            "web/proxies-confiance",
+            "infra/nginx",
+            "auth/rate-limiting"
+          ],
+          "priority": "haute",
+          "type": "Sécurité"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Guide 10. Audit 4.11, dans handleRefreshSession.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 29,
+          "journal": ".nostagIAtelier/journal/29.md",
+          "name": "Signer le JWT avant la rotation du refresh token",
+          "notions": [
+            "auth/refresh-rotation",
+            "auth/jwt"
+          ],
+          "priority": "haute",
+          "type": "Sécurité"
+        },
+        {
+          "dependsOn": [
+            14
+          ],
+          "description": "Audit 5.2. Sortir la logique des handlers, la transaction vit dans le service. À faire avant d'ajouter blocage et notifications aux likes.",
+          "detect": {
+            "done": [],
+            "started": [
+              "exists:backend/src/services/LikeService.cpp"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 30,
+          "journal": ".nostagIAtelier/journal/30.md",
+          "name": "Couche services : LikeService d'abord",
+          "notions": [
+            "archi/couche-services",
+            "archi/evenements",
+            "cpp/result-expected"
+          ],
+          "priority": "haute",
+          "type": "Dette"
+        },
+        {
+          "dependsOn": [
+            30
+          ],
+          "description": "Audit 3.13. Exigé par le sujet. LikeRoutes.cpp vérifie la cible, pas l'utilisateur courant : répondre 403.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 31,
+          "journal": ".nostagIAtelier/journal/31.md",
+          "name": "Like interdit sans photo de profil",
+          "notions": [
+            "web/http-bases",
+            "archi/couche-services"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            15,
+            16
+          ],
+          "description": "Audit 3.3. Autocomplétion GET /api/interests, PUT /api/profile/interests en transaction, normalisation. Les tables existent déjà.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/src|/api/interests"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 32,
+          "journal": ".nostagIAtelier/journal/32.md",
+          "name": "Tags d'intérêt réutilisables",
+          "notions": [
+            "sql/relation-nn",
+            "sql/on-conflict",
+            "sql/tableaux-unnest",
+            "sql/recherche-floue",
+            "sql/index"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            16
+          ],
+          "description": "Audit 3.4. PATCH /api/profile/identity. Exigé par le sujet.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/src|/api/profile/identity"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 33,
+          "journal": ".nostagIAtelier/journal/33.md",
+          "name": "Modifier nom et prénom",
+          "notions": [
+            "web/validation-entrees",
+            "web/rest-conception"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            26,
+            27
+          ],
+          "description": "Audit 3.4. Mot de passe redemandé, lien à la nouvelle adresse, alerte à l'ancienne, table email_change_tokens.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/migrations|email_change_tokens"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 34,
+          "journal": ".nostagIAtelier/journal/34.md",
+          "name": "Changer d'email avec confirmation",
+          "notions": [
+            "auth/reauthentification",
+            "auth/tokens-opaques",
+            "sql/sqlstate"
+          ],
+          "priority": "critique",
+          "type": "Sécurité"
+        },
+        {
+          "dependsOn": [
+            19
+          ],
+          "description": "Audit 3.5. Colonnes lat/lon arrondies, PUT /api/profile/location, consentement et retrait, ville manuelle géocodée.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/src|/api/profile/location"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 35,
+          "journal": ".nostagIAtelier/journal/35.md",
+          "name": "Géolocalisation du profil",
+          "notions": [
+            "metier/rgpd",
+            "metier/geocodage",
+            "sql/migrations",
+            "sql/contraintes"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            30,
+            37
+          ],
+          "description": "Audit 3.9. Table profile_views dédupliquée, GET visitors et history avec profils résumés et pagination.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/migrations|profile_views"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 36,
+          "journal": ".nostagIAtelier/journal/36.md",
+          "name": "Historique des visites",
+          "notions": [
+            "sql/on-conflict",
+            "sql/pagination-keyset",
+            "sql/n-plus-un",
+            "web/rest-conception"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            30
+          ],
+          "description": "Audit 3.10. Suggestions, recherche, consultation (404), likes, notifications, messages HTTP et WebSocket, conversations. Un test par point d'entrée.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 37,
+          "journal": ".nostagIAtelier/journal/37.md",
+          "name": "Blocage partout",
+          "notions": [
+            "metier/policy-centralisee",
+            "sql/vues-sql",
+            "tests/pyramide",
+            "sql/transactions"
+          ],
+          "priority": "critique",
+          "type": "Sécurité"
+        },
+        {
+          "dependsOn": [
+            30
+          ],
+          "description": "Audit 3.10. Table user_reports, POST /api/profiles/<id>/report.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/migrations|user_reports"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 38,
+          "journal": ".nostagIAtelier/journal/38.md",
+          "name": "Signalement de faux compte",
+          "notions": [
+            "web/rest-conception",
+            "sql/contraintes"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            21
+          ],
+          "description": "Audit 3.11. online et last_seen_at dans le profil, écritures espacées.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 39,
+          "journal": ".nostagIAtelier/journal/39.md",
+          "name": "Présence et dernière connexion",
+          "notions": [
+            "temps-reel/presence",
+            "temps-reel/heartbeat"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            30,
+            36
+          ],
+          "description": "Audit 3.6. Formule documentée, FameCalculator pur, recalcul à chaque événement.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/src|FameCalculator"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 40,
+          "journal": ".nostagIAtelier/journal/40.md",
+          "name": "Note de popularité",
+          "notions": [
+            "metier/fame-rating",
+            "sql/denormalisation",
+            "archi/evenements"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            9,
+            32,
+            35,
+            37,
+            40
+          ],
+          "description": "Audit 3.7. Compatibilité d'orientation dans les deux sens, bisexuel par défaut, score proximité, tags et popularité, priorité géographique, exclusions.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 41,
+          "journal": ".nostagIAtelier/journal/41.md",
+          "name": "Moteur de suggestions",
+          "notions": [
+            "metier/orientation",
+            "metier/score-matching",
+            "metier/recherche-unifiee",
+            "sql/explain-analyze",
+            "sql/index",
+            "sql/cte"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            41
+          ],
+          "description": "Audit 3.8. Même moteur que les suggestions : âge, popularité, localisation, tags, tri et filtres.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 42,
+          "journal": ".nostagIAtelier/journal/42.md",
+          "name": "Recherche avancée, tris et filtres",
+          "notions": [
+            "metier/recherche-unifiee",
+            "sql/query-builder",
+            "sql/pagination-keyset",
+            "web/rest-conception"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            22,
+            21,
+            30,
+            37
+          ],
+          "description": "Audit 3.12. Like, visite, message, match, unlike d'un connecté. Routes de lecture, compteur non lu, règles de blocage et d'unlike.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 43,
+          "journal": ".nostagIAtelier/journal/43.md",
+          "name": "Notifications des cinq événements",
+          "notions": [
+            "temps-reel/notifications-stockees",
+            "temps-reel/outbox",
+            "archi/evenements"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            21
+          ],
+          "description": "Audit IV.6. unread_count existe par conversation : pousser un total visible depuis toutes les pages.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 44,
+          "journal": ".nostagIAtelier/journal/44.md",
+          "name": "Compteur global de messages non lus",
+          "notions": [
+            "temps-reel/fan-out",
+            "temps-reel/websocket"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            32,
+            35,
+            37,
+            39,
+            40
+          ],
+          "description": "Audit 3.14 et 4.17. Tout le profil consulté en un appel, likes reçus et matchs renvoyés en profils résumés, sans email.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 45,
+          "journal": ".nostagIAtelier/journal/45.md",
+          "name": "Bloc relationship et profils résumés",
+          "notions": [
+            "web/rest-conception",
+            "sql/n-plus-un"
+          ],
+          "priority": "critique",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            30
+          ],
+          "description": "Audit 4.18. Le sujet dit désactivé, le code supprime tout par cascade. Décider puis documenter (archived_at).",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/migrations|archived_at"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 46,
+          "journal": ".nostagIAtelier/journal/46.md",
+          "name": "Unlike : chat désactivé sans perdre l'historique",
+          "notions": [
+            "sql/contraintes",
+            "sql/migrations"
+          ],
+          "priority": "haute",
+          "type": "Dette"
+        },
+        {
+          "dependsOn": [
+            32,
+            35,
+            40
+          ],
+          "description": "Audit 3.15. Binaire ou script reproductible, données crédibles et équilibrées, likes et visites croisés, COPY.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 47,
+          "journal": ".nostagIAtelier/journal/47.md",
+          "name": "Générateur de 500 profils",
+          "notions": [
+            "sql/insertion-massive",
+            "auth/argon2id"
+          ],
+          "priority": "critique",
+          "type": "Outil"
+        },
+        {
+          "dependsOn": [
+            17,
+            18,
+            23,
+            28,
+            29,
+            31,
+            33,
+            34,
+            38,
+            39,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47
+          ],
+          "description": "Vérifier chaque ligne du sujet : zéro warning, sanitize, EXIF absents, injection SQL, XSS, upload, secrets absents de Git, parcours complets.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 48,
+          "journal": ".nostagIAtelier/journal/48.md",
+          "name": "Recette finale du sujet",
+          "notions": [
+            "tests/pyramide",
+            "web/upload-securise",
+            "web/xss-echappement",
+            "sql/requetes-parametrees",
+            "build/sanitizers"
+          ],
+          "priority": "critique",
+          "type": "Test"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Audit 4.21. Profil complet et état d'onboarding en un appel.",
+          "detect": {
+            "done": [
+              "contains:backend/src|\"/api/me\""
+            ],
+            "started": [
+              "contains:backend/src|\"/api/me\""
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 49,
+          "journal": ".nostagIAtelier/journal/49.md",
+          "name": "GET /api/me",
+          "notions": [
+            "web/rest-conception"
+          ],
+          "priority": "basse",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Audit 4.20. L'envoi SMTP se fait dans le handler. Table email_outbox et worker.",
+          "detect": {
+            "done": [],
+            "started": [
+              "contains:backend/migrations|email_outbox"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 50,
+          "journal": ".nostagIAtelier/journal/50.md",
+          "name": "Envoi d'emails en file",
+          "notions": [
+            "temps-reel/outbox",
+            "auth/enumeration-temps-constant"
+          ],
+          "priority": "basse",
+          "type": "Dette"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Audit 4.22.",
+          "detect": {
+            "done": [
+              "contains:backend/src|/health",
+              "contains:backend/src|/ready"
+            ],
+            "started": [
+              "contains:backend/src|/health"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 51,
+          "journal": ".nostagIAtelier/journal/51.md",
+          "name": "/health, /ready et arrêt propre",
+          "notions": [
+            "infra/sante-arret-propre",
+            "infra/docker-compose"
+          ],
+          "priority": "basse",
+          "type": "Dette"
+        },
+        {
+          "dependsOn": [
+            42,
+            43
+          ],
+          "description": "Audit 4.23. docs/openapi.yaml.",
+          "detect": {
+            "done": [
+              "exists:docs/openapi.yaml"
+            ],
+            "started": [
+              "exists:docs/openapi.yaml"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 52,
+          "journal": ".nostagIAtelier/journal/52.md",
+          "name": "Contrat OpenAPI",
+          "notions": [
+            "web/openapi"
+          ],
+          "priority": "basse",
+          "type": "Doc"
+        },
+        {
+          "dependsOn": [
+            15
+          ],
+          "description": "Audit 6.11. Build, tests, sanitize.",
+          "detect": {
+            "done": [
+              "exists:.github/workflows"
+            ],
+            "started": [
+              "exists:.github/workflows"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 53,
+          "journal": ".nostagIAtelier/journal/53.md",
+          "name": "CI GitHub Actions",
+          "notions": [
+            "infra/ci-github-actions",
+            "build/presets"
+          ],
+          "priority": "basse",
+          "type": "Outil"
+        },
+        {
+          "dependsOn": [
+            13
+          ],
+          "description": "Guide 06, étape I. Audit 4.6 et 4.7. Une transaction et un verrou par paire, suppression de la resynchronisation de main.cpp:107. Test : deux threads, un seul match.",
+          "detect": {
+            "done": [
+              "exists:backend/src/services/MatchService.cpp",
+              "exists:backend/tests/integration/MatchServiceTests.cpp"
+            ],
+            "started": [
+              "exists:backend/src/services/MatchService.cpp"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "06-cpp-pg-2#11"
+          ],
+          "id": 14,
+          "journal": ".nostagIAtelier/journal/14.md",
+          "name": "Like mutuel atomique",
+          "notions": [
+            "sql/verrous-consultatifs",
+            "sql/transactions",
+            "sql/isolation",
+            "sql/deadlock",
+            "sql/cte",
+            "cpp/data-race"
+          ],
+          "priority": "critique",
+          "type": "Sécurité"
+        }
+      ],
+      "id": "todo",
+      "title": "À faire"
+    },
+    {
+      "cards": [
+        {
+          "dependsOn": [
+            11
+          ],
+          "description": "Guide 06, étape G. Account, Like, Profile, Messaging, accès par nom de colonne, puis suppression de src/database/.",
+          "detect": {
+            "done": [
+              "absent:backend/src/database",
+              "lacks:backend/src/repositories|QueryResult",
+              "lacks:backend/src/messaging|QueryResult"
+            ],
+            "started": [
+              "contains:backend/src/repositories|pg::"
+            ]
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "06-cpp-pg-2#9"
+          ],
+          "id": 12,
+          "journal": ".nostagIAtelier/journal/12.md",
+          "name": "Migrer les repositories vers cpp-pg, supprimer src/database",
+          "notions": [
+            "sql/libpq",
+            "cpp/interfaces-injection",
+            "sql/n-plus-un"
+          ],
+          "priority": "critique",
+          "type": "Dette"
+        }
+      ],
+      "id": "doing",
+      "title": "En cours"
+    },
+    {
+      "cards": [
+        {
+          "dependsOn": [],
+          "description": "Guide 01. Bibliothèque JWT, JWKS et authentification déplacée dans le monorepo.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "01-libs-cpp-auth"
+          ],
+          "id": 1,
+          "journal": ".nostagIAtelier/journal/1.md",
+          "name": "cpp-auth déplacée dans backend/libs",
+          "notions": [
+            "auth/jwt",
+            "auth/signature-rs256",
+            "auth/jwks",
+            "archi/lib-coeur-adaptateur"
+          ],
+          "priority": "normale",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [],
+          "description": "Guide 02. Structure commune de toutes les bibliothèques.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "02-libs-template"
+          ],
+          "id": 2,
+          "journal": ".nostagIAtelier/journal/2.md",
+          "name": "Gabarit libs/_template et new-lib.sh",
+          "notions": [
+            "build/cmake-cibles",
+            "build/package-cmake",
+            "build/semver",
+            "build/vcpkg"
+          ],
+          "priority": "normale",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [],
+          "description": "Guide 03. Audit 4.19.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "03-presets-warnings"
+          ],
+          "id": 3,
+          "journal": ".nostagIAtelier/journal/3.md",
+          "name": "Presets, warnings en erreur, sanitizers",
+          "notions": [
+            "build/presets",
+            "build/warnings",
+            "build/sanitizers",
+            "cpp/duree-de-vie-objets"
+          ],
+          "priority": "normale",
+          "type": "Dette"
+        },
+        {
+          "dependsOn": [],
+          "description": "Guide 04.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "04-cpp-core"
+          ],
+          "id": 4,
+          "journal": ".nostagIAtelier/journal/4.md",
+          "name": "cpp-core : Error, Result, Config, Logger",
+          "notions": [
+            "cpp/result-expected",
+            "infra/logs-structures",
+            "cpp/mutex-contention"
+          ],
+          "priority": "normale",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [
+            3,
+            4
+          ],
+          "description": "Guide 05. Audit 4.4 et 4.5. Correction de la lecture TIMESTAMPTZ.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "05-cpp-pg-1"
+          ],
+          "id": 5,
+          "journal": ".nostagIAtelier/journal/5.md",
+          "name": "cpp-pg 1/2 : connexion, pool, transactions, lignes typées",
+          "notions": [
+            "cpp/raii",
+            "cpp/semantique-deplacement",
+            "cpp/pointeurs-intelligents",
+            "cpp/condition-variable",
+            "cpp/templates-variadiques",
+            "sql/libpq",
+            "sql/pool-connexions",
+            "sql/transactions",
+            "sql/isolation",
+            "sql/sqlstate"
+          ],
+          "priority": "haute",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [],
+          "description": "Audit 4.1 et 4.2. Le backend démarre seul, les secrets ne sont plus versionnés.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 6,
+          "journal": ".nostagIAtelier/journal/6.md",
+          "name": "Docker multi-étapes et secrets en fichiers",
+          "notions": [
+            "infra/docker-multi-etapes",
+            "infra/docker-compose",
+            "infra/secrets-fichiers"
+          ],
+          "priority": "haute",
+          "type": "Sécurité"
+        },
+        {
+          "dependsOn": [],
+          "description": "Déjà en place : Argon2id, refresh tokens, vérification email, reset, limiteur Redis.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 7,
+          "journal": ".nostagIAtelier/journal/7.md",
+          "name": "Authentification de base (inscription, sessions, reset)",
+          "notions": [
+            "auth/argon2id",
+            "auth/refresh-rotation",
+            "auth/tokens-opaques",
+            "auth/rate-limiting",
+            "infra/redis",
+            "infra/nginx",
+            "web/cookies",
+            "web/csrf",
+            "web/http-bases"
+          ],
+          "priority": "normale",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [],
+          "description": "Jusqu'à 5 photos, réencodage WebP par libvips. Reste à vérifier les EXIF, voir la carte de recette.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [],
+          "id": 8,
+          "journal": ".nostagIAtelier/journal/8.md",
+          "name": "Photos de profil (upload sécurisé)",
+          "notions": [
+            "web/upload-securise"
+          ],
+          "priority": "normale",
+          "type": "Fonctionnalité"
+        },
+        {
+          "dependsOn": [
+            5
+          ],
+          "description": "Guide 06, étape C. Executor est fait. Filtres optionnels, $n automatiques, tri par liste blanche, tests purs.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "06-cpp-pg-2#5"
+          ],
+          "id": 9,
+          "journal": ".nostagIAtelier/journal/9.md",
+          "name": "cpp-pg : QueryBuilder",
+          "notions": [
+            "sql/query-builder",
+            "sql/requetes-parametrees",
+            "cpp/interfaces-injection",
+            "sql/pagination-keyset"
+          ],
+          "priority": "critique",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [
+            9
+          ],
+          "description": "Guide 06, étapes D et E. Déplacer DatabaseInitializer, somme de contrôle, --dry-run, verrou consultatif.",
+          "detect": {
+            "done": [],
+            "started": []
+          },
+          "detected": 0,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "06-cpp-pg-2#6",
+            "06-cpp-pg-2#7"
+          ],
+          "id": 10,
+          "journal": ".nostagIAtelier/journal/10.md",
+          "name": "cpp-pg : MigrationRunner et publication 0.2.0",
+          "notions": [
+            "sql/migrations",
+            "sql/verrous-consultatifs",
+            "build/semver"
+          ],
+          "priority": "critique",
+          "type": "Lib"
+        },
+        {
+          "dependsOn": [
+            10
+          ],
+          "description": "Guide 06, étape F. Audit 4.15 et 4.16 : DROP TABLE users, UserRepository et ses tests, trou 006 documenté.",
+          "detect": {
+            "done": [
+              "absent:backend/src/repositories/UserRepository.cpp",
+              "absent:backend/tests/integration/UserRepositoryIntegrationTests.cpp",
+              "exists:backend/migrations/009_drop_legacy_users.sql",
+              "exists:backend/migrations/README.md"
+            ],
+            "started": [
+              "exists:backend/migrations/009_drop_legacy_users.sql"
+            ]
+          },
+          "detected": 2,
+          "enteredAt": "2026-10-30",
+          "guides": [
+            "06-cpp-pg-2#8"
+          ],
+          "id": 11,
+          "journal": ".nostagIAtelier/journal/11.md",
+          "name": "Supprimer le code hérité users",
+          "notions": [
+            "sql/migrations"
+          ],
+          "priority": "haute",
+          "type": "Dette"
+        }
+      ],
+      "id": "done",
+      "title": "Fait"
+    }
+  ],
+  "doneColumn": "done",
+  "nextId": 54,
+  "types": [
+    "Lib",
+    "Fonctionnalité",
+    "Sécurité",
+    "Dette",
+    "Test",
+    "Outil",
+    "Doc"
+  ]
+}

@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Pour afficher 40 cartes, le front appelle 40 fois `GET /api/profiles/<id>`. Chaque appel prend 5 ms, mais la page met une seconde. Quelle est l'explication la plus juste ?",
+   "choices": [
+    "Chaque requête SQL est mal indexée, donc il faut ajouter un index sur `account_id`.",
+    "Le temps vient des 40 allers-retours, avec Nginx, l'authentification et le SQL répétés, bien plus que du travail de chaque requête.",
+    "Le pool de connexions est trop petit, donc il faut passer de 4 à 40 connexions.",
+    "PostgreSQL ne sait pas répondre à plus de 20 requêtes par seconde pour un même utilisateur."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le coût d'une requête vient surtout de l'aller-retour, pas du travail effectué. N+1 multiplie ces allers-retours, même si chacun paraît rapide. Un index n'y changerait presque rien, car chaque requête est déjà rapide."
+  },
+  {
+   "text": "Tu dois renvoyer 20 profils avec leurs tags, et un profil en a plusieurs. Quelle stratégie évite le N+1 sans dupliquer les profils ?",
+   "choices": [
+    "Joindre profils, photos et tags dans une seule grosse requête, puis dédoublonner côté C++.",
+    "Boucler sur les 20 profils et lancer une requête de tags par profil, ce qui reste rapide.",
+    "Charger les profils par jointure, puis les tags en une seconde requête avec `ANY($1)`, et regrouper en mémoire avec une `std::unordered_map`.",
+    "Faire une requête de tags par profil, mais dans une transaction pour qu'elles comptent comme une seule."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Avec des données à plusieurs lignes par profil, le chargement groupé donne 2 requêtes au total. Tout joindre dupliquerait les profils, et deux relations multiples dans une même requête donnent un produit cartésien. Une transaction ne supprime pas les allers-retours."
+  },
+  {
+   "text": "Un collègue réécrit le backend de `GET /api/likes/received` avec une jointure efficace. L'API renvoie toujours seulement des ids, et le front appelle toujours `GET /api/profiles/<id>` pour chaque carte. Que dis-tu ?",
+   "choices": [
+    "Le problème est résolu, car le N+1 ne concerne que les boucles dans le backend.",
+    "Le problème est résolu, car la jointure rend chaque appel `GET /api/profiles/<id>` quasi instantané.",
+    "Le problème reste, car il faut seulement mettre un cache devant les 40 appels.",
+    "Le problème reste : il faut que l'API renvoie directement des profils résumés pour que le front n'ait plus qu'un appel."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Corriger seulement le backend est une erreur fréquente. Le N+1 existe aussi entre le front et l'API : 40 passages par Nginx, 40 authentifications, 40 requêtes. Une jointure dans le backend ne réduit pas ces allers-retours."
+  },
+  {
+   "text": "Ton endpoint est lent avec 500 profils mais semblait correct en développement. Quelles actions permettent de repérer un N+1 ?",
+   "choices": [
+    "Activer `log_statement = 'all'` en développement et compter les requêtes émises par appel HTTP.",
+    "Mesurer le temps de chaque requête prise isolément, car la plus lente désigne le coupable.",
+    "Écrire un test qui compte les requêtes exécutées pendant un appel.",
+    "Tester uniquement avec le seed de 10 profils, car les problèmes de volume apparaissent aussi à petite échelle."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Chaque requête d'un N+1 est rapide, donc le temps individuel ne révèle rien : il faut compter les requêtes. Un seed de 10 profils laisse le problème passer inaperçu, car il croît avec les données."
+  }
+ ]
+}

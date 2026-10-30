@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Dans une transaction, on appelle `hub.publish(\"account:7\", \"Vous avez un match !\")`, puis `ensureConversation()` échoue et déclenche un `ROLLBACK`. Que voit l'utilisateur ?",
+   "choices": [
+    "Rien, car le ROLLBACK annule aussi le message déjà envoyé au hub.",
+    "Un match qui n'existe pas, car aucune transaction ne couvre à la fois la base et le WebSocket.",
+    "Un match valide, car le message a été émis avant l'échec et suffit à créer l'état.",
+    "Une erreur 503 envoyée au client par le hub à la place du message."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le ROLLBACK n'agit que sur la base, pas sur le hub WebSocket. On a donc annoncé une action que la base a annulée. Il faut publier après le commit : le pire cas devient une notification perdue, jamais fausse."
+  },
+  {
+   "text": "Un worker d'outbox publie un événement, puis meurt avant de le marquer `processed_at`. Après redémarrage, que se passe-t-il et que doit prévoir le consommateur ?",
+   "choices": [
+    "L'événement est perdu, car il a été publié sans marquage ; le consommateur doit interroger la base.",
+    "L'événement est republié ; la livraison est au moins une fois, donc le consommateur doit tolérer les doublons.",
+    "L'événement est republié exactement une fois, car `SKIP LOCKED` garantit l'unicité.",
+    "L'événement est republié ; le consommateur peut l'ignorer, car le doublon est impossible."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Entre la publication et le marquage, un plantage laisse la ligne non traitée, donc le worker la rejoue. La livraison est au moins une fois, jamais exactement une fois. Le consommateur se protège par exemple avec un identifiant d'événement."
+  },
+  {
+   "text": "Deux workers exécutent en même temps `SELECT ... FROM outbox WHERE processed_at IS NULL ORDER BY id LIMIT 100 FOR UPDATE SKIP LOCKED`. Que fait `SKIP LOCKED` ?",
+   "choices": [
+    "Le second worker attend que le premier ait fini, pour traiter les lignes dans l'ordre.",
+    "Le second worker reçoit les mêmes lignes, et la base fusionne les doublons à l'écriture.",
+    "Chaque worker saute les lignes déjà verrouillées par l'autre, sans se gêner ni attendre.",
+    "Les lignes verrouillées sont marquées traitées, donc aucun événement n'est publié deux fois."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "`SKIP LOCKED` permet à plusieurs workers de travailler en parallèle sur des lignes différentes. Il ne garantit pas une livraison exactement une fois, car un plantage après publication provoque toujours un rejeu. Ce n'est pas non plus une attente."
+  },
+  {
+   "text": "À l'inscription, le compte est créé puis l'email est envoyé. Le SMTP échoue : la route répond `503` alors que le compte existe. Quelle approche corrige le problème ?",
+   "choices": [
+    "Annuler le compte quand le SMTP échoue, pour que la réponse `503` reste cohérente.",
+    "Envoyer l'email dans la transaction elle-même, pour que le commit dépende du SMTP.",
+    "Écrire le compte et une ligne `email_outbox` dans la même transaction, répondre tout de suite, et laisser un worker envoyer avec des réessais.",
+    "Ignorer l'échec du SMTP et ne jamais réessayer, car l'email n'est pas critique."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Avec une `email_outbox`, l'intention d'envoi est écrite avec l'action, et le worker peut réessayer avec un délai croissant. La requête ne dépend plus du SMTP, ce qui règle aussi l'énumération par le temps. Publier dans la transaction est l'erreur à éviter."
+  }
+ ]
+}

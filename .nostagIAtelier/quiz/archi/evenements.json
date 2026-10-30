@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "Tu nommes les événements du module de match. Lesquels respectent la convention de la fiche ?",
+   "choices": [
+    "`MatchCreated`, un fait passé et immuable",
+    "`SendNotification`, qui dit clairement ce qui doit se produire ensuite",
+    "`ProfileViewed`, qui annonce une visite déjà survenue",
+    "`UpdateFame`, que le service émet pour déclencher le recalcul de popularité"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Un événement est un fait passé, nommé au passé, et chaque abonné décide d'y réagir. `SendNotification` et `UpdateFame` sont des ordres : l'émetteur reste couplé à ce qu'il attend."
+  },
+  {
+   "text": "`MatchService` appelle `bus.publish(MatchCreated{...})` avant `tx->commit()`, puis le commit échoue. Que se passe-t-il ?",
+   "choices": [
+    "Rien de grave : les abonnés ont reçu l'événement et s'adapteront au prochain appel",
+    "La notification part pour un match qui n'existe pas : il faut publier après le commit, ou via une outbox",
+    "Le bus annule automatiquement les effets déjà déclenchés par les abonnés",
+    "L'événement est perdu, mais seulement si l'abonné est asynchrone ; en mémoire c'est sans effet"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Publier avant le commit annonce un fait qui peut ne jamais exister. La règle est de publier après le commit, ou d'écrire l'événement dans la transaction avec une outbox. Le bus n'annule rien tout seul."
+  },
+  {
+   "text": "Après un like validé, l'abonné `NotificationHandler` lève une exception car le service d'envoi est en panne. Quel comportement est souhaitable ?",
+   "choices": [
+    "Le like est annulé, pour que la notification et le like restent toujours cohérents",
+    "L'exception remonte jusqu'au handler HTTP, qui renvoie une erreur 500 au client",
+    "L'échec d'un abonné ne doit pas faire échouer l'action déjà validée",
+    "Avec une outbox, l'événement peut être retraité plus tard au lieu d'être perdu"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Faire échouer une action déjà validée à cause d'un abonné est une erreur fréquente. Une outbox, écrite dans la transaction et traitée plus tard, rend la réaction plus robuste."
+  },
+  {
+   "text": "Ton service n'a qu'un seul effet après un like : envoyer une notification. Un collègue propose d'introduire un `EventBus`. Que choisis-tu ?",
+   "choices": [
+    "Un appel direct, plus simple ; le bus se justifie quand les réactions se multiplient",
+    "Le bus tout de suite, car un appel direct empêche d'ajouter des réactions plus tard",
+    "Le bus, car il rend le déroulé plus lisible quand on lit le service",
+    "Un appel direct, car un bus ne peut pas fonctionner avec un seul abonné"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Le bus a un prix : le déroulé n'est plus visible en lisant le service. Avec un ou deux effets, l'appel direct est plus simple, et le bus n'apparaît que lorsque les réactions se multiplient."
+  }
+ ]
+}

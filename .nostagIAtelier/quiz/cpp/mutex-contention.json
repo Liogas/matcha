@@ -1,0 +1,58 @@
+{
+ "questions": [
+  {
+   "text": "`sendToAccount` prend un `std::lock_guard` sur le mutex du hub puis appelle `send_text` sur chaque WebSocket de l'utilisateur. Quel est le problème et quelle est la correction ?",
+   "choices": [
+    "Le `lock_guard` ne peut pas protéger une `unordered_map` : il faut le remplacer par un `unique_lock`",
+    "L'envoi réseau se fait sous verrou, donc un client lent retarde tous les autres : il faut copier la liste de cibles sous verrou et envoyer après l'avoir libéré",
+    "Le verrou est relâché trop tôt, ce qui permet à un autre thread de modifier la table pendant la recherche",
+    "Le mutex est inutile ici : un seul thread à la fois écrit dans la table des connexions"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Sous un verrou, on ne manipule que de la mémoire et rapidement, jamais du réseau. Copier une petite liste sous verrou puis envoyer hors verrou limite la contention à quelques microsecondes. Ici, le verrou est au contraire tenu trop longtemps, pas trop peu."
+  },
+  {
+   "text": "Dans `Hub::publish`, un refactoring supprime le bloc `{ }` autour du `lock_guard` et du `find`. La boucle d'envoi reste identique. Quelle conséquence ?",
+   "choices": [
+    "Aucune : le verrou est relâché automatiquement dès la dernière utilisation de `_topics`",
+    "Le code ne compile plus, car un `lock_guard` doit être placé dans un bloc",
+    "Les données de `cibles` ne sont plus protégées pendant la copie, ce qui crée un data race",
+    "Le verrou est tenu jusqu'à la fin de la fonction, donc les envois se font sous verrou et le bénéfice de la copie est perdu"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Un `lock_guard` est relâché à l'accolade fermante de son bloc, pas à sa dernière utilisation. Sans le bloc, la boucle `send` s'exécute verrou pris, et une session lente ralentit tous les threads qui veulent le mutex. La copie reste protégée, mais elle n'apporte plus rien."
+  },
+  {
+   "text": "L'ancien `Database` avait une connexion unique et un mutex pris dans chaque méthode. Le thread A fait `BEGIN`, le thread B fait un `UPDATE`, puis A fait `INSERT`. Pourquoi le mutex n'empêche-t-il pas le bug ?",
+   "choices": [
+    "Parce que le mutex protégeait chaque appel isolément, pas la séquence logique complète de la transaction",
+    "Parce que `lock_guard` est incompatible avec les requêtes SQL, il aurait fallu `scoped_lock`",
+    "Parce que les mutex ne fonctionnent pas entre threads de pools différents",
+    "Parce que l'`UPDATE` de B s'est exécuté dans la transaction de A faute d'une connexion distincte pour chaque emprunteur"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "La protection doit couvrir toute l'opération logique, pas seulement chaque appel. Comme les deux threads partageaient une seule connexion, l'`UPDATE` de B est tombé dans la transaction de A. Le pool règle le problème en donnant à chaque emprunteur sa propre connexion."
+  },
+  {
+   "text": "Ce code est-il correct ?\n\n`if (_compteurs.contains(id)) { std::lock_guard lock(_mutex); _compteurs[id] -= 1; }`\n\nQuelles raisons expliquent le problème ?",
+   "choices": [
+    "`contains` lit la table sans verrou pendant qu'un autre thread peut l'écrire, ce qui est un data race",
+    "Le `lock_guard` est déclaré dans un bloc, donc il ne protège pas l'instruction qui suit",
+    "Le test et l'action sont dans deux étapes distinctes, donc l'état peut changer entre les deux",
+    "Un `std::lock_guard` ne peut pas verrouiller une table de hachage, seulement des types simples"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Lire sans verrou ce qui est écrit sous verrou est toujours un data race, et tester puis agir en deux étapes laisse l'état changer entre les deux. Il faut prendre le verrou avant le `if` pour couvrir toute l'opération. Le `lock_guard` du bloc protège bien la ligne qui suit, mais trop tard."
+  }
+ ]
+}

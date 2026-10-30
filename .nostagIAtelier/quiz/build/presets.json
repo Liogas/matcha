@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Tu ajoutes `cpp-geo` : `add_subdirectory(cpp-geo)` est en place, `cmake --preset debug` passe sans erreur. Pourtant `ctest --preset debug` ne lance aucun test de la nouvelle lib. Quelle est la cause la plus probable ?",
+   "choices": [
+    "Le preset `debug` n'a pas reçu `\"CPP_GEO_BUILD_TESTS\": \"ON\"`, donc les tests ne sont pas compilés.",
+    "Le preset `debug` hérite de `base`, qui désactive `ctest` pour les nouvelles libs.",
+    "Le fichier `CMakeCache.txt` est en lecture seule après la première configuration.",
+    "L'option `-Werror` du preset masque les cibles de test qui produisent un warning."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Les tests d'une lib sont désactivés par défaut en sous-projet et chaque preset doit activer l'option de la nouvelle lib. Sans cela, rien n'est compilé et rien ne le signale. `-Werror` ferait échouer la compilation, pas disparaître silencieusement des tests."
+  },
+  {
+   "text": "Un collègue propose de faire pointer les presets `debug` et `sanitize` vers le même `binaryDir` pour économiser de la place disque. Pourquoi est-ce une mauvaise idée ?",
+   "choices": [
+    "Un seul preset peut écrire dans un dossier, car `CMakeCache.txt` est verrouillé par le premier qui l'utilise.",
+    "Les fichiers objets ne sont pas compilés avec les mêmes options, donc ils ne peuvent pas être partagés.",
+    "Le preset `sanitize` hérite de `debug`, donc CMake refuse deux dossiers identiques pour un parent et son enfant.",
+    "`ctest` ne sait lire les résultats que d'un dossier dont le nom correspond au type de build."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "`sanitize` ajoute l'instrumentation, donc ses objets diffèrent de ceux de `debug`. Les mélanger donnerait des résultats faux ou forcerait une recompilation complète à chaque changement. Il n'existe aucun verrou sur le cache ni de règle de nommage imposée par `ctest`."
+  },
+  {
+   "text": "En relisant `CMakePresets.json`, tu vois `\"toolchainFile\": \"/home/alice/vcpkg/scripts/buildsystems/vcpkg.cmake\"`. Que fais-tu ?",
+   "choices": [
+    "Tu laisses ce chemin, puisque le fichier est versionné et que tout le monde le verra.",
+    "Tu déplaces ce chemin dans `CMakeCache.txt`, qui est propre à chaque machine.",
+    "Tu le remplaces par `$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake`, lu dans l'environnement.",
+    "Tu le dupliques dans chaque preset enfant pour que chacun reste autonome."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un chemin personnel dans un fichier partagé casse le build des autres développeurs. `$env{VCPKG_ROOT}` laisse chaque machine fournir son propre emplacement. Le cache est un fichier généré dans le dossier de build, pas un endroit où ranger la configuration partagée."
+  },
+  {
+   "text": "Tu modifies une variable de cache dans le preset `debug`, tu relances `cmake --preset debug`, mais le build se comporte comme avant. Tu soupçonnes le cache. Quelle est la bonne démarche ?",
+   "choices": [
+    "Tu ajoutes la même variable au preset caché `base` pour forcer sa prise en compte.",
+    "Tu supprimes `CMakePresets.json` puis tu le restaures depuis le dépôt.",
+    "Tu passes `-Werror` en ligne de commande pour provoquer une reconfiguration complète.",
+    "Tu supprimes le dossier `build/debug` et tu reconfigures depuis zéro."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Les choix sont écrits dans `CMakeCache.txt` au premier `cmake --preset`, et les changements de preset ne sont pas toujours repris. Supprimer le dossier de build de ce preset garantit une configuration propre. Toucher au fichier de presets ne vide pas un cache existant."
+  }
+ ]
+}

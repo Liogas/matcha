@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Tu limites la biographie avec `if (bio.size() > 500) return erreur();`. Une utilisatrice qui écrit en russe est refusée à 250 lettres. Quelle correction applique la fiche ?",
+   "choices": [
+    "Compter les points de code avec `utf8::length`, car `size()` compte des octets et une lettre russe en prend deux.",
+    "Remplacer `size()` par `length()`, qui compte les caractères plutôt que les octets.",
+    "Doubler la limite à 1000 octets, ce qui règle le cas du russe sans modifier le code.",
+    "Convertir la chaîne en minuscules avant de la mesurer, pour que les lettres soient normalisées."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Une `std::string` est un sac d'octets : `size()` et `length()` renvoient la même chose. Une limite montrée à l'utilisateur doit se compter en points de code. Doubler la limite ne marche que pour certaines langues, et la mise en minuscules ne change rien au comptage."
+  },
+  {
+   "text": "Pour afficher un aperçu, tu fais `bio.substr(0, 500)` sur un texte accentué. PostgreSQL refuse ensuite la valeur avec `invalid byte sequence for encoding \"UTF8\"`. Quelle est l'explication ?",
+   "choices": [
+    "`substr` a pu couper au milieu d'un caractère, laissant une séquence tronquée qui n'est plus de l'UTF-8 valide.",
+    "`substr` convertit silencieusement la chaîne en ASCII, ce qui supprime les accents et casse l'encodage.",
+    "PostgreSQL n'accepte que des chaînes dont la taille en octets est un multiple de deux.",
+    "La chaîne contenait un `é` écrit `e` + U+0301, et PostgreSQL refuse les caractères combinés."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Couper à un nombre fixe d'octets peut tomber entre le premier octet d'un caractère et ses octets de suite. Le texte obtenu contient une séquence tronquée, ce que PostgreSQL refuse. La forme `e` + U+0301 est un autre piège (la normalisation), mais elle est valide."
+  },
+  {
+   "text": "Tu utilises `length`, qui compte les octets vérifiant `(byte & 0b11000000) != 0b10000000`. Quel résultat renvoie-t-elle pour `€uro`, sachant que `€` s'écrit `E2 82 AC` ?",
+   "choices": [
+    "6, car la fonction compte tous les octets de la chaîne.",
+    "4, car `82` et `AC` commencent par `10` et ne sont pas comptés.",
+    "3, car `€` est un caractère spécial ignoré par le comptage.",
+    "5, car seul l'octet `E2` est écarté comme octet de tête."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Les octets de suite commencent toujours par `10`, donc le masque les reconnaît et la boucle ne les compte pas. Il reste `E2`, `u`, `r` et `o`, soit 4 points de code pour 6 octets. L'octet de tête `E2` est bien compté."
+  },
+  {
+   "text": "Tu écris un validateur UTF-8 pour les chaînes reçues avant leur arrivée en base. Parmi ces entrées, lesquelles doit-il refuser ?",
+   "choices": [
+    "La séquence `C0 AF`, un encodage trop long de `/` utilisé pour contourner des filtres.",
+    "La séquence `C3 A9`, qui code `é` sur deux octets.",
+    "L'octet `74`, qui code la lettre `t` en ASCII.",
+    "L'octet `A9` seul, un octet de suite sans octet de tête."
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Un octet de suite isolé et un encodage trop long comme `C0 AF` font partie de ce qu'une validation doit refuser. `C3 A9` est un `é` parfaitement valide, et l'ASCII reste inchangé en UTF-8. Un validateur trop laxiste laisse passer des contournements de filtres."
+  }
+ ]
+}

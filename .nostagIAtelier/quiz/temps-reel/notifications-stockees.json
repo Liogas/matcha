@@ -1,0 +1,43 @@
+{
+ "questions": [
+  {
+   "text": "Alice est hors ligne quand Bob la like. À sa connexion, elle doit voir la notification et le compteur de non-lus. Où doit vivre la notification ?",
+   "choices": [
+    "Uniquement dans le message WebSocket, relu depuis l'historique du navigateur à la connexion.",
+    "En base, avec `read_at` à `NULL` tant qu'elle n'est pas lue ; le WebSocket ne fait que la signaler.",
+    "Dans le hub en mémoire, vidée à la fermeture de la dernière connexion de l'utilisateur.",
+    "Dans un compteur incrémenté, car le détail de la notification n'est pas utile hors ligne."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le push n'atteint personne si le destinataire est hors ligne, donc la vérité doit être en base. Le WebSocket n'est qu'une accélération pour montrer la notification plus vite. Un simple compteur perdrait le détail de l'événement."
+  },
+  {
+   "text": "Alice a bloqué Bob. Un développeur a branché le filtre sur les likes et les messages, mais pas sur les visites de profil. Alice reçoit pourtant « Bob a visité votre profil ». Quelle est la bonne correction ?",
+   "choices": [
+    "Ajouter un test de blocage dans la route des visites uniquement, car les autres chemins sont déjà couverts.",
+    "Supprimer la notification de visite, puisque le sujet n'exige que les likes et les messages.",
+    "Faire le test de blocage côté front, qui masque la notification à l'affichage.",
+    "Faire passer les cinq types d'événements par le `NotificationDispatcher`, dont le filtre est le point de décision unique."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Oublier le filtre dans l'un des cinq chemins est une erreur fréquente. En centralisant le filtre dans le dispatcher, la politique de blocage s'applique à tous les événements. La masquer côté front laisserait la notification stockée et comptée."
+  },
+  {
+   "text": "Pour le compteur de non-lus, un développeur propose une colonne `unread_count` incrémentée à chaque notification. Quel choix recommande la fiche ?",
+   "choices": [
+    "Compter avec `SELECT COUNT(*) ... WHERE recipient_id = $1 AND read_at IS NULL`, avec un index partiel, car c'est toujours juste.",
+    "Garder la colonne incrémentée, car un `COUNT(*)` est forcément trop lent pour un badge.",
+    "Calculer le compteur dans le navigateur à partir des notifications déjà chargées dans la page.",
+    "Stocker la colonne et la recalculer chaque nuit pour corriger les dérives accumulées."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Un compteur stocké est rapide mais peut dériver, par exemple après un marquage comme lu dans un autre onglet. Compter reste exact, et un index partiel sur les non-lues le rend rapide. On commence donc par compter."
+  }
+ ]
+}

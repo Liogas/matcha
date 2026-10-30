@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un utilisateur envoie `page.html` renommé `photo.jpg`, avec l'en-tête `Content-Type: image/jpeg`. Comment la chaîne de traitement réagit-elle ?",
+   "choices": [
+    "Elle accepte le fichier, car l'extension et le `Content-Type` annoncent un JPEG",
+    "Elle accepte si les premiers octets ressemblent à un JPEG, ce qui prouve le format",
+    "libvips échoue au décodage, la réponse est 400 et rien n'est écrit sur le disque",
+    "Elle stocke le fichier tel quel et le sert avec `image/webp` pour neutraliser le HTML"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "L'extension, le nom et le `Content-Type` sont des déclarations du client : seul le contenu compte, et un faux fichier échoue au décodage. Les magic bytes ne suffisent pas non plus, car un polyglotte peut être valide dans plusieurs formats."
+  },
+  {
+   "text": "Une image de 5 Ko se décompresse en 30 000 × 30 000 pixels. La limite de 10 Mo de Nginx est respectée. Quelle protection est pertinente ?",
+   "choices": [
+    "Contrôler les dimensions avant de décoder toute l'image, et réduire au-delà de `_maximumDimension`",
+    "Se fier à la taille de 5 Ko, qui prouve que l'image est petite",
+    "Décoder d'abord toute l'image, puis comparer ses dimensions à la limite",
+    "Vérifier l'extension `.jpg` et le `Content-Type` avant tout traitement"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Une bombe de décompression passe la limite de taille du corps : c'est le nombre de pixels qui coûte. Décoder toute l'image avant de regarder ses dimensions est justement l'erreur à éviter."
+  },
+  {
+   "text": "Une photo de téléphone contenant une position GPS est réencodée en WebP. Quelles pratiques sont correctes ?",
+   "choices": [
+    "Appliquer l'orientation EXIF avant de retirer les métadonnées, pour que la photo reste droite",
+    "Retirer d'abord toutes les métadonnées, puis appliquer l'orientation EXIF sur le résultat",
+    "Vérifier avec `exiftool` que la sortie WebP ne contient plus de position GPS",
+    "Garder aussi l'original sur le disque, au cas où l'utilisateur voudrait le récupérer"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "L'orientation EXIF sert à afficher la photo droite : une fois les métadonnées retirées, elle est perdue, donc on l'applique avant. Il faut aussi contrôler la sortie avec `exiftool`. Conserver l'original garderait le GPS et contredit le principe de ne jamais garder le fichier reçu."
+  },
+  {
+   "text": "Un dev veut garder le nom de fichier reçu en supprimant les `../`, plutôt que de générer une clé. Un autre rappelle qu'un client peut envoyer `..%2f..%2fetc/passwd`. Pourquoi la clé générée est-elle préférable ?",
+   "choices": [
+    "Elle exclut toute donnée du client du chemin, alors que le nettoyage est une liste noire contournable",
+    "Elle est plus courte, donc le stockage prend moins de place sur le disque",
+    "Elle permet de retrouver l'extension d'origine pour choisir le `Content-Type` à servir",
+    "Elle rend le réencodage inutile, puisque le chemin ne dépend plus du client"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Nettoyer un chemin, c'est filtrer avec une liste noire, que les encodages et les systèmes permettent de contourner. Une clé générée par le serveur fait disparaître le problème au lieu de le filtrer. Elle n'a aucun effet sur le contenu du fichier, donc le réencodage reste nécessaire."
+  }
+ ]
+}

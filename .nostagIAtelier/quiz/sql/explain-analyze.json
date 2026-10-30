@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un nœud `Nested Loop` affiche `actual time=0.01..0.02 rows=1 loops=500`. Quel est le temps total approximatif de cette étape ?",
+   "choices": [
+    "Environ 0,02 ms, car le temps affiché est déjà le total du nœud.",
+    "Environ 10 ms, car le temps affiché est par boucle : 500 × 0,02 ms.",
+    "Environ 5 ms, car seul le temps de démarrage de 0,01 ms est multiplié par les boucles.",
+    "Environ 500 ms, car chaque boucle dure 1 ms."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le temps réel est donné par boucle, et le nœud s'exécute 500 fois : 500 × 0,02 ms donne environ 10 ms. Lire 0,02 ms sous-estime l'étape de façon trompeuse. Un `loops` élevé signale une requête exécutée pour chaque ligne, où un index ou une autre jointure peut aider."
+  },
+  {
+   "text": "Dans un plan, un nœud affiche `rows=5` estimées mais `rows=40000` réelles, et le planificateur a choisi un `Nested Loop`. Que fais-tu en premier ?",
+   "choices": [
+    "Tu crées tout de suite un index sur chaque colonne du filtre.",
+    "Tu te fies au `cost`, qui reste fiable malgré l'écart de lignes.",
+    "Tu lances `ANALYZE` pour rafraîchir les statistiques, puis tu relis le plan.",
+    "Tu relances avec `EXPLAIN` seul, qui donne les lignes réelles sans exécuter."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Un fort écart entre lignes estimées et réelles indique des statistiques périmées, qui faussent le choix du plan. `ANALYZE` les remet à jour. Le `cost` repose sur ces mêmes estimations, et `EXPLAIN` seul n'exécute pas la requête, donc n'affiche aucune valeur réelle."
+  },
+  {
+   "text": "Tu veux mesurer `DELETE FROM profile_likes WHERE ...` avec `EXPLAIN ANALYZE` sur une base de test qui contient des données utiles. Quelles affirmations sont justes ?",
+   "choices": [
+    "`EXPLAIN ANALYZE` n'affiche qu'une estimation, donc rien n'est supprimé.",
+    "La requête est vraiment exécutée : les lignes sont supprimées.",
+    "Ajouter `BUFFERS` empêche l'exécution réelle de la requête.",
+    "Entourer la commande de `BEGIN` et `ROLLBACK` annule ses effets."
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Contrairement à `EXPLAIN` seul, `EXPLAIN ANALYZE` exécute vraiment la requête, y compris pour une écriture. On l'enferme donc dans une transaction qu'on annule avec `ROLLBACK`. `BUFFERS` ajoute seulement des informations sur les lectures de pages."
+  },
+  {
+   "text": "Un plan montre `Sort` au-dessus d'un `Seq Scan on matcha_profiles` avec `Rows Removed by Filter: 520`, pour un `LIMIT 20` sur `fame_rating DESC`. Que fais-tu ?",
+   "choices": [
+    "Tu interdis les `Seq Scan`, qui sont toujours mauvais.",
+    "Tu compares les `cost` plutôt que les temps réels, qui sont moins fiables.",
+    "Tu lances `ANALYZE` en priorité, car 520 lignes retirées prouvent des statistiques périmées.",
+    "Tu crées un index sur `fame_rating DESC`, puis tu relis le plan pour vérifier le gain."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Beaucoup de lignes retirées par le filtre suggèrent un index, qui supprimerait aussi le tri et ne lirait que 20 lignes. On vérifie ensuite avec un nouveau plan. Ici les lignes estimées et réelles concordent, donc les statistiques ne sont pas en cause, et le temps réel prime sur le `cost`."
+  }
+ ]
+}

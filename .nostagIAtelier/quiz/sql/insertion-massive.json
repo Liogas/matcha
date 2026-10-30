@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Ton seed lance 500 `INSERT` séparés hors transaction et prend plusieurs minutes. Tu les enveloppes dans un seul `BEGIN ... COMMIT`. Qu'est-ce qui devient moins coûteux ?",
+   "choices": [
+    "Chaque ligne est analysée une seule fois par le serveur, au lieu de 500 fois, et c'est ce qui fait gagner l'essentiel du temps.",
+    "Les allers-retours réseau disparaissent, car le client envoie tout le lot en un seul message vers le serveur.",
+    "L'écriture forcée du journal sur disque n'est payée qu'au `COMMIT` final, au lieu d'une fois par ligne.",
+    "Les index de la table ne sont plus mis à jour pendant la transaction, ils sont reconstruits d'un coup à la fin."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le coût principal d'un `COMMIT` est l'écriture forcée sur disque, payée une seule fois dans une transaction. Les allers-retours réseau, eux, restent : un `INSERT` par instruction en coûte toujours un, et c'est `COPY` qui les supprime en plus."
+  },
+  {
+   "text": "Tu charges des profils avec `COPY profils FROM STDIN` au format texte. Une bio contient une tabulation au milieu du texte, et une autre bio est vide (`NULL`). Que dois-tu faire ?",
+   "choices": [
+    "Envoyer la tabulation telle quelle et écrire `NULL` en toutes lettres, car `COPY` sait interpréter ces valeurs seul.",
+    "Échapper la tabulation et écrire `\\N` pour la valeur nulle, sinon les colonnes se décalent ou la chaîne `NULL` est stockée.",
+    "Remplacer chaque tabulation par une virgule et laisser le champ vide pour `NULL`, car le séparateur dépend du contenu.",
+    "Passer ces deux lignes par un `INSERT` classique, car `COPY` n'accepte pas de texte contenant des caractères spéciaux."
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Le format texte de `COPY` sépare les colonnes par tabulation, écrit `NULL` en `\\N` et demande d'échapper `\\`, tabulation et saut de ligne. Une tabulation non échappée est lue comme un séparateur et décale toutes les colonnes de la ligne."
+  },
+  {
+   "text": "Ton seed crée 500 comptes et le script met plusieurs minutes, presque tout le temps passé dans le hachage des mots de passe avec Argon2. Quelle solution convient pour des données de démonstration ?",
+   "choices": [
+    "Hacher les mots de passe en parallèle sur plusieurs threads, pour garder un hash distinct par compte tout en réduisant le temps.",
+    "Remplacer Argon2 par un hash rapide comme SHA-256 pour tous les comptes de seed, puis le changer avant la mise en ligne.",
+    "Stocker les mots de passe en clair pour le seed, puisque ce sont des comptes de démonstration jamais utilisés en production.",
+    "Calculer un seul hash Argon2 et le réutiliser pour tous les comptes de seed, ce qui est acceptable ici."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Argon2 est lent exprès, donc 500 hachages coûtent des minutes. Pour des données de démonstration, un seul hash réutilisé suffit et garde le format réel. Un hash rapide ou un clair créeraient des comptes qui ne ressemblent pas à de vrais comptes."
+  },
+  {
+   "text": "Tu écris le générateur de 500 profils pour tester suggestions, distance et popularité. Lesquels de ces choix rendent les données crédibles et utiles ?",
+   "choices": [
+    "Tirer 3 à 8 tags dans un vocabulaire limité, pour que des profils aient des tags en commun.",
+    "Donner le même nombre de likes et de visites à chaque profil, pour que la popularité soit parfaitement équilibrée.",
+    "Utiliser des emails en `@gmail.com` inventés, pour que la validation d'adresse se comporte comme en production.",
+    "Placer les positions autour de villes réelles avec une dispersion aléatoire, pour pouvoir tester le calcul de distance."
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Un vocabulaire limité garantit des tags communs, et des villes réelles avec dispersion donnent des distances testables. Des likes uniformes empêchent d'étaler la popularité, et il faut des emails en `example.test`, un domaine réservé et non routable, pas de vraies adresses."
+  }
+ ]
+}

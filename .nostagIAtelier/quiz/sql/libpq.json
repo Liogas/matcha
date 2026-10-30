@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Une colonne `bio` est nullable. Ton code lit `PQgetvalue(res, 0, col)` et affiche la valeur : les profils sans bio affichent une chaîne vide, indiscernable d'une vraie bio vide. Que corriger ?",
+   "choices": [
+    "Comparer le résultat de `PQgetvalue` à `nullptr`, car la fonction renvoie un pointeur nul pour une valeur `NULL`.",
+    "Demander le résultat en format binaire, qui distingue naturellement `NULL` d'une chaîne vide.",
+    "Tester d'abord `PQgetisnull(res, 0, col)`, car `PQgetvalue` renvoie `\"\"` pour une valeur `NULL`.",
+    "Ajouter `COALESCE(bio, 'NULL')` dans toutes les requêtes et comparer ensuite avec cette chaîne."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "`PQgetvalue` renvoie une chaîne vide pour `NULL`, jamais un pointeur nul. Seul `PQgetisnull` permet de les distinguer. Le format binaire ne règle pas ce problème et dépend en plus de la représentation interne."
+  },
+  {
+   "text": "Un ancien `getTimestamp` renvoyait toujours `nullopt` alors que les colonnes contenaient bien des dates. Il vérifiait `PQftype(res, col) == 1114`. Quelle était la cause ?",
+   "choices": [
+    "Les valeurs arrivent en texte par défaut, donc `PQftype` renvoie toujours l'OID du type texte pour toute colonne.",
+    "`PQftype` ne fonctionne qu'après `PQclear`, ce qui rendait la vérification invalide à chaque appel.",
+    "Il manquait un appel à `PQgetisnull`, qui est obligatoire pour que l'OID soit correctement renseigné.",
+    "Les colonnes sont en `timestamptz` (OID 1184) alors que la fonction n'acceptait que `timestamp` (OID 1114)."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Chaque type a un OID : 1114 pour `TIMESTAMPOID`, 1184 pour `TIMESTAMPTZOID`. Toutes les colonnes utilisaient le second, donc le test échouait systématiquement. Le format texte des valeurs n'empêche pas `PQftype` de renvoyer l'OID du vrai type."
+  },
+  {
+   "text": "Parmi ces usages de libpq, lesquels sont de vrais bugs ?",
+   "choices": [
+    "Garder un `char *` obtenu par `PQgetvalue` et le lire après avoir appelé `PQclear` sur le résultat.",
+    "Passer les paramètres sous forme de texte à `PQexecParams`, avec les formats à `NULL`.",
+    "Faire utiliser le même `PGconn` en même temps par deux threads, sans passer par un pool.",
+    "Utiliser `PQexecParams` pour une requête avec `$1`, au lieu de `PQexec` avec la valeur collée dans le texte."
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Le `char *` pointe dans la mémoire du `PGresult` : après `PQclear`, il est invalide. Un `PGconn` n'est pas thread-safe, d'où l'exclusivité garantie par le pool. Le texte par défaut et `PQexecParams` sont au contraire l'usage normal et sûr."
+  },
+  {
+   "text": "Dans un wrapper, `Row::get(std::string_view column)` appelle `PQfnumber(_result, column.data())`. Sur certains appels, le bon indice n'est pas trouvé, ou la lecture déborde. Quelle est la correction ?",
+   "choices": [
+    "Passer `std::string(column).c_str()`, car un `string_view` n'est pas forcément terminé par `\\0` à cet endroit.",
+    "Remplacer `PQfnumber` par `PQnfields`, qui accepte des chaînes sans zéro final et renvoie le nombre de colonnes.",
+    "Appeler `PQclear` avant `PQfnumber`, pour que la bibliothèque relise le nom de la colonne depuis le début.",
+    "Convertir la colonne en `const char *` avec un cast `reinterpret_cast`, sans copie, pour garder la même adresse."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "`PQfnumber` attend une chaîne C terminée par `\\0`, alors qu'un `string_view` peut désigner une portion de chaîne sans terminaison. La copie dans une `std::string` garantit le zéro final, et le temporaire vit jusqu'au `;`, ce qui suffit pour l'appel."
+  }
+ ]
+}

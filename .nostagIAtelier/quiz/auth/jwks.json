@@ -1,0 +1,56 @@
+{
+ "questions": [
+  {
+   "text": "Le backend valide ses propres jetons en téléchargeant sa clé publique sur `http://backend:18080/.well-known/jwks.json`. Au démarrage, le serveur n'écoute pas encore et il a fallu activer `allowInsecureHttp = true`. Quelle correction retenir ?",
+   "choices": [
+    "Passer à `HttpJwksProvider` en allongeant le délai d'attente de la requête",
+    "Garder l'URL, mais activer `allowInsecureHttp` uniquement en production",
+    "Réécrire le validateur pour qu'il lise directement la clé privée du signataire",
+    "Injecter un `StaticJwksProvider` construit avec `signer.publicJwk()`"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Un émetteur qui valide ses propres jetons n'a pas besoin du réseau : une référence à sa clé publique suffit. Le validateur ne change pas, car il dépend de l'interface `JwksProvider`. Allonger le délai ou autoriser HTTP ne supprime pas la circularité."
+  },
+  {
+   "text": "Vous faites une rotation : la nouvelle clé signe désormais tous les jetons de 15 minutes. Quand retirer l'ancienne clé du JWKS ?",
+   "choices": [
+    "Dès que la nouvelle clé signe, puisque les nouveaux jetons n'en dépendent plus",
+    "Après au moins 15 minutes, avec une marge pour les caches",
+    "Jamais, sinon tous les anciens jetons deviennent invalides à jamais",
+    "Au prochain redémarrage du serveur, quelle que soit l'heure"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Des jetons signés avec l'ancienne clé circulent encore et doivent rester vérifiables. Il faut donc la garder au moins la durée de vie maximale d'un jeton, plus une marge pour les caches. La retirer trop tôt déconnecte des utilisateurs, la garder éternellement n'est pas nécessaire."
+  },
+  {
+   "text": "Un validateur recharge le JWKS distant à chaque `kid` inconnu. Un attaquant envoie des jetons avec des `kid` inventés. Que se passe-t-il, et que faut-il ajouter ?",
+   "choices": [
+    "Rien de grave : un `kid` inconnu est de toute façon refusé sans effet de bord",
+    "Le cache devient inutile et doit être supprimé pour rester cohérent",
+    "Le serveur subit des requêtes réseau forcées ; il faut un délai minimum entre deux rechargements",
+    "La signature est faussée ; il faut vérifier `alg` avant de lire `kid`"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Chaque `kid` inventé déclenche un téléchargement, ce qui permet à l'attaquant de saturer le réseau ou l'émetteur. Un délai minimum entre deux rechargements limite ce risque. Supprimer le cache aggraverait le problème."
+  },
+  {
+   "text": "Avec un `HttpJwksProvider`, le réseau échoue et le provider renvoie `VerificationUnavailable`. Quelle réponse HTTP donner au client ?",
+   "choices": [
+    "`401`, car le jeton n'a pas pu être vérifié",
+    "`500`, car c'est une erreur interne non prévue",
+    "`503`, car ce n'est pas un jeton invalide mais une vérification impossible",
+    "`403`, car l'accès est refusé tant que la clé est absente"
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le jeton n'est pas prouvé invalide : c'est le service de vérification qui est indisponible, ce qui correspond à `503`. Renvoyer `401` ferait croire à un jeton valide mal traité, et pousserait le front à se déconnecter."
+  }
+ ]
+}

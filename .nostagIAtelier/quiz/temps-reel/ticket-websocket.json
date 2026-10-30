@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Le front ouvre `wss://matcha.local/api/messaging/ws?access_token=eyJhbGci...` parce qu'un navigateur ne peut pas mettre d'en-tête sur un WebSocket. Quel est le risque principal ?",
+   "choices": [
+    "Le JWT est trop long pour une URL, donc le navigateur tronque le jeton et la connexion échoue.",
+    "Le chiffrement `wss` ne protège pas le jeton, qui circule en clair sur le réseau.",
+    "L'URL est écrite dans les logs d'accès de Nginx, et quiconque les lit peut se faire passer pour l'utilisateur tant que le JWT est valable.",
+    "Le serveur ne peut pas identifier le compte, car l'URL ne contient pas d'en-tête `Authorization`."
+   ],
+   "correct": [
+    2
+   ],
+   "explanation": "Le problème n'est pas le transport mais les traces : un secret placé dans une URL finit dans des logs. Ici, le JWT reste exploitable pendant 15 minutes. D'où l'idée d'un ticket court et à usage unique."
+  },
+  {
+   "text": "Quelles propriétés doit avoir le ticket renvoyé par `POST /api/ws-ticket` ?",
+   "choices": [
+    "Un JWT signé de 15 minutes, réutilisable à chaque reconnexion pour éviter de redemander un ticket.",
+    "Une valeur aléatoire opaque, associée à un compte côté serveur.",
+    "Une durée très courte, par exemple 30 secondes.",
+    "Un contenu lisible par le front, qui y trouve l'identifiant du compte."
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Le ticket est un token opaque : il ne dit rien par lui-même et n'a de sens que dans la table du serveur. Sa durée très courte et son usage unique limitent les dégâts s'il est lu dans un log. Un jeton réutilisable de 15 minutes reproduirait le problème."
+  },
+  {
+   "text": "Dans `TicketStore::consume`, un développeur sépare la lecture et la suppression : il prend le verrou pour `find`, le relâche, puis le reprend pour `erase`. Quel bug apparaît ?",
+   "choices": [
+    "Deux connexions utilisant le même ticket peuvent réussir toutes les deux, car les deux lisent avant que l'une n'ait supprimé.",
+    "Le ticket n'expire plus, car `_clock.now()` n'est lu qu'au moment de la suppression.",
+    "Rien, car `erase` sur une clé absente provoque une erreur qui bloque la seconde connexion.",
+    "Les tickets non utilisés ne sont plus nettoyés, ce qui fait grossir la table."
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "La lecture et la suppression doivent se faire sous le même verrou pour que la consommation soit atomique. Sinon, le ticket redevient réutilisable le temps d'une course entre deux connexions. L'horloge injectée n'a aucun rapport avec ce défaut."
+  },
+  {
+   "text": "Pourquoi fixer la durée de vie du ticket à 30 secondes, plutôt qu'à 1 seconde ou 10 minutes ?",
+   "choices": [
+    "1 seconde suffirait, mais 30 secondes laissent une marge pour le nettoyage de la table.",
+    "10 minutes serait acceptable, car le ticket est à usage unique et donc inoffensif.",
+    "30 secondes correspondent à la durée du `ping` du heartbeat, qui doit rester identique.",
+    "1 seconde est trop court pour un réseau lent, et 10 minutes laisserait un ticket volé non consommé exploitable longtemps."
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Le ticket doit survivre au délai entre sa réception et l'ouverture du WebSocket, y compris sur un réseau lent. Plus il dure, plus un ticket volé mais non encore consommé reste utilisable. L'usage unique ne protège pas contre un ticket pris avant que le vrai client ne s'en serve."
+  }
+ ]
+}

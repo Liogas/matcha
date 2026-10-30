@@ -1,0 +1,57 @@
+{
+ "questions": [
+  {
+   "text": "Un client mobile sur un mauvais réseau lit ses messages WebSocket très lentement, alors que le serveur continue de lui en publier. Quelle conception évite de saturer la RAM ?",
+   "choices": [
+    "Une file illimitée par session, pour ne perdre aucun message du client lent",
+    "Une file bornée par session ; en cas de débordement on coupe la session, et le client recharge son état en se reconnectant",
+    "Une seule file globale, vidée au rythme du client le plus lent",
+    "Un verrou du hub tenu pendant l'envoi, pour que chaque client reçoive son message avant le suivant"
+   ],
+   "correct": [
+    1
+   ],
+   "explanation": "Sans limite, les messages d'un client lent s'accumulent jusqu'à consommer la RAM. Une file bornée avec coupure de la session protège le serveur, et le client récupère la vérité depuis la base."
+  },
+  {
+   "text": "Alice est connectée au backend 1 et Bob au backend 2. Le code publie `account:7` pour Bob avec un `InMemoryBroker`. Que se passe-t-il, et quelle évolution est prévue ?",
+   "choices": [
+    "Bob reçoit le message, car le `Hub` partage ses abonnés entre les instances",
+    "Bob reçoit le message en double, une fois par instance",
+    "Bob ne reçoit rien ; il faut réécrire le `Hub` pour qu'il connaisse Redis",
+    "Bob ne reçoit rien, car le broker mémoire reste local ; un `RedisBroker` derrière `IBroker` relaie sans toucher au `Hub`"
+   ],
+   "correct": [
+    3
+   ],
+   "explanation": "Le broker en mémoire ne voit que les sessions de son processus. `IBroker` isole ce choix : on remplace `InMemoryBroker` par `RedisBroker` pour relayer entre instances, sans modifier le `Hub`."
+  },
+  {
+   "text": "Bob est hors ligne quand un match se produit. Si les notifications ne passaient que par Redis Pub/Sub, sans table `notifications`, quelles conséquences seraient réelles ?",
+   "choices": [
+    "Bob ne verrait jamais cette notification, car Pub/Sub livre aux seuls abonnés présents",
+    "Redis garderait le message jusqu'à la reconnexion de Bob",
+    "Le compteur de non-lus ne pourrait pas être calculé, car rien n'est conservé",
+    "Bob la recevrait à la reconnexion, car Pub/Sub rejoue les messages manqués"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Pub/Sub livre aux abonnés présents puis oublie : un absent perd le message, et aucun historique n'existe pour compter les non-lus. La table garde la vérité, et le push n'est qu'un signal en direct."
+  },
+  {
+   "text": "Pour simplifier, un développeur publie toutes les notifications sur un seul sujet `notifications`, auquel chaque session s'abonne. Quel est le problème ?",
+   "choices": [
+    "Chaque publication est recopiée vers tous les utilisateurs connectés, réveillés pour rien ; un sujet `account:12` par compte est préférable",
+    "L'éditeur doit alors connaître les connexions de chacun, ce qui le couple au hub",
+    "La base ne pourrait plus servir de source de vérité pour les notifications",
+    "Un sujet ne peut pas être partagé entre plusieurs onglets d'un même compte"
+   ],
+   "correct": [
+    0
+   ],
+   "explanation": "Le fan-out recopie le message vers chaque abonné du sujet : un sujet global multiplie les livraisons inutiles. Un sujet par compte cible les bonnes sessions, et l'éditeur n'a toujours pas à connaître les connexions."
+  }
+ ]
+}
