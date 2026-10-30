@@ -31,19 +31,24 @@ add_executable(matcha_backend
     src/database/DatabaseInitializer.cpp
 
     src/repositories/AccountRepository.cpp
+    src/repositories/ProfileRepository.cpp
+    src/repositories/LikeRepository.cpp
 
     src/security/PasswordHasher.cpp
     src/security/OpaqueToken.cpp
     src/security/EmailVerificationToken.cpp
+    
     src/services/SmtpEmailSender.cpp
+    src/services/ProfilePhotoService.cpp
+    
     src/security/RedisLoginAttemptLimiter.cpp
+    
     src/images/ImageProcessor.cpp
     src/images/LocalImageStorage.cpp
-    src/services/ProfilePhotoService.cpp
-    src/repositories/ProfileRepository.cpp
-    src/repositories/LikeRepository.cpp
+    
     src/messaging/MessagingRepository.cpp
     src/messaging/MessagingWebSocket.cpp
+    src/messaging/MessagingRoutes.cpp
 
     src/http/AuthRoutes.cpp
     src/http/AuthRouteSupport.cpp
@@ -52,7 +57,6 @@ add_executable(matcha_backend
     src/http/AuthSessionRoutes.cpp
     src/http/ProfileRoutes.cpp
     src/http/LikeRoutes.cpp
-    src/messaging/MessagingRoutes.cpp
 )
 
 target_link_libraries(matcha_backend
@@ -78,24 +82,6 @@ target_include_directories(login_rate_limiter_tests
 
 target_link_libraries(login_rate_limiter_tests
     PRIVATE redis++::redis++_static GTest::gtest_main OpenSSL::Crypto
-)
-
-add_executable(user_repository_integration_tests
-    tests/integration/UserRepositoryIntegrationTests.cpp
-    src/database/Database.cpp
-    src/database/QueryResult.cpp
-    src/repositories/UserRepository.cpp
-)
-
-target_include_directories(user_repository_integration_tests
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
-target_link_libraries(user_repository_integration_tests
-    PRIVATE
-        cpp-auth::cpp-auth
-        PostgreSQL::PostgreSQL
-        GTest::gtest_main
 )
 
 add_executable(account_repository_integration_tests
@@ -159,34 +145,8 @@ target_link_libraries(password_hasher_tests
         GTest::gtest_main
 )
 
-add_executable(auth_integration_tests
-    tests/integration/AuthIntegrationTests.cpp
-    tests/integration/AuthAuthentificationIntegrationTests.cpp
-
-    src/database/Database.cpp
-    src/database/QueryResult.cpp
-    
-    src/repositories/UserRepository.cpp
-    
-    src/security/PasswordHasher.cpp
-)
-
-target_include_directories(auth_integration_tests
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
-target_link_libraries(auth_integration_tests
-    PRIVATE
-        cpp-auth::cpp-auth
-        PostgreSQL::PostgreSQL
-        unofficial-sodium::sodium
-        GTest::gtest_main
-)
-
 include(GoogleTest)
-gtest_discover_tests(auth_integration_tests)
 gtest_discover_tests(password_hasher_tests)
-gtest_discover_tests(user_repository_integration_tests)
 gtest_discover_tests(account_repository_integration_tests)
 gtest_discover_tests(login_rate_limiter_tests)
 gtest_discover_tests(email_verification_token_tests)
