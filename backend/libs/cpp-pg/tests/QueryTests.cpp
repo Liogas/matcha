@@ -1,4 +1,5 @@
 #include "support/PgTest.hpp"
+#include <pg/QueryBuilder.hpp>
 
 using namespace std::chrono;
 
@@ -103,4 +104,19 @@ TEST_F(Query, CountsAffectedRows)
 	ASSERT_TRUE(updated) << updated.error().message;
 	EXPECT_EQ(updated->affected(), 2);
 	EXPECT_TRUE(updated->empty());
+}
+
+TEST_F(Query, RunsABuiltQuery)
+{
+	ASSERT_TRUE(this->connection->query("INSERT INTO items (name, score) VALUES ('a', 1), ('b', 5), ('c', 9)"));
+	const std::optional<int> minScore = 4;
+	pg::QueryBuilder builder("SELECT name FROM items");
+	builder.whereIf(minScore, "score >= ?").orderBy("name", {{"name", "name"}}).limit(10);
+	const auto query = builder.build();
+	ASSERT_TRUE(query) << query.error().message;
+	const auto rows = this->connection->execute(query->sql, query->params);
+	ASSERT_TRUE(rows) << rows.error().message;
+	ASSERT_EQ(rows->size(), 2u);
+	EXPECT_EQ((*rows)[0].get<std::string>("name"), "b");
+	EXPECT_EQ((*rows)[1].get<std::string>("name"), "c");
 }

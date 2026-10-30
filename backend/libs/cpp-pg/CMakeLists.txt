@@ -2,7 +2,7 @@
 # EN TETE #
 cmake_minimum_required(VERSION 3.21)
 
-project(cpp-pg VERSION 0.1.0 LANGUAGES CXX)
+project(cpp-pg VERSION 0.2.0 LANGUAGES CXX)
 
 option(CPP_PG_BUILD_TESTS "build cpp-pg tests" ${PROJECT_IS_TOP_LEVEL})
 
@@ -27,6 +27,8 @@ add_library(cpp-pg STATIC
 	src/Rows.cpp
 	src/Connection.cpp
 	src/Pool.cpp
+	src/QueryBuilder.cpp
+	src/Migrations.cpp
 )
 add_library(cpp-pg::cpp-pg ALIAS cpp-pg)
 target_compile_features(cpp-pg PUBLIC cxx_std_23)
@@ -86,6 +88,8 @@ if(CPP_PG_BUILD_TESTS)
 		tests/QueryTests.cpp
 		tests/TransactionTests.cpp
 		tests/PoolTests.cpp
+		tests/QueryBuilderTests.cpp
+		tests/MigrationTests.cpp
     )
     target_link_libraries(cpp-pg_tests PRIVATE
         cpp-pg::cpp-pg

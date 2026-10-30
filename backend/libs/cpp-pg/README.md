@@ -1,7 +1,8 @@
 # cpp-pg
 
 > Accès à PostgreSQL au-dessus de libpq : pool de connexions, transactions RAII,
-> paramètres typés et lecture des colonnes par leur nom.
+> paramètres typés, lecture des colonnes par leur nom, requêtes à filtres
+> optionnels et migrations.
 
 ## Exemple minimal
 
@@ -34,6 +35,32 @@ int main()
 }
 ```
 
+## Requêtes à filtres optionnels
+
+```cpp
+const pg::SortWhitelist sorts{{"newest", "p.id DESC"}, {"age", "p.birth DESC, p.id"}};
+pg::QueryBuilder builder("SELECT p.id FROM profiles p");
+builder.where("p.id <> ?", viewerId)
+    .whereIf(city, "p.city = ?")          // std::optional : ajouté seulement s'il a une valeur
+    .orderBy(sortFromUrl, sorts)          // clé inconnue : build() renvoie Invalid
+    .limit(20);
+const auto query = builder.build();        // core::Result<pg::Query>
+if (query)
+    rows = pool->execute(query->sql, query->params);
+```
+
+## Migrations
+
+```cpp
+pg::MigrationOptions options;            // dossier "migrations", table "schema_migrations"
+const auto report = pg::migrate(*pool, options, logger);
+```
+
+Fichiers `NNN_nom.sql`, appliqués par numéro, tous dans une seule transaction, sous
+un verrou consultatif. Le SHA-256 de chaque fichier appliqué est enregistré : un
+fichier modifié après coup est refusé. `options.dryRun` applique puis annule.
+
+
 ## Utilisation
 
 Dans le monorepo (`backend/libs/CMakeLists.txt`), après cpp-core :
@@ -46,7 +73,7 @@ add_subdirectory(cpp-pg)
 Depuis un autre projet, une fois installée (avec cpp-core) :
 
 ```cmake
-find_package(cpp-pg 0.1 CONFIG REQUIRED)
+find_package(cpp-pg 0.2 CONFIG REQUIRED)
 target_link_libraries(mon_app PRIVATE cpp-pg::cpp-pg)
 ```
 
@@ -69,6 +96,10 @@ sautés.
   Erreurs de programmation (colonne inconnue, `NULL` lu sans `std::optional`,
   transaction utilisée après `commit()`) en exception.
 - Chaque session est en `TimeZone=UTC` et `DateStyle=ISO`.
+- `Connection`, `Transaction` et `ConnectionPool` sont des `pg::Executor` : un code
+  qui reçoit un `Executor &` tourne aussi bien seul que dans une transaction.
+- `QueryBuilder` ne met jamais une valeur dans le texte SQL ; un tri ne peut venir que
+  d'une `SortWhitelist`.
 
 ## Limites
 
@@ -76,3 +107,6 @@ sautés.
 - Pas de requêtes préparées (`PQprepare`), ni de mode pipeline, ni de `LISTEN/NOTIFY`.
 - Une `Transaction` ne doit pas être partagée entre threads.
 - Le pool doit vivre plus longtemps que les connexions et transactions qu'il prête.
+- `QueryBuilder` ne sait faire que des `SELECT` ; un « ? » littéral (dans une chaîne
+  SQL, ou l'opérateur `jsonb ?`) ne peut pas apparaître dans une condition.
+- Les migrations tournent dans une transaction : pas de `CREATE INDEX CONCURRENTLY`.
