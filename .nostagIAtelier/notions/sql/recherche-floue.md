@@ -4,6 +4,21 @@
 ## Mise en situation
 `GET /api/interests?q=veg` doit proposer `vegan` et `vegetarien` à chaque frappe, en quelques millisecondes. Et une personne qui tape `vgean` aimerait peut-être trouver `vegan`.
 
+### Comment `vgean` retrouve `vegan`
+`pg_trgm` découpe les mots en morceaux de trois lettres, puis compare ces morceaux.
+
+```tableau
+titre: Comparer deux mots par trigrammes
+étape: Découpage du tag stocké, avec des espaces ajoutés aux bords.
+> vegan : "  v" " ve" "veg" "ega" "gan" "an "
+étape: Découpage de ce que l'utilisateur a tapé.
+> vgean : "  v" " vg" "vge" "gea" "ean" "an "
+étape: On compte les trigrammes en commun.
+> communs : "  v" et "an "
+étape: La similarité est faible, mais c'est le meilleur résultat parmi les tags : il suffit de le proposer en premier.
++ = 2 communs sur 10 différents, soit 0,2
+```
+
 ## La théorie
 ### La recherche par préfixe
 ```sql
@@ -72,3 +87,5 @@ Le paramètre empêche l'[injection SQL](requetes-parametrees.md), mais `LIKE` i
 
 - [Les index](index.md)
 - [Requêtes paramétrées et injection SQL](requetes-parametrees.md)
+
+<!-- enrichie -->

@@ -4,6 +4,25 @@
 ## Mise en situation
 Tu ajoutes la latitude aux profils. Sur ta machine, tu tapes `ALTER TABLE` dans `psql`, et tout marche. Le correcteur clone le dépôt et lance `docker compose up` : la colonne n'existe pas, l'application plante. Le schéma doit vivre dans le dépôt, au même titre que le code.
 
+### Trois bases, une seule histoire
+Le runner compare ce que les fichiers demandent et ce que la base a déjà reçu.
+
+```tableau
+titre: Le démarrage du serveur
+colonnes: Fichiers | Runner | schema_migrations
+étape: Le runner liste les fichiers du dossier.
+Fichiers -> Runner: 001 ... 009
+étape: Il lit ce qui a déjà été appliqué sur cette base.
+schema_migrations -> Runner: 001 ... 008
+étape: Il ne reste que 009. Les autres ne seront jamais rejouées.
+Runner: à appliquer : 009
+étape: La migration et son enregistrement sont dans la même transaction : tout ou rien.
++ Runner -> schema_migrations: 009 + somme de contrôle
+étape: Si quelqu'un modifie 003 après coup, sa somme de contrôle ne correspond plus, et le serveur refuse de démarrer.
+! Fichiers: 003 modifié
+! Runner: arrêt
+```
+
 ## La théorie
 ### Le principe
 Chaque changement est un fichier SQL numéroté dans `backend/migrations/`. La base retient ce qui a déjà été appliqué dans une table, `schema_migrations`. Au démarrage, le runner compare les deux listes et applique ce qui manque.
@@ -88,3 +107,5 @@ On crée une nouvelle migration avec `ALTER TABLE ... RENAME COLUMN`. Si tu modi
 - [Les verrous consultatifs](verrous-consultatifs.md)
 - [Les transactions et ACID](transactions.md)
 - [Les contraintes d'intégrité](contraintes.md)
+
+<!-- enrichie -->

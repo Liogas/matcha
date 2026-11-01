@@ -4,6 +4,21 @@
 ## Mise en situation
 Chaque utilisateur a une note publique. Le sujet laisse le choix des critères, tant qu'ils sont cohérents. Une simple somme de likes favorise quelques profils, et peut être gonflée par de faux comptes.
 
+### Défendre sa formule en soutenance
+Le correcteur va demander pourquoi tel profil a telle note. Prends un calcul concret, en supposant une formule simple que tu pourras ajuster.
+
+```tableau
+titre: Un exemple de calcul, avec une formule à décider
+étape: Exemple : 12 likes reçus, 3 matchs, 40 visites uniques récentes.
+= likes = 12    matchs = 3    visites = 40
+étape: Un match compte plus qu'un like, car il est réciproque. Coefficients d'exemple : 1, 3 et 0,2.
+> 12 × 1 + 3 × 3 + 40 × 0,2 = 29
+étape: Un logarithme écrase les grands nombres : 100 faux likes ne valent plus 100 fois plus.
+> note = 100 × log(1 + 29) / log(1 + plafond)
+étape: La formule reste une décision ouverte du projet, à documenter dans ton dossier.
+! = décision ouverte (carte #40)
+```
+
 ## La théorie
 ### Que mesurer
 Des signaux d'intérêt réel :
@@ -82,3 +97,5 @@ Avec une somme, un profil à 1000 likes a 100 fois plus qu'un profil à 10, et l
 - [Dénormalisation et triggers](../sql/denormalisation.md)
 - [Les événements de domaine](../archi/evenements.md)
 - [Le score de matching](score-matching.md)
+
+<!-- enrichie -->

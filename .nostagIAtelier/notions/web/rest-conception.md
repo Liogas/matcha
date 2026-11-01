@@ -4,6 +4,30 @@
 ## Mise en situation
 Le front affiche la fiche d'un profil : photo, popularité, distance, tags communs, en ligne ou non, like reçu ou non. Si chaque information demande un appel, l'écran fait 6 requêtes. Une API se conçoit depuis son utilisation.
 
+### Concevoir depuis l'écran
+Prends la fiche d'un profil, et compare ce que le front doit faire selon l'API.
+
+```tableau
+titre: Une API pensée table par table
+colonnes: Écran | API
+étape: Chaque information demande son appel.
+Écran -> API: GET /profiles/7
+Écran -> API: GET /profiles/7/photos
+Écran -> API: GET /profiles/7/tags
+Écran -> API: GET /presence/7
+! = 4 requêtes pour un écran
+```
+
+```tableau
+titre: Une API pensée pour l'écran
+colonnes: Écran | API
+étape: Un seul appel renvoie ce que l'écran affiche.
+Écran -> API: GET /profiles/7
++ API -> Écran: profil complet
+étape: Les informations relatives à toi, comme `liked_by_me`, sont calculées par le serveur.
++ = 1 requête, le serveur fait les jointures
+```
+
 ## La théorie
 ### Les principes
 - Une URL désigne une ressource : `/api/profiles/7`, pas `/api/getProfile?id=7`.
@@ -84,3 +108,5 @@ Le front devrait charger chaque profil, soit N appels. Il faut renvoyer des prof
 - [Le problème N+1](../sql/n-plus-un.md)
 - [OpenAPI](openapi.md)
 - [Pagination keyset ou OFFSET](../sql/pagination-keyset.md)
+
+<!-- enrichie -->

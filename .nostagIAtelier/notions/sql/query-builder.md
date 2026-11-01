@@ -15,6 +15,26 @@ if (city)   sql += " AND city = $" + std::to_string(n++);
 
 Ça fonctionne, mais tout est fragile. Il faut compter les `$n`, garder les valeurs dans le même ordre que le texte, et ne jamais glisser une valeur dans le texte. Une erreur de décalage donne une erreur SQL ou, pire, compare le mauvais champ sans rien dire.
 
+### Les filtres s'empilent, pas les valeurs
+Regarde la requête se construire. Le texte ne contient que des `$n`, et les valeurs voyagent à part.
+
+```tableau
+titre: Une recherche avec deux filtres sur quatre
+colonnes: Code | Texte SQL | Paramètres
+étape: Le départ est toujours le même.
+Texte SQL: SELECT ... FROM profils
+étape: L'âge minimal est renseigné : une condition, une valeur.
+Code -> Texte SQL: WHERE age >= $1
+Code -> Paramètres: 25
+étape: La ville est vide : rien n'est ajouté, ni au texte, ni aux valeurs.
+Code: ville absente
+étape: Les tags sont renseignés. Le numéro suit automatiquement.
+Code -> Texte SQL: AND tags @> $2
+Code -> Paramètres: {geek}
+étape: Le tri vient d'une liste blanche, car une colonne ne peut pas être un paramètre.
++ Code -> Texte SQL: ORDER BY fame_rating
+```
+
 ## La théorie
 ### Le rôle exact du builder
 Un builder ne remplace pas ton SQL : il assemble des morceaux que tu écris. Il fait trois choses :
@@ -133,3 +153,5 @@ Paramètres : `[10, 18, 30]`. C'est le rôle de `_limitParam` : retenir le numé
 - [Pagination keyset ou OFFSET](pagination-keyset.md)
 - [Un seul moteur pour suggestions et recherche](../metier/recherche-unifiee.md)
 - [Templates variadiques et fold expressions](../cpp/templates-variadiques.md)
+
+<!-- enrichie -->

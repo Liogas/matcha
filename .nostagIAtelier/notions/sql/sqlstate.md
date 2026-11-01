@@ -4,6 +4,22 @@
 ## Mise en situation
 Deux personnes s'inscrivent avec le même email. L'[index](index.md) unique en refuse une. Le client doit recevoir `409`, avec un message utile, et non `500`. Chercher le mot `duplicate` dans le message serait fragile : le texte dépend de `lc_messages` et peut changer.
 
+### Traduire une fois pour toutes
+Le texte d'une erreur change avec `lc_messages`. Le code, lui, ne change jamais.
+
+```tableau
+titre: Une erreur et sa traduction
+colonnes: PostgreSQL | pg::Error | Service | Client
+étape: L'unicité est violée. La réponse contient un code et un texte.
+! PostgreSQL -> pg::Error: 23505
+étape: cpp-pg lit le code avec `PQresultErrorField`, et le traduit une seule fois.
+pg::Error -> Service: Conflict
+étape: Le service n'a pas besoin de connaître SQL.
+Service -> Client: 409
+étape: `40P01` et `40001` signifient autre chose : la transaction peut être rejouée.
+pg::Error: 40P01 : à rejouer
+```
+
 ## La théorie
 Un code SQLSTATE comporte 5 caractères. Les deux premiers forment la classe, les trois suivants précisent :
 
@@ -69,3 +85,5 @@ La colonne a `CHECK (position BETWEEN 1 AND 5)`, donc `23514`. `errorCodeFor` do
 - [Result et std::expected](../cpp/result-expected.md)
 - [Les contraintes d'intégrité](contraintes.md)
 - [Les niveaux d'isolation](isolation.md)
+
+<!-- enrichie -->

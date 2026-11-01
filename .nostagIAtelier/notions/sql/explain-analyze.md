@@ -10,6 +10,23 @@ SELECT account_id FROM matcha_profiles
 WHERE fame_rating > 50 ORDER BY fame_rating DESC LIMIT 20;
 ```
 
+### Lire un plan, de bas en haut
+Un plan se lit par les lignes les plus indentées, celles qui s'exécutent en premier.
+
+```tableau
+titre: Avant et après un index
+étape: La ligne la plus coûteuse raconte tout : il lit toutes les lignes.
+! > Seq Scan on matcha_profiles  (rows=500)
+étape: Il filtre, et en jette la plupart.
+! > Filter: fame_rating > 50  (Rows Removed: 410)
+étape: Puis il trie ce qui reste en mémoire.
+! > Sort  (actual time=12 ms)
+étape: Après `CREATE INDEX`, il lit directement dans l'ordre voulu, et s'arrête à 20 lignes.
++ > Index Scan using profiles_fame_idx  (rows=20)
+étape: `actual time` et `rows` sont des mesures réelles : compare-les aux estimations pour repérer des statistiques fausses.
+= estimé ≠ réel : lance ANALYZE
+```
+
 ## La théorie
 ### Le planificateur
 PostgreSQL ne suit pas l'ordre de ta requête. Il estime le coût de plusieurs stratégies à partir de statistiques sur les données, puis choisit la moins chère.
@@ -95,3 +112,5 @@ Environ 500 × 0,02 ms = 10 ms. Le chiffre affiché est par boucle. Le nœud s'e
 
 - [Les index](index.md)
 - [Pagination keyset ou OFFSET](pagination-keyset.md)
+
+<!-- enrichie -->

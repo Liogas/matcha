@@ -4,6 +4,24 @@
 ## Mise en situation
 Pour trier par popularité, il faudrait calculer pour chaque profil ses likes, matchs et visites, à chaque recherche. Avec 500 profils et un tri, ce calcul se ferait pour tous. On décide donc de stocker `fame_rating` dans `matcha_profiles`.
 
+### Le prix d'une valeur copiée
+Une valeur dénormalisée est une promesse : elle doit rester vraie à chaque écriture.
+
+```tableau
+titre: Une note qui dérive
+colonnes: Action | Table likes | fame_rating
+étape: Un like arrive. La table des likes est la vérité.
+Action -> Table likes: INSERT
+étape: La note doit suivre, dans la même transaction.
+Action -> fame_rating: recalcul
+étape: Un nouveau chemin supprime des likes sans penser à la note.
+! Action -> Table likes: DELETE
+étape: Les deux valeurs se contredisent, sans aucune erreur.
+! fame_rating: valeur fausse
+étape: Un trigger attaché à la table ne peut pas être oublié, car il suit toutes les écritures.
++ Table likes -> fame_rating: trigger
+```
+
 ## La théorie
 ### Normalisation et dénormalisation
 Un schéma normalisé stocke chaque fait une seule fois : on ne peut pas se contredire. La dénormalisation copie ou résume une information pour accélérer la lecture. On échange une lecture simple contre une écriture plus compliquée.
@@ -79,3 +97,5 @@ Elle corrige toute dérive due à un bug, et elle permet de changer la formule :
 - [La note de popularité](../metier/fame-rating.md)
 - [Les vues SQL](vues-sql.md)
 - [Les événements de domaine](../archi/evenements.md)
+
+<!-- enrichie -->

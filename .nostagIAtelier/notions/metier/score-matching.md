@@ -4,6 +4,29 @@
 ## Mise en situation
 Le sujet veut des correspondances intelligentes, selon la proximité, les tags partagés et la popularité, avec une priorité à la même zone. En soutenance, on te demandera : pourquoi ce profil apparaît-il en premier ? Il faut une réponse chiffrée.
 
+### Expliquer un classement avec des chiffres
+Imagine deux suggestions pour Alice. Les poids utilisés ici sont un exemple à ajuster : 0,5 pour la proximité, 0,3 pour les tags, 0,2 pour la popularité.
+
+```tableau
+titre: Pourquoi Bruno passe devant Chloé
+colonnes: Critère | Bruno | Chloé
+étape: Proximité, entre 0 et 1 : Bruno est à 3 km, Chloé à 40 km.
+Critère: proximité
+Bruno: 0,9
+Chloé: 0,4
+étape: Tags communs : 2 pour Bruno, 3 pour Chloé.
+Critère: tags
+Bruno: 0,5
+Chloé: 0,8
+étape: Popularité.
+Critère: popularité
+Bruno: 0,6
+Chloé: 0,7
+étape: Le score pondéré donne la réponse à la question du correcteur.
++ Bruno: 0,72
+Chloé: 0,58
+```
+
 ## La théorie
 ### Un score pondéré
 ```text
@@ -79,3 +102,5 @@ Avec `0,2 × 80 = 16` contre un maximum de 0,5 pour la proximité, la popularit�
 - [Compatibilité d'orientation](orientation.md)
 - [Bounding box et antiméridien](bounding-box.md)
 - [Les CTE (WITH)](../sql/cte.md)
+
+<!-- enrichie -->

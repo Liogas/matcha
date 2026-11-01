@@ -4,6 +4,23 @@
 ## Mise en situation
 L'utilisateur enregistre 8 tags. Tu pourrais construire `VALUES ($1), ($2), ... ($8)`, mais le nombre de paramètres varie, et la requête change à chaque fois. PostgreSQL sait recevoir un tableau comme une seule valeur.
 
+### Une liste, un seul paramètre
+Le texte de la requête ne change jamais, quel que soit le nombre de tags. C'est ce qui rend cette forme si pratique.
+
+```tableau
+titre: Enregistrer trois tags
+étape: L'application envoie une seule valeur, de type tableau.
+> $1 = {vegan,geek,rando}
+étape: `unnest` déplie le tableau en lignes, comme une petite table.
+> vegan
+> geek
+> rando
+étape: `INSERT ... SELECT` peut ensuite travailler sur ces lignes en une instruction.
++ > INSERT ... SELECT unnest($1::text[])
+étape: Avec 3 ou 300 tags, la requête est la même, et elle ne fait qu'un aller-retour.
++ = 1 requête, 1 paramètre
+```
+
 ## La théorie
 ### Le type tableau
 Tout type a sa version tableau : `text[]`, `bigint[]`. En format texte, un tableau s'écrit `{vegan,geek}`.
@@ -68,3 +85,5 @@ Aucune ligne : aucune valeur ne peut être égale à un élément d'une liste vi
 - [Requêtes paramétrées et injection SQL](requetes-parametrees.md)
 - [Les relations N-N](relation-nn.md)
 - [INSERT ON CONFLICT](on-conflict.md)
+
+<!-- enrichie -->

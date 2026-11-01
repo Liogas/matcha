@@ -13,6 +13,23 @@ T2 : INSERT vegan        -> erreur 23505
 
 Le motif tester-puis-agir n'est pas atomique, même dans une [transaction](transactions.md) en [`READ COMMITTED`](isolation.md). L'erreur empoisonne en plus toute la transaction de T2.
 
+### Pourquoi tester avant d'insérer ne suffit pas
+Le test et l'insertion sont deux instructions : une autre requête peut passer entre les deux.
+
+```tableau
+titre: La même insertion, avec ON CONFLICT
+colonnes: T1 | PostgreSQL | T2
+étape: Les deux transactions envoient la même instruction, sans test préalable.
+T1 -> PostgreSQL: INSERT vegan ON CONFLICT
+T2 -> PostgreSQL: INSERT vegan ON CONFLICT
+étape: La vérification et l'écriture ne font qu'un, grâce à l'index unique. T1 passe.
++ PostgreSQL -> T1: id 12 créé
+étape: T2 attend que T1 valide, puis constate le conflit sans erreur.
+PostgreSQL -> T2: conflit, rien inséré
+étape: La transaction de T2 reste saine, et aucune requête n'a échoué.
++ = pas de 23505, pas de transaction empoisonnée
+```
+
 ## La théorie
 `ON CONFLICT` rend la décision atomique : l'insertion consulte l'[index](index.md) unique et attend, si nécessaire, la [transaction](transactions.md) concurrente.
 
@@ -81,3 +98,5 @@ Parce qu'aucune erreur n'est levée : le conflit est traité comme un cas normal
 - [Les relations N-N](relation-nn.md)
 - [Les contraintes d'intégrité](contraintes.md)
 - [Tableaux et unnest](tableaux-unnest.md)
+
+<!-- enrichie -->

@@ -4,6 +4,26 @@
 ## Mise en situation
 Bloquer doit agir sur les suggestions, la recherche, la consultation, les likes, les notifications, les messages HTTP, les messages [WebSocket](../temps-reel/websocket.md) et la liste des conversations. Soit huit points d'entrée. Si un seul est oublié, une personne bloquée peut encore écrire à quelqu'un qui voulait s'en protéger. C'est une faute grave pour un site de rencontre.
 
+### Un test qui garde les huit portes
+La règle est écrite une fois, mais c'est l'ensemble des points d'entrée qu'on vérifie.
+
+```tableau
+titre: Alice a bloqué Bob
+colonnes: Point d'entrée | Résultat attendu
+étape: Bob n'apparaît plus dans les suggestions d'Alice.
+Point d'entrée: suggestions
++ Résultat attendu: absent
+étape: Consulter son profil renvoie `404`, comme si le compte n'existait pas.
+Point d'entrée: consultation
++ Résultat attendu: 404
+étape: Il ne peut plus liker.
+Point d'entrée: like
++ Résultat attendu: refusé
+étape: Un message envoyé sur un WebSocket déjà ouvert doit aussi être refusé. C'est la porte qu'on oublie.
+! Point d'entrée: message WebSocket
++ Résultat attendu: refusé
+```
+
 ## La théorie
 ### Une préoccupation transversale
 Certaines règles traversent tout le code : autorisation, journalisation, blocage. Les recopier est la meilleure façon d'en oublier une.
@@ -76,3 +96,5 @@ Pourquoi le test doit-il passer par la route, et non directement par `is_blocked
 - [Les vues SQL](../sql/vues-sql.md)
 - [Notifications stockées et compteurs](../temps-reel/notifications-stockees.md)
 - [La pyramide de tests](../tests/pyramide.md)
+
+<!-- enrichie -->

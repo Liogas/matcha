@@ -4,6 +4,22 @@
 ## Mise en situation
 Le blocage doit s'appliquer aux suggestions, à la recherche, à la consultation, aux likes, aux notifications et aux messages. Si chaque requête recopie son `NOT EXISTS`, un oubli suffit pour qu'un utilisateur bloqué réapparaisse. De même, la règle de complétude du profil est aujourd'hui copiée dans quatre requêtes.
 
+### Une règle, un nom
+Avec une vue, la règle ne s'écrit qu'une fois, et chaque requête l'utilise par son nom.
+
+```tableau
+titre: Corriger la règle de blocage
+colonnes: Requêtes | Vue blocked_pairs
+étape: Trois requêtes lisent la vue au lieu de recopier leur `NOT EXISTS`.
+Requêtes -> Vue blocked_pairs: suggestions
+Requêtes -> Vue blocked_pairs: recherche
+Requêtes -> Vue blocked_pairs: consultation
+étape: La règle doit changer. Une nouvelle migration remplace la vue.
+Vue blocked_pairs: CREATE OR REPLACE VIEW
+étape: Aucune requête n'a bougé, et toutes suivent la nouvelle règle.
++ = un changement, partout à la fois
+```
+
 ## La théorie
 ### Une vue
 ```sql
@@ -72,3 +88,5 @@ La table enregistre qui a décidé, utile pour permettre le déblocage. L'effet,
 - [Une règle transversale centralisée](../metier/policy-centralisee.md)
 - [Dénormalisation et triggers](denormalisation.md)
 - [Les index](index.md)
+
+<!-- enrichie -->

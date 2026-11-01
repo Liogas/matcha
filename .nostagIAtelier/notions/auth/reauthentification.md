@@ -4,6 +4,25 @@
 ## Mise en situation
 Quelqu'un trouve ton téléphone déverrouillé, avec matcha ouvert. S'il peut changer l'email sans vérification, il déclenche ensuite un reset vers sa propre adresse, et le compte lui appartient pour toujours. C'est un account takeover.
 
+### La prise de compte, en quatre gestes
+Tout se joue en moins d'une minute, sur un téléphone laissé ouvert.
+
+```tableau
+titre: Sans réauthentification
+colonnes: Intrus | Serveur | Email de l'intrus
+étape: La session est valide, puisque le téléphone est connecté.
+Intrus -> Serveur: changer l'email
+étape: Aucune preuve supplémentaire n'est demandée. L'adresse du compte devient celle de l'intrus.
+! Serveur: email remplacé
+étape: Il demande un nouveau mot de passe, et le lien arrive chez lui.
+Intrus -> Serveur: mot de passe oublié
+! Serveur -> Email de l'intrus: lien de reset
+étape: Le compte lui appartient, et la victime n'a plus aucun moyen de le récupérer.
+! = compte perdu
+étape: Si le mot de passe actuel est exigé dès le premier geste, tout s'arrête là.
++ Serveur: mot de passe requis
+```
+
 ## La théorie
 ### Session et identité
 Une session prouve qu'un navigateur s'est connecté à un moment donné. Elle ne prouve pas que la personne actuelle est la même. Pour les actions irréversibles, on redemande une preuve.
@@ -52,3 +71,5 @@ Le but est de prouver que l'utilisateur contrôle la nouvelle adresse. L'ancienn
 
 - [Les tokens opaques à usage unique](tokens-opaques.md)
 - [Rotation des refresh tokens](refresh-rotation.md)
+
+<!-- enrichie -->

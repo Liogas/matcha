@@ -4,6 +4,26 @@
 ## Mise en situation
 Le sujet demande des tags réutilisables. Une colonne `tags TEXT` contenant `"vegan,geek"` semble simple. Mais comment trouver les profils `geek` ? Comment compter les tags communs ? Comment proposer les tags existants ? Comment renommer un tag ? Une liste dans une case est invisible pour la base.
 
+### Essaie de répondre avec la colonne `tags TEXT`
+Prends trois questions du projet et compare les réponses dans les deux schémas.
+
+```tableau
+titre: Trois questions, deux schémas
+colonnes: Question | tags TEXT | Table de liaison
+étape: Trouver les profils `geek`.
+Question: qui aime geek ?
+! tags TEXT: LIKE '%geek%' trouve aussi 'mangeek'
++ Table de liaison: égalité sur interest_id
+étape: Compter les tags communs entre deux profils.
+Question: tags communs ?
+! tags TEXT: découper du texte
++ Table de liaison: une jointure
+étape: Renommer un tag pour tout le monde.
+Question: renommer ?
+! tags TEXT: réécrire chaque profil
++ Table de liaison: un seul UPDATE
+```
+
 ## La théorie
 ### Normaliser
 Une relation N-N se modélise par trois tables :
@@ -64,6 +84,21 @@ SELECT $2, id FROM matcha_interests WHERE LOWER(name) = ANY($3::text[]);
 
 Sans transaction, un échec après le `DELETE` laisserait le profil sans tags.
 
+## Exemple pas à pas : deux profils, trois tables
+Alice a rando et cuisine, Bob a rando. Voici ce qui est réellement stocké :
+
+```tableau
+titre: Le contenu des tables
+étape: Chaque tag existe une seule fois.
+> matcha_interests : (1, rando) (2, cuisine)
+étape: La table de liaison n'a que des paires d'identifiants.
+> matcha_profile_interests : (alice, 1) (alice, 2) (bob, 1)
+étape: Les tags communs sont les lignes qui partagent un `interest_id`.
+> interest_id = 1 chez alice et chez bob
+étape: Une jointure de la table avec elle-même répond directement.
++ = 1 tag commun : rando
+```
+
 ## Erreurs fréquentes
 - Ne pas normaliser les noms : `Vegan`, `vegan` et `#vegan` feraient trois tags.
 - Oublier un [index](index.md) sur `interest_id` : la clé primaire ne sert que dans l'ordre `(profile_account_id, interest_id)`.
@@ -90,3 +125,5 @@ WHERE LOWER(i.name) = ANY($1::text[]);
 - [INSERT ON CONFLICT](on-conflict.md)
 - [Tableaux et unnest](tableaux-unnest.md)
 - [Les contraintes d'intégrité](contraintes.md)
+
+<!-- enrichie -->

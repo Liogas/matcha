@@ -4,6 +4,22 @@
 ## Mise en situation
 Ça marche sur ta machine. Mais un fichier oublié dans le commit, un test cassé, ou une dépendance présente seulement chez toi casse le dépôt, parfois juste avant la soutenance. La CI le voit à chaque push.
 
+### Ce que la CI attrape et que ta machine cache
+Ta machine contient des fichiers, des caches et des dépendances que le dépôt n'a pas.
+
+```tableau
+titre: Un fichier oublié dans le commit
+colonnes: Ta machine | GitHub | Machine neuve
+étape: Tout compile chez toi, car le fichier existe sur ton disque.
++ Ta machine: make test ok
+étape: Tu pousses, mais le nouveau fichier n'a pas été ajouté.
+Ta machine -> GitHub: git push
+étape: GitHub lance une machine vide, qui ne connaît que le dépôt.
+GitHub -> Machine neuve: checkout, build
+étape: La compilation échoue, et tu le sais dans la minute, pas pendant la soutenance.
+! Machine neuve -> GitHub: fichier manquant
+```
+
 ## La théorie
 ### Le principe
 À chaque événement, GitHub lance une machine neuve, qui exécute les étapes d'un fichier `.github/workflows/*.yml`.
@@ -71,3 +87,5 @@ Ta machine contient des fichiers non commités, d'anciens objets de compilation,
 
 - [Les presets CMake](../build/presets.md)
 - [Les sanitizers : ASan, UBSan, LSan](../build/sanitizers.md)
+
+<!-- enrichie -->

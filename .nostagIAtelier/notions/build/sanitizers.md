@@ -4,6 +4,24 @@
 ## Mise en situation
 Un `string_view` pointe sur une chaîne détruite. Le programme affiche souvent le bon texte : la mémoire n'a pas encore été réécrite. Le bug peut dormir des mois, puis provoquer un plantage impossible à reproduire. Un sanitizer l'arrête au premier accès.
 
+### Comment ASan attrape l'erreur
+Il garde une carte de la mémoire, et vérifie chaque accès.
+
+```tableau
+titre: Un use-after-free sous ASan
+colonnes: Programme | Allocateur ASan | Carte mémoire
+étape: Allocation : les octets sont marqués accessibles, avec des zones rouges autour.
+Programme -> Allocateur ASan: new
+Allocateur ASan -> Carte mémoire: accessible
+étape: Libération : la mémoire n'est pas réutilisée tout de suite. Elle est mise en quarantaine.
+Programme -> Allocateur ASan: delete
+! Allocateur ASan -> Carte mémoire: empoisonnée
+étape: Chaque lecture est précédée d'une vérification ajoutée à la compilation.
+Programme -> Carte mémoire: lecture autorisée ?
+étape: Le programme s'arrête immédiatement, en donnant les trois piles : accès, libération, allocation.
+! Carte mémoire -> Programme: heap-use-after-free
+```
+
 ## La théorie
 ### Le principe
 Le compilateur ajoute une vérification à chaque accès mémoire. ASan garde une mémoire parallèle, dite shadow memory, qui indique pour chaque octet s'il est accessible. Autour de chaque allocation, il place des zones rouges. La mémoire libérée est mise en quarantaine.
@@ -85,3 +103,5 @@ Tous les fichiers doivent être compilés avec l'instrumentation : mélanger des
 - [La durée de vie des objets](../cpp/duree-de-vie-objets.md)
 - [Data race et ThreadSanitizer](../cpp/data-race.md)
 - [Les presets CMake](presets.md)
+
+<!-- enrichie -->

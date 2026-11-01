@@ -22,6 +22,31 @@ SELECT account_id FROM matcha_profiles WHERE city = '' OR '1'='1'
 
 La condition est toujours vraie et tous les profils sortent. Le client a réécrit ta requête, parce que son texte et le tien ont été mélangés. Avec une requête plus sensible, il pourrait lire la table des comptes ou contourner une connexion. Le sujet le dit clairement : une faille de sécurité vaut 0.
 
+### Même saisie, deux mondes
+Suis la valeur `' OR '1'='1` dans les deux cas. Le texte tapé est identique, mais son rôle change.
+
+```tableau
+titre: Une chaîne assemblée
+colonnes: Application | PostgreSQL
+étape: La valeur est collée dans le texte.
+! Application -> PostgreSQL: WHERE city = '' OR '1'='1'
+étape: Le serveur analyse une seule chaîne : il ne peut pas savoir ce qui venait de l'utilisateur.
+! PostgreSQL: condition toujours vraie
+étape: Tous les profils sortent.
+! PostgreSQL -> Application: toute la table
+```
+
+```tableau
+titre: Une requête paramétrée
+colonnes: Application | PostgreSQL
+étape: La structure part d'abord. Elle est analysée sans aucune valeur.
+Application -> PostgreSQL: WHERE city = $1
+étape: La valeur arrive à part, et n'est jamais analysée comme du SQL.
+Application -> PostgreSQL: valeur de $1
+étape: On cherche simplement une ville qui porte ce nom étrange.
++ PostgreSQL -> Application: 0 ligne
+```
+
 ## La théorie
 ### Pourquoi l'injection existe
 Un serveur SQL reçoit un texte et l'analyse pour comprendre sa structure : quelles tables, quelles conditions, quelles valeurs. Si des données de l'utilisateur sont dans ce texte, l'analyseur ne peut pas les distinguer de ce que tu as écrit. Le `'` qui ferme la chaîne a le même sens, qu'il vienne de toi ou de l'attaquant.
@@ -101,3 +126,5 @@ Quel est le risque, et comment corriger ?
 - [libpq, l'API C de PostgreSQL](libpq.md)
 - [Valider les entrées](../web/validation-entrees.md)
 - [XSS et échappement](../web/xss-echappement.md)
+
+<!-- enrichie -->

@@ -21,6 +21,23 @@ Avant           Après une arrivée en tête
 
 `OFFSET 20` commence maintenant au rang 21 : Théo, que tu as déjà vu, s'affiche une seconde fois. Dans l'autre sens, si quelqu'un sort du classement, un profil est sauté sans que personne ne s'en rende compte.
 
+### Le profil vu deux fois
+Déroule la lecture avec une page de 3 profils. Le classement change pendant que tu lis.
+
+```tableau
+titre: OFFSET : un doublon apparaît
+étape: Page 1, avec `OFFSET 0`.
+> A  B  C
+étape: Un nouveau profil Z arrive en tête du classement. Tout descend d'un rang.
+> Z  A  B  C  D  E
+étape: Page 2, avec `OFFSET 3` : on saute 3 lignes. Le profil C revient !
+! > C  D  E
+étape: Le keyset repart de la dernière ligne vue, pas d'un nombre de lignes.
++ > WHERE fame_rating < note de C
+étape: La page suivante commence bien après C, quels que soient les changements.
++ > D  E  F
+```
+
 ## La théorie
 ### Le coût réel d'OFFSET
 `OFFSET` ne saute pas : il lit puis jette. `OFFSET 10000 LIMIT 20` construit 10 020 lignes pour en garder 20. La page 500 coûte donc beaucoup plus que la page 1. Le temps croît avec la profondeur.
@@ -103,3 +120,5 @@ ORDER BY id DESC LIMIT 50;
 - [Un QueryBuilder sûr](query-builder.md)
 - [EXPLAIN ANALYZE](explain-analyze.md)
 - [Un seul moteur pour suggestions et recherche](../metier/recherche-unifiee.md)
+
+<!-- enrichie -->

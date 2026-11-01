@@ -4,6 +4,23 @@
 ## Mise en situation
 Après un like, il faut notifier, recalculer la popularité, peut-être enregistrer une statistique. Si `MatchService` appelle tout cela, il dépend de tout. Ajouter une réaction oblige à modifier un service qui fonctionne.
 
+### Ajouter une réaction sans toucher au service
+On te demande d'envoyer une statistique à chaque match. Regarde ce qui change dans chaque organisation.
+
+```tableau
+titre: Un service qui annonce un fait
+colonnes: MatchService | Bus | Notifications | Popularité | Stats
+étape: Le service valide sa transaction, puis annonce ce qui s'est passé.
+MatchService -> Bus: MatchCreated
+étape: Chaque réaction s'est abonnée au bus. Le service ne les connaît pas.
+Bus -> Notifications: MatchCreated
+Bus -> Popularité: MatchCreated
+étape: La nouvelle demande devient un abonné de plus. `MatchService` n'est pas modifié.
++ Bus -> Stats: MatchCreated
+étape: Si une réaction échoue, le match reste valide : elle ne fait pas partie de la transaction.
+= réagir n'est pas décider
+```
+
 ## La théorie
 ### L'événement
 Un événement est un fait passé, immuable, nommé au passé :
@@ -70,3 +87,5 @@ Le premier décrit un fait, et chacun décide d'y réagir. Le second est un ordr
 
 - [La couche services](couche-services.md)
 - [L'outbox et publier après le commit](../temps-reel/outbox.md)
+
+<!-- enrichie -->

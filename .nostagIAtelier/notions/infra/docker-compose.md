@@ -4,6 +4,24 @@
 ## Mise en situation
 matcha, c'est PostgreSQL, [Redis](redis.md), le backend, le frontend, [Nginx](nginx.md) et Mailpit. Les lancer un par un avec les bonnes options est pénible. `docker compose up` doit suffire.
 
+### `docker compose up`, dans l'ordre
+Le fichier décrit des dépendances, et Compose en déduit l'ordre de démarrage.
+
+```tableau
+titre: Le démarrage de matcha
+colonnes: Compose | PostgreSQL | Backend | Nginx
+étape: PostgreSQL démarre en premier. Le conteneur lancé n'est pas encore une base prête.
+Compose -> PostgreSQL: start
+étape: `condition: service_healthy` fait attendre le backend jusqu'à la réussite du healthcheck.
+PostgreSQL: pg_isready ok
+étape: Le backend démarre, joint `postgres` par son nom, et applique les migrations.
+Compose -> Backend: start
+Backend -> PostgreSQL: migrate
+étape: Nginx arrive en dernier, seul service exposé à l'extérieur.
+Compose -> Nginx: start
++ Nginx: port ouvert
+```
+
 ## La théorie
 ### Services et réseau
 Chaque service tourne dans son conteneur, sur un réseau privé commun. Un service est joignable par son nom, grâce à un DNS interne :
@@ -77,3 +95,5 @@ La base serait joignable depuis le réseau, et seul son mot de passe la protége
 - [Secrets et fichiers .env](secrets-fichiers.md)
 - [Docker : build multi-étapes](docker-multi-etapes.md)
 - [Healthcheck et arrêt propre](sante-arret-propre.md)
+
+<!-- enrichie -->

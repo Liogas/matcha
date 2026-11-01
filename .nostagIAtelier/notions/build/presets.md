@@ -12,6 +12,24 @@ cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug \
 
 Une option oubliée donne un build différent, et personne ne sait pourquoi.
 
+### Le même build, partout
+Un preset remplace une ligne à retenir par un nom versionné.
+
+```tableau
+titre: Une configuration, trois endroits
+colonnes: CMakePresets.json | Toi | CI | Docker
+étape: Les options sont écrites une seule fois, dans le dépôt.
+CMakePresets.json: debug, sanitize, release
+étape: Tu tapes un nom court.
+CMakePresets.json -> Toi: cmake --preset debug
+étape: La CI lance exactement la même chose.
+CMakePresets.json -> CI: cmake --preset sanitize
+étape: Le Dockerfile aussi.
+CMakePresets.json -> Docker: cmake --preset release
+étape: Une option ajoutée au preset s'applique partout. Plus de « chez moi ça marche ».
++ = une seule source de vérité
+```
+
 ## La théorie
 `CMakePresets.json` décrit des configurations nommées, avec héritage. Dans le projet :
 
@@ -67,3 +85,5 @@ Un consommateur d'une lib ne veut pas compiler ses tests : cela ralentit le buil
 - [Les sanitizers : ASan, UBSan, LSan](sanitizers.md)
 - [Warnings en erreur](warnings.md)
 - [CMake : cibles et visibilité](cmake-cibles.md)
+
+<!-- enrichie -->

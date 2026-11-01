@@ -4,6 +4,22 @@
 ## Mise en situation
 Pour connaître le format d'une réponse, il faut lire le C++. La documentation est dispersée dans le README, et elle dérive. Un `docs/openapi.yaml` devient le contrat entre le front et le back, et il se présente très bien en entretien.
 
+### Un contrat que les deux côtés partagent
+Le fichier sert de point de rendez-vous. Il évite que le front et le back découvrent leur désaccord trop tard.
+
+```tableau
+titre: Ajouter un champ à une réponse
+colonnes: openapi.yaml | Backend | Front
+étape: Le contrat change en premier, dans la même revue de code.
+openapi.yaml: ajoute liked_by_me
+étape: Le backend le renvoie.
+openapi.yaml -> Backend: implémente
+étape: Le front peut le lire, ou générer ses types depuis le fichier.
+openapi.yaml -> Front: types à jour
+étape: Un champ renommé d'un seul côté se voit tout de suite.
++ = le désaccord apparaît avant la production
+```
+
 ## La théorie
 OpenAPI est un format standard de description d'API HTTP. Il décrit :
 
@@ -69,3 +85,5 @@ Quels statuts documenter pour `POST /api/profiles/{id}/block` ?
 ## Voir aussi
 
 - [Concevoir une API REST](rest-conception.md)
+
+<!-- enrichie -->

@@ -4,6 +4,24 @@
 ## Mise en situation
 Un utilisateur envoie `photo.jpg`, qui est en réalité du HTML avec du JavaScript. Un autre envoie une image de 5 Ko qui se décompresse en 30 000 × 30 000 pixels : c'est une bombe de décompression. Un troisième envoie une vraie photo de téléphone, contenant la position GPS exacte de son domicile.
 
+### Trois fichiers hostiles
+La chaîne de traitement a une étape pour chacun d'eux.
+
+```tableau
+titre: Le parcours d'un fichier
+colonnes: Client | Nginx | ImageProcessor | Stockage
+étape: Un fichier de 2 Go : refusé sans rien lire.
+! Client -> Nginx: 2 Go
+Nginx -> Client: 413
+étape: Du HTML nommé `photo.jpg` : libvips ne peut pas le décoder.
+! Client -> ImageProcessor: faux JPEG
+ImageProcessor -> Client: 400
+étape: Une bombe de décompression : ses dimensions sont lues avant de décoder les pixels.
+! ImageProcessor: 30 000 × 30 000 : refus
+étape: Une vraie photo est **réencodée** : seuls les pixels sont gardés, les métadonnées GPS disparaissent.
++ ImageProcessor -> Stockage: nouveau fichier, nom aléatoire
+```
+
 ## La théorie
 ### Ne pas croire le client
 L'extension, le nom du fichier et le `Content-Type` sont des déclarations. Seul le contenu réel compte. Les premiers octets, dits magic bytes, sont un indice, mais un fichier peut être valide en plusieurs formats à la fois, c'est un polyglotte.
@@ -63,3 +81,5 @@ Le nettoyage d'un chemin est une liste noire, facile à contourner selon les sys
 
 - [Valider les entrées](validation-entrees.md)
 - [RGPD : consentement et minimisation](../metier/rgpd.md)
+
+<!-- enrichie -->

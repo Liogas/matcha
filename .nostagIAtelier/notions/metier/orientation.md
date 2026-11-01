@@ -4,6 +4,24 @@
 ## Mise en situation
 Le filtre le plus simple regarde ce que je cherche. Mais une femme lesbienne verrait alors dans ses suggestions... d'autres femmes hétérosexuelles qui ne s'intéressent pas à elle. Le sujet demande des profils intéressants. La règle est symétrique.
 
+### Vérifier les deux sens
+Le test tient en deux questions, et il faut toujours poser les deux.
+
+```tableau
+titre: Alice et Bruno
+colonnes: Question | Réponse
+étape: Alice, femme hétérosexuelle, cherche des hommes. Bruno est un homme.
+Question: Alice cherche Bruno ?
++ Réponse: oui
+étape: Bruno, homme gay, cherche des hommes. Alice est une femme.
+Question: Bruno cherche Alice ?
+! Réponse: non
+étape: Un seul sens ne suffit pas : ils ne sont pas compatibles.
+! = compatibles(A, B) = non
+étape: Avec deux sens, la relation est symétrique, et le test paramétré couvre toutes les combinaisons.
++ = cherche(A, B) ET cherche(B, A)
+```
+
 ## La théorie
 ### Une relation à deux sens
 ```text
@@ -80,3 +98,5 @@ La [pagination](../sql/pagination-keyset.md) s'applique avant le filtre. Sur 20 
 - [Le score de matching](score-matching.md)
 - [GoogleTest : fixtures et tests paramétrés](../tests/gtest.md)
 - [Un QueryBuilder sûr](../sql/query-builder.md)
+
+<!-- enrichie -->

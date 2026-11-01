@@ -4,6 +4,25 @@
 ## Mise en situation
 Tu dois rendre un projet sans régression, avec du temps limité. Tout tester par le navigateur serait lent et fragile. Ne tester que des fonctions pures ne verrait pas une requête SQL fausse. Comment répartir l'effort ?
 
+### Où tester une règle ?
+Prends trois bugs possibles de matcha, et cherche l'étage le plus bas qui peut les attraper.
+
+```tableau
+titre: Le bon étage pour chaque bug
+colonnes: Bug | Unitaire | Intégration | Bout en bout
+étape: Distance fausse : un calcul pur, testé en quelques microsecondes.
+Bug: Haversine fausse
++ Unitaire: suffit
+étape: Requête SQL fausse : seule une vraie base peut le montrer.
+Bug: JOIN incorrect
++ Intégration: nécessaire
+étape: Le front oublie d'envoyer le cookie : il faut tout le parcours.
+Bug: refresh jamais appelé
++ Bout en bout: nécessaire
+étape: Plus l'étage est bas, plus le test est rapide, et plus l'échec désigne précisément la cause.
+= descends le test aussi bas que possible
+```
+
 ## La théorie
 ### Les étages
 ```text
@@ -64,3 +83,5 @@ Unitaire, sur le validateur : il couvre tous les cas limites instantanément. Un
 
 - [GoogleTest : fixtures et tests paramétrés](gtest.md)
 - [Les faux objets de test](faux-objets.md)
+
+<!-- enrichie -->

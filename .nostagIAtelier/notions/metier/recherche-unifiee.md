@@ -4,6 +4,23 @@
 ## Mise en situation
 Les deux pages filtrent et trient par âge, popularité, localisation et tags. Écrites séparément, elles divergeront : un filtre corrigé ici et oublié là. Plus grave, le blocage pourrait manquer dans l'une d'elles.
 
+### Deux pages, un seul moteur
+Les pages ne diffèrent que par l'objet qu'elles passent au moteur.
+
+```tableau
+titre: Suggestions et recherche
+colonnes: Page | ProfileQuery | Moteur | PostgreSQL
+étape: Les suggestions remplissent les filtres depuis ton propre profil.
+Page -> ProfileQuery: compatibles, proches
+étape: La recherche les remplit depuis le formulaire.
+Page -> ProfileQuery: âge, tags, ville
+étape: Le moteur assemble une seule requête, et y applique toujours blocage et compatibilité.
+ProfileQuery -> Moteur: filtres
++ Moteur: blocage toujours appliqué
+étape: Une correction ici profite aux deux pages à la fois.
+Moteur -> PostgreSQL: SELECT unique
+```
+
 ## La théorie
 ### Un objet décrit la demande
 ```cpp
@@ -85,3 +102,5 @@ Oublier le blocage dans une des deux pages, ce qui ferait réapparaître un util
 - [Pagination keyset ou OFFSET](../sql/pagination-keyset.md)
 - [Le score de matching](score-matching.md)
 - [Une règle transversale centralisée](policy-centralisee.md)
+
+<!-- enrichie -->
