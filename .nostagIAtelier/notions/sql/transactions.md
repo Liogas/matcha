@@ -10,6 +10,21 @@ Alice like Bob, qui l'avait déjà liké. Le serveur doit faire trois écritures
 3. INSERT de la conversation
 ```
 
+```tableau
+titre: Le like mutuel, sans transaction
+colonnes: Serveur | PostgreSQL
+étape: Alice like Bob. Le like est **validé tout de suite**.
+Serveur -> PostgreSQL: INSERT like
++ PostgreSQL: enregistré
+étape: Le match aussi : les deux personnes vont voir « vous êtes connectés ».
+Serveur -> PostgreSQL: INSERT match
++ PostgreSQL: enregistré
+étape: Le serveur plante ici. La troisième écriture n'est jamais envoyée.
+! Serveur: plantage
+étape: Au redémarrage, la base contient un match **sans conversation**. Rien ne peut l'annuler : les deux premières écritures sont déjà validées.
+! = like : oui   match : oui   conversation : non
+```
+
 Sans transaction, chaque écriture est validée séparément. Si le serveur plante entre 2 et 3, il reste un match sans conversation, et les deux personnes voient « vous êtes connectés » sans pouvoir se parler. C'est exactement ce que répare la boucle de `main.cpp:107` au démarrage. Ce code soigne un symptôme : la transaction supprime la cause.
 
 ## La théorie
@@ -34,12 +49,19 @@ Avant de confirmer `COMMIT`, il écrit dans un journal sur disque, le WAL (write
 ### Une transaction appartient à une connexion
 C'est le point le plus important pour ton code. PostgreSQL ne connaît ni tes threads ni tes fonctions. `BEGIN` s'applique à la connexion : tout ce qui passe ensuite sur elle fait partie de la transaction.
 
-```text
-Ancien code, une seule connexion :
-thread A : BEGIN
-thread B :        UPDATE ... (requête d'un autre utilisateur !)
-thread A :                    INSERT ...
-thread A :                               ROLLBACK  -> annule aussi B
+```tableau
+titre: Ancien code : une seule connexion pour tous les threads
+colonnes: Thread A | Connexion | Thread B
+étape: A traite le like d'Alice. Il ouvre une transaction **sur la connexion partagée**.
+Thread A -> Connexion: BEGIN
+étape: B traite une tout autre personne. Il ne demande aucune transaction, mais la connexion est déjà dedans.
+! Thread B -> Connexion: UPDATE profil
+étape: A continue son travail. Il ne sait pas que B est passé.
+Thread A -> Connexion: INSERT like
+étape: A rencontre une erreur et annule.
+Thread A -> Connexion: ROLLBACK
+étape: L'`UPDATE` de B disparaît aussi. B a répondu « profil enregistré » à son utilisateur, et c'est faux.
+! Connexion: tout est annulé
 ```
 
 C'est le défaut de l'ancien `Database` relevé par l'audit 4.5. `pg::Transaction` y répond en gardant une connexion pour lui seul, du `BEGIN` au `COMMIT`.
@@ -66,6 +88,22 @@ core::Result<void> MatchService::like(std::int64_t liker, std::int64_t liked) {
 
     return tx->commit();
 }
+```
+
+```tableau
+titre: Le même like, avec une transaction
+colonnes: MatchService | pg::Transaction | PostgreSQL
+étape: `_pool.begin()` réserve une connexion pour ce like, et pour lui seul.
+MatchService -> pg::Transaction: _pool.begin()
+pg::Transaction -> PostgreSQL: BEGIN
+étape: Les écritures sont faites, mais **invisibles pour les autres** tant que rien n'est validé.
+pg::Transaction -> PostgreSQL: INSERT like, match
+étape: La création de la conversation échoue. La fonction fait `return` avec une erreur.
+! MatchService: return erreur
+étape: `tx` sort de portée sans `commit()` : son destructeur annule. Aucun oubli possible.
+pg::Transaction -> PostgreSQL: ROLLBACK
+étape: La base est exactement comme avant le like. Pas de match orphelin.
++ = like : non   match : non   conversation : non
 ```
 
 À chaque `return` prématuré, `tx` est détruit et le [RAII](../cpp/raii.md) annule tout. Il n'y a plus de chemin qui laisse une écriture à moitié faite. Les [repositories](../archi/couche-services.md) sont construits sur la transaction, car ils reçoivent un Executor.

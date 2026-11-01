@@ -18,6 +18,22 @@ ERROR: current transaction is aborted, commands ignored until end of transaction
 
 Le refus attendu a mis toute la transaction en échec, comme expliqué dans la fiche transactions. Le test ne peut plus rien faire.
 
+```tableau
+titre: L'erreur attendue qui empoisonne le test
+colonnes: Test | PostgreSQL
+étape: Le premier compte est créé. La transaction est saine.
+Test -> PostgreSQL: INSERT a@example.test
++ PostgreSQL: OK
+étape: Le doublon est refusé, comme le test l'espère.
+Test -> PostgreSQL: INSERT a@example.test
+! PostgreSQL: 23505
+étape: PostgreSQL considère maintenant toute la transaction comme perdue.
+! = transaction aborted
+étape: La requête suivante est refusée sans même être lue.
+Test -> PostgreSQL: SELECT ...
+! PostgreSQL: 25P02
+```
+
 ## La théorie
 Un savepoint marque un état dans la [transaction](transactions.md) :
 
@@ -43,11 +59,19 @@ Chaque savepoint crée une sous-transaction. En créer des milliers dans une mê
 ## Exemple complet : la fixture du guide 06
 Le guide ajoute un `SAVEPOINT` autour de chaque requête de test : on le pose avant la requête, on le relâche si elle réussit, on y revient si elle échoue. Le test se comporte ainsi comme une suite de requêtes indépendantes :
 
-```text
-SAVEPOINT s
-INSERT doublon -> erreur 23505
-ROLLBACK TO s
-SELECT -> fonctionne
+```tableau
+titre: La même suite, avec un savepoint
+colonnes: Fixture | PostgreSQL
+étape: Avant la requête risquée, on pose un point de retour.
+Fixture -> PostgreSQL: SAVEPOINT s
+étape: Le doublon échoue. La transaction est en échec, pour l'instant.
+Fixture -> PostgreSQL: INSERT doublon
+! PostgreSQL: 23505
+étape: On revient au point. L'échec est effacé, et tout ce qui précède `s` est conservé.
+Fixture -> PostgreSQL: ROLLBACK TO s
+étape: La transaction fonctionne de nouveau.
+Fixture -> PostgreSQL: SELECT ...
++ PostgreSQL: OK
 ```
 
 Le test reste dans une seule [transaction](transactions.md), annulée à la fin, voir la [transaction annulée](../tests/transaction-annulee.md).

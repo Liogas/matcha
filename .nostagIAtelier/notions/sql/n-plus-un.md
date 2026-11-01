@@ -12,6 +12,23 @@ for (auto &like : likes)
     profils.push_back(repo.find(like.id)); // N requêtes
 ```
 
+```tableau
+titre: Afficher 3 profils, version N+1
+colonnes: Service | PostgreSQL
+étape: Une requête pour obtenir la liste des ids.
+Service -> PostgreSQL: SELECT ids
+PostgreSQL -> Service: 3 ids
+étape: Puis une requête par id. Chaque aller-retour attend la réponse du précédent.
+! Service -> PostgreSQL: SELECT profil 1
+! Service -> PostgreSQL: SELECT profil 2
+! Service -> PostgreSQL: SELECT profil 3
+étape: 4 requêtes pour 3 profils. Avec 40 profils, ce serait 41, et le code n'aurait pas changé.
+! = 1 + N requêtes
+étape: La jointure ramène tout en un seul aller-retour, quel que soit N.
++ Service -> PostgreSQL: SELECT ... JOIN
++ PostgreSQL -> Service: 3 profils complets
+```
+
 ## La théorie
 Le coût d'une requête vient surtout de l'aller-retour, pas du travail. N+1 multiplie les allers-retours. Il est difficile à voir, car chaque requête est rapide, et il passe inaperçu avec peu de données.
 
@@ -46,9 +63,14 @@ WHERE pi.profile_account_id = ANY($1);
 ## Exemple déroulé
 Pour 20 profils avec tags :
 
-```text
-Avant : 1 (liste) + 20 (profils) + 20 (tags) = 41 requêtes
-Après : 1 (profils joints) + 1 (tags) = 2 requêtes
+```tableau
+titre: Le compte, pour 20 profils avec leurs tags
+étape: Avant : une liste, puis deux boucles.
+! = 1 (liste) + 20 (profils) + 20 (tags) = 41 requêtes
+étape: Une jointure remplace la liste et la boucle des profils.
+= 1 (profils joints) + 20 (tags) = 21 requêtes
+étape: Le chargement groupé remplace la deuxième boucle : `ANY($1)` prend tous les ids d'un coup.
++ = 1 (profils joints) + 1 (tags) = 2 requêtes
 ```
 
 La réponse API contient directement des profils résumés, et le front n'a plus qu'un appel à faire, voir l'[API REST](../web/rest-conception.md).

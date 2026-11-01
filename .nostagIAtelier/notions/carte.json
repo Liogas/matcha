@@ -1,0 +1,271 @@
+{
+ "categories": {
+  "cpp": "C++",
+  "sql": "PostgreSQL",
+  "auth": "Authentification",
+  "web": "Web et HTTP",
+  "temps-reel": "Temps réel",
+  "metier": "Règles de matcha",
+  "archi": "Architecture",
+  "tests": "Tests",
+  "build": "Build",
+  "infra": "Infrastructure"
+ },
+ "prerequis": {
+  "archi/couche-services": [
+   "cpp/interfaces-injection",
+   "cpp/result-expected",
+   "sql/transactions"
+  ],
+  "archi/evenements": [
+   "archi/couche-services"
+  ],
+  "archi/lib-coeur-adaptateur": [
+   "build/cmake-cibles",
+   "cpp/interfaces-injection"
+  ],
+  "auth/enumeration-temps-constant": [
+   "auth/argon2id"
+  ],
+  "auth/jwks": [
+   "auth/jwt"
+  ],
+  "auth/jwt": [
+   "auth/signature-rs256"
+  ],
+  "auth/politique-mot-de-passe": [
+   "web/validation-entrees"
+  ],
+  "auth/rate-limiting": [
+   "infra/redis"
+  ],
+  "auth/reauthentification": [
+   "auth/jwt",
+   "auth/argon2id"
+  ],
+  "auth/refresh-rotation": [
+   "auth/jwt",
+   "auth/tokens-opaques",
+   "sql/transactions"
+  ],
+  "build/package-cmake": [
+   "build/cmake-cibles",
+   "build/semver"
+  ],
+  "build/presets": [
+   "build/cmake-cibles"
+  ],
+  "build/sanitizers": [
+   "build/presets",
+   "cpp/data-race"
+  ],
+  "build/vcpkg": [
+   "build/cmake-cibles"
+  ],
+  "build/warnings": [
+   "build/cmake-cibles"
+  ],
+  "cpp/condition-variable": [
+   "cpp/mutex-contention"
+  ],
+  "cpp/data-race": [
+   "cpp/mutex-contention"
+  ],
+  "cpp/interfaces-injection": [
+   "cpp/pointeurs-intelligents"
+  ],
+  "cpp/mutex-contention": [
+   "cpp/raii"
+  ],
+  "cpp/pointeurs-intelligents": [
+   "cpp/raii",
+   "cpp/semantique-deplacement"
+  ],
+  "cpp/raii": [
+   "cpp/duree-de-vie-objets"
+  ],
+  "cpp/result-expected": [
+   "cpp/semantique-deplacement"
+  ],
+  "cpp/semantique-deplacement": [
+   "cpp/duree-de-vie-objets"
+  ],
+  "infra/ci-github-actions": [
+   "build/presets",
+   "tests/pyramide"
+  ],
+  "infra/docker-compose": [
+   "infra/docker-multi-etapes"
+  ],
+  "infra/logs-structures": [
+   "web/middleware-crow"
+  ],
+  "infra/nginx": [
+   "web/http-bases"
+  ],
+  "infra/sante-arret-propre": [
+   "infra/docker-compose"
+  ],
+  "infra/secrets-fichiers": [
+   "infra/docker-compose"
+  ],
+  "metier/bounding-box": [
+   "metier/haversine",
+   "sql/index"
+  ],
+  "metier/fame-rating": [
+   "sql/denormalisation"
+  ],
+  "metier/policy-centralisee": [
+   "archi/couche-services"
+  ],
+  "metier/recherche-unifiee": [
+   "sql/query-builder",
+   "sql/pagination-keyset",
+   "metier/bounding-box",
+   "metier/score-matching"
+  ],
+  "metier/score-matching": [
+   "metier/haversine",
+   "metier/orientation"
+  ],
+  "sql/deadlock": [
+   "sql/isolation"
+  ],
+  "sql/denormalisation": [
+   "sql/contraintes",
+   "sql/transactions"
+  ],
+  "sql/explain-analyze": [
+   "sql/index"
+  ],
+  "sql/insertion-massive": [
+   "sql/transactions",
+   "sql/index"
+  ],
+  "sql/isolation": [
+   "sql/transactions"
+  ],
+  "sql/jsonb": [
+   "sql/index"
+  ],
+  "sql/libpq": [
+   "cpp/raii"
+  ],
+  "sql/migrations": [
+   "sql/transactions",
+   "sql/verrous-consultatifs"
+  ],
+  "sql/n-plus-un": [
+   "sql/relation-nn",
+   "sql/requetes-parametrees"
+  ],
+  "sql/on-conflict": [
+   "sql/contraintes"
+  ],
+  "sql/pagination-keyset": [
+   "sql/index"
+  ],
+  "sql/pool-connexions": [
+   "sql/libpq",
+   "cpp/mutex-contention",
+   "cpp/condition-variable"
+  ],
+  "sql/query-builder": [
+   "sql/requetes-parametrees",
+   "cpp/templates-variadiques"
+  ],
+  "sql/recherche-floue": [
+   "sql/index"
+  ],
+  "sql/relation-nn": [
+   "sql/contraintes"
+  ],
+  "sql/requetes-parametrees": [
+   "sql/libpq"
+  ],
+  "sql/savepoint": [
+   "sql/transactions"
+  ],
+  "sql/sqlstate": [
+   "sql/libpq"
+  ],
+  "sql/tableaux-unnest": [
+   "sql/n-plus-un"
+  ],
+  "sql/transactions": [
+   "sql/libpq"
+  ],
+  "sql/verrous-consultatifs": [
+   "sql/isolation"
+  ],
+  "sql/vues-sql": [
+   "sql/relation-nn"
+  ],
+  "temps-reel/fan-out": [
+   "temps-reel/websocket",
+   "cpp/mutex-contention"
+  ],
+  "temps-reel/heartbeat": [
+   "temps-reel/websocket"
+  ],
+  "temps-reel/notifications-stockees": [
+   "sql/transactions",
+   "temps-reel/fan-out"
+  ],
+  "temps-reel/outbox": [
+   "sql/transactions",
+   "temps-reel/fan-out"
+  ],
+  "temps-reel/presence": [
+   "temps-reel/heartbeat"
+  ],
+  "temps-reel/ticket-websocket": [
+   "temps-reel/websocket",
+   "auth/tokens-opaques"
+  ],
+  "temps-reel/websocket": [
+   "web/http-bases"
+  ],
+  "tests/faux-objets": [
+   "tests/gtest",
+   "cpp/interfaces-injection"
+  ],
+  "tests/gtest": [
+   "tests/pyramide"
+  ],
+  "tests/transaction-annulee": [
+   "tests/gtest",
+   "sql/savepoint"
+  ],
+  "web/cookies": [
+   "web/http-bases"
+  ],
+  "web/csrf": [
+   "web/cookies"
+  ],
+  "web/middleware-crow": [
+   "web/http-bases"
+  ],
+  "web/openapi": [
+   "web/rest-conception"
+  ],
+  "web/proxies-confiance": [
+   "infra/nginx"
+  ],
+  "web/rest-conception": [
+   "web/http-bases"
+  ],
+  "web/upload-securise": [
+   "web/validation-entrees"
+  ],
+  "web/validation-entrees": [
+   "web/http-bases",
+   "cpp/utf-8",
+   "cpp/result-expected"
+  ],
+  "web/xss-echappement": [
+   "web/http-bases"
+  ]
+ }
+}

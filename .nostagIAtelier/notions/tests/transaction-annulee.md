@@ -10,10 +10,19 @@ Tu pourrais vider les tables avant chaque test avec `TRUNCATE`, mais ce serait l
 ### L'idée
 Ce qui n'est pas validé n'existe que pour la connexion qui l'a écrit. Une [transaction](../sql/transactions.md) ouverte au début du test et annulée à la fin efface donc tout, quoi qu'il se soit passé.
 
-```text
-SetUp    : BEGIN
-Test     : INSERT, UPDATE, SELECT   (voit ses écritures)
-TearDown : ROLLBACK                 (la base est comme avant)
+```tableau
+titre: La vie d'un test
+colonnes: Fixture | Test | PostgreSQL
+étape: `SetUp` ouvre une transaction avant que le test commence.
+Fixture -> PostgreSQL: BEGIN
+étape: Le test écrit. Il voit ses lignes, car il est sur la même connexion.
+Test -> PostgreSQL: INSERT compte
+Test -> PostgreSQL: SELECT compte
++ PostgreSQL -> Test: il existe
+étape: `TearDown` détruit la transaction, même si le test a échoué.
+Fixture -> PostgreSQL: ROLLBACK
+étape: La base est comme avant. Le test suivant peut recréer le même email.
++ = aucune trace sur le disque
 ```
 
 C'est rapide, car rien n'atteint le disque. Et les tests sont isolés, car aucun autre ne voit ces lignes.
