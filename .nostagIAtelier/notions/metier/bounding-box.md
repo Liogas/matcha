@@ -4,6 +4,23 @@
 ## Mise en situation
 Les profils à moins de 50 km : calculer [Haversine](haversine.md) pour tout le monde serait coûteux, et aucun [index](../sql/index.md) ne peut aider. En revanche, un index sait répondre à `latitude BETWEEN a AND b`. Il faut donc traduire un cercle en plages.
 
+### Pourquoi deux filtres valent mieux qu'un
+Imagine 500 profils, et toi à Paris qui cherches à moins de 50 km.
+
+```tableau
+titre: Sans et avec la bounding box
+colonnes: Requête | Index | Haversine
+étape: Sans rectangle, l'index ne peut pas aider : `distance_km(...)` est un calcul, pas une colonne triée.
+! Requête -> Haversine: 500 calculs
+étape: Avec le rectangle, l'index répond tout de suite sur les plages de latitude et de longitude.
+Requête -> Index: BETWEEN lat, lon
++ Index -> Requête: 40 candidats
+étape: Les coins du rectangle sont hors du cercle : quelques candidats sont trop loin.
+Requête -> Haversine: 40 calculs
+étape: Le résultat est exact, pour 40 calculs au lieu de 500.
++ Haversine -> Requête: 31 profils
+```
+
 ## La théorie
 ### Du cercle au rectangle
 Un degré de latitude fait toujours environ 111 km. Un degré de longitude fait `111 × cos(latitude)` km.
@@ -60,6 +77,21 @@ BoundingBox boundingBox(GeoPoint center, double radiusKm);
 
 Une fonction pure, sans PostgreSQL. Le [QueryBuilder](../sql/query-builder.md) en fait les conditions.
 
+## Exemple pas à pas : autour de la longitude 179
+Un utilisateur aux Fidji, longitude 179, cherche à 200 km. C'est le cas que tout le monde oublie.
+
+```tableau
+titre: Le rectangle qui traverse l'antiméridien
+étape: On calcule comme d'habitude : environ 2° de chaque côté à cette latitude.
+= 179 - 2 = 177    179 + 2 = 181
+étape: La longitude 181 n'existe pas. On la ramène dans l'intervalle.
+> maxLon = 181 - 360 = -179
+étape: `BETWEEN 177 AND -179` ne renvoie jamais rien : le minimum dépasse le maximum.
+! > longitude BETWEEN 177 AND -179    aucun résultat
+étape: On reconnaît le cas à `minLon > maxLon`, et on coupe en deux plages.
++ > longitude >= 177 OR longitude <= -179
+```
+
 ## Erreurs fréquentes
 - Oublier le `cos(latitude)`.
 - Croire que le rectangle suffit.
@@ -78,3 +110,5 @@ Il est construit pour contenir tout le cercle : aucun point à moins de R km ne 
 
 - [La formule de Haversine](haversine.md)
 - [Les index](../sql/index.md)
+
+<!-- enrichie -->

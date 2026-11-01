@@ -10,6 +10,23 @@ if (!gender.empty() && !std::regex_match(gender, std::regex(R"(^[A-Za-z_]+$)")))
 
 Et la ville utilise une plage de lettres accentuées. Il y a trois défauts : la regex est reconstruite à chaque requête, la plage ne fait pas ce qu'elle semble faire, et une regex peut être exploitée pour ralentir le serveur.
 
+### Regarde le retour arrière exploser
+Une regex à retour arrière essaie chaque façon de découper le texte. Sur un texte valide, elle s'arrête vite. Sur un texte *presque* valide, elle essaie tout avant de conclure.
+
+```tableau
+titre: Le motif ^(a+)+$ sur aaaa!
+étape: Le motif réussit à consommer tous les `a`, puis bute sur le `!`.
+> (aaaa) puis !    échec
+étape: Il revient en arrière et essaie un autre découpage des mêmes lettres.
+> (aaa)(a) puis !  échec
+étape: Encore un autre, pour le même échec.
+> (aa)(aa) puis !  échec
+étape: Il y a 2 puissance n-1 façons de découper n lettres. Chaque `a` ajouté double le temps.
+! = 4 lettres : 8 essais    30 lettres : plus de 500 millions
+étape: Une seule requête d'un attaquant peut occuper un thread du serveur pendant des secondes. C'est le ReDoS.
+! = un motif mal écrit devient une faille
+```
+
 ## La théorie
 ### Comment fonctionne une regex
 Une regex est compilée en automate. `std::regex` utilise généralement un algorithme à retour arrière : il essaie un chemin et revient en arrière en cas d'échec.
@@ -69,6 +86,20 @@ La longueur est vérifiée en premier, ce qui borne le travail. La règle est ex
 ## Quand utiliser une regex
 Pour un motif ASCII simple, sur une entrée courte déjà bornée : un nom d'utilisateur `^[a-zA-Z0-9_]{3,20}$` par exemple. Pour le reste, une boucle simple est plus claire et plus rapide.
 
+## Exemple pas à pas : remplacer une regex par du code simple
+La validation du genre n'a pas besoin de regex. C'est une liste fermée de valeurs, donc une table suffit :
+
+```cpp
+// Avant : regex reconstruite à chaque requête, et trop permissive
+std::regex_match(gender, std::regex(R"(^[A-Za-z_]+$)"));
+
+// Après : une liste blanche, rien d'autre ne passe
+static constexpr std::array kGenders{"male"sv, "female"sv, "other"sv};
+bool ok = std::find(kGenders.begin(), kGenders.end(), gender) != kGenders.end();
+```
+
+Compare les deux sur l'entrée `licorne` : la regex accepte, la liste refuse. La nouvelle version est plus courte, plus rapide et plus stricte. Pose-toi la question à chaque regex : est-ce que je décris un format, ou une liste de valeurs ?
+
 ## Erreurs fréquentes
 - Construire la regex dans la fonction.
 - Vouloir valider un email parfaitement : on vérifie une syntaxe raisonnable, et le lien envoyé fait la vraie vérification.
@@ -88,3 +119,5 @@ Pourquoi `^[A-Za-z]+$` refuse-t-il `Élodie`, et que proposes-tu pour un prénom
 
 - [UTF-8 : octets et caractères](utf-8.md)
 - [Valider les entrées](../web/validation-entrees.md)
+
+<!-- enrichie -->

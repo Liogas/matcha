@@ -4,6 +4,24 @@
 ## Mise en situation
 Un utilisateur refuse le GPS et saisit `Lyon`. Le sujet exige que le matching fonctionne quand même. Il faut donc une latitude et une longitude à partir de ce texte, de préférence sans dépendre d'un service externe le jour de la soutenance.
 
+### Du texte saisi à un point sur la carte
+Suis une saisie du formulaire de profil jusqu'aux coordonnées, en passant par chaque étape où elle pourrait échouer.
+
+```tableau
+titre: Géocoder « SAINT-étienne »
+colonnes: Formulaire | Service | TableGeocoder
+étape: L'utilisateur a refusé le GPS et tape sa ville, avec sa propre casse.
+Formulaire -> Service: "SAINT-étienne"
+étape: On normalise : minuscules, accents retirés, tirets remplacés.
+TableGeocoder: "saint etienne"
+étape: La table a été normalisée de la même façon au chargement : la recherche est une simple lecture.
+Service -> TableGeocoder: locate(ville)
++ TableGeocoder -> Service: 45,43 ; 4,39
+étape: Une ville inconnue n'est pas une panne : c'est une erreur que l'utilisateur peut corriger.
+! TableGeocoder -> Service: NotFound
+Service -> Formulaire: ville inconnue
+```
+
 ## La théorie
 ### Deux approches
 - **Base locale** : `TableGeocoder` charge le fichier GeoNames `cities15000`, soit les villes de plus de 15 000 habitants. C'est rapide, fiable et hors ligne, mais limité aux villes connues.
@@ -65,3 +83,5 @@ Il contient des dizaines de milliers de lignes : le relire à chaque requête se
 - [La formule de Haversine](haversine.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [UTF-8 : octets et caractères](../cpp/utf-8.md)
+
+<!-- enrichie -->

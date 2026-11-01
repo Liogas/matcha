@@ -10,6 +10,24 @@ if (bio.size() > 500) return erreur();
 
 Une utilisatrice qui écrit en russe est refusée à 250 lettres, car chacune prend deux octets. Et si tu coupes une chaîne à 500 octets pour l'afficher, tu peux tomber au milieu d'un caractère : PostgreSQL refuse alors le texte avec `invalid byte sequence for encoding "UTF8"`.
 
+### Coupe une chaîne au mauvais endroit
+Ton aperçu de biographie garde les 6 premiers octets avec `bio.substr(0, 6)`. Avec `Héloïse`, regarde ce qui arrive octet par octet. Le même code marche parfaitement avec `Hector`, et c'est pour ça que le bug survit aux tests écrits avec des prénoms sans accent.
+
+```tableau
+titre: Couper Héloïse à 6 octets
+étape: Chaque lettre accentuée prend 2 octets. `Héloïse` fait 7 caractères, mais 9 octets.
+> H  é     l  o  ï     s  e
+> 48 C3 A9 6C 6F C3 AF 73 65
+étape: `substr(0, 6)` garde les 6 premiers octets, sans rien savoir des caractères.
+> 48 C3 A9 6C 6F C3
+étape: Le dernier octet `C3` annonce un caractère de 2 octets, mais la suite a disparu.
+! > C3 suivi de rien : séquence tronquée
+étape: PostgreSQL refuse ce texte, et la requête échoue pour un simple aperçu.
+! = invalid byte sequence for encoding "UTF8"
+étape: La bonne coupe recule jusqu'au début du caractère : un octet de la forme `10xxxxxx` n'est jamais un début.
++ > 48 C3 A9 6C 6F  =  "Hélo"
+```
+
 ## La théorie
 ### Trois niveaux
 - **Octet** : 8 bits, ce que compte `std::string::size()`.
@@ -66,6 +84,25 @@ Pour `été`, soit `C3 A9 74 C3 A9` : 5 octets, dont 2 de suite, donc 3 points d
 - Toute chaîne reçue doit être validée avant d'arriver en base.
 - Une limite affichée à l'utilisateur doit être comptée en points de code.
 
+## Exemple pas à pas : compter « été »
+La fonction `length` compte les octets qui ne sont pas des octets de suite.
+
+```tableau
+titre: length("été")
+étape: Le texte fait 5 octets : `C3 A9`, `74`, `C3 A9`.
+> C3 A9 74 C3 A9       compte = 0
+étape: `C3` commence par `11` : c'est un début de caractère.
+> C3                   compte = 1
+étape: `A9` commence par `10` : c'est une suite, on ne compte pas.
+> A9                   compte = 1
+étape: `74` est de l'ASCII : un caractère à lui seul.
+> 74                   compte = 2
+étape: La dernière paire ajoute un seul caractère.
+> C3 A9                compte = 3
+étape: Résultat : 3 caractères pour 5 octets. `size()` aurait répondu 5.
++ = length = 3, size = 5
+```
+
 ## Erreurs fréquentes
 - Tronquer avec `substr(0, n)` : on peut couper un caractère.
 - Utiliser [`std::regex`](std-regex.md) sur des accents, voir std::regex.
@@ -86,3 +123,5 @@ Combien d'octets et de points de code contient `€uro` ? Quels sont les premier
 - [std::regex](std-regex.md)
 - [Politique de mot de passe (NIST 800-63B)](../auth/politique-mot-de-passe.md)
 - [Valider les entrées](../web/validation-entrees.md)
+
+<!-- enrichie -->

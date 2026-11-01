@@ -11,6 +11,22 @@ CONSTRAINT profile_likes_unique_pair
     UNIQUE (liker_account_id, liked_account_id)
 ```
 
+### Deux chemins, une seule règle
+Le jour où une règle n'existe que dans une route, le premier autre chemin la contourne. Compare avec une règle portée par le schéma :
+
+```tableau
+titre: Qui vérifie qu'on ne se like pas soi-même ?
+colonnes: Route Like | Script seed | PostgreSQL
+étape: La route vérifie elle-même, et refuse. Jusqu'ici, tout va bien.
+Route Like: id == cible ? 400
+étape: Le script de seed écrit directement dans la table. Il ne passe pas par la route.
+! Script seed -> PostgreSQL: INSERT 7 like 7
+étape: Sans contrainte, la ligne entre, et on découvre plus tard des « matchs avec soi-même ».
+! PostgreSQL: ligne acceptée
+étape: Avec `CHECK`, la règle vit dans la table. Aucun chemin ne peut l'éviter.
++ PostgreSQL: 23514 refusé
+```
+
 ## La théorie
 ### Les types
 - **`PRIMARY KEY`** : identifie chaque ligne, unique et non nulle.
@@ -59,6 +75,25 @@ Une seule écriture est valide, `(7,12)`, et l'unicité empêche les doublons. L
 ## Double validation
 Le C++ valide pour produire un message clair, en validation. La base valide pour garantir la vérité, même en cas de bug. Sur le genre et l'orientation, il manque aujourd'hui la seconde barrière (audit 4.13).
 
+## Exemple pas à pas : traduire une violation en réponse HTTP
+La contrainte attrape l'erreur, et le code doit la rendre utile. Le chemin complet est court.
+
+```tableau
+titre: Liker deux fois
+colonnes: Client | Service | PostgreSQL
+étape: Le premier like passe.
+Client -> Service: POST like
+Service -> PostgreSQL: INSERT
+étape: Le client renvoie la même requête, après un double clic.
+Client -> Service: POST like
+Service -> PostgreSQL: INSERT
+! PostgreSQL -> Service: 23505
+étape: Le code `SQLSTATE` est stable, contrairement au texte du message. Le service le traduit en erreur métier.
+Service -> Client: 409 ou réponse idempotente
+étape: Tester d'abord avec un `SELECT` ne suffirait pas : deux requêtes simultanées passeraient le test ensemble. La contrainte, elle, ne laisse rien passer.
++ = la base tranche, le code traduit
+```
+
 ## Erreurs fréquentes
 - Ajouter un `CHECK` sans vérifier les données existantes : la [migration](migrations.md) échoue.
 - Tester puis insérer, au lieu de laisser l'unicité trancher.
@@ -82,3 +117,5 @@ CONSTRAINT user_reports_no_self CHECK (reporter_id <> reported_id)
 - [Les codes SQLSTATE](sqlstate.md)
 - [Les migrations](migrations.md)
 - [Valider les entrées](../web/validation-entrees.md)
+
+<!-- enrichie -->

@@ -4,6 +4,23 @@
 ## Mise en situation
 Le sujet refuse les mots anglais courants. Le code n'en refuse que 7, en dur dans `AuthRouteSupport.cpp`. Un formulaire classique impose une majuscule, un chiffre et un symbole, et `Password1!` passe, alors qu'il figure dans toutes les listes d'attaque.
 
+### Ce que voit vraiment un attaquant
+Une règle de composition semble compliquer le travail de l'attaquant. En réalité, elle ne change presque rien à l'ordre dans lequel il essaie.
+
+```tableau
+titre: L'ordre d'une attaque par dictionnaire
+étape: D'abord les mots de passe vus dans des fuites. Des millions de comptes partagent les mêmes.
+! > password   123456   qwerty
+étape: Puis les mêmes avec les transformations que tout le monde applique pour satisfaire les règles.
+! > Password1   Password1!   P@ssw0rd
+étape: `Password1!` a une majuscule, un chiffre et un symbole : il passe le formulaire, et tombe dans les premiers essais.
+! = la règle est respectée, le compte reste faible
+étape: Une phrase de quatre mots sans symbole n'apparaît dans aucune de ces listes.
++ > cheval-agrafe-pile-correct
+étape: Conclusion : refuser les mots connus protège. Imposer un symbole ne protège pas.
++ = longueur + liste de refus
+```
+
 ## La théorie
 ### Comment les mots de passe sont attaqués
 Une attaque ne teste pas au hasard. Elle essaie d'abord les mots de passe connus issus des fuites, puis des mots du dictionnaire avec des transformations courantes : majuscule initiale, chiffres à la fin, `a` remplacé par `@`.
@@ -45,6 +62,22 @@ La règle est injectée, ce qui remplace les doublons `isValidPwd` et `validPass
 ## Où l'appliquer
 À l'inscription, au reset, et au changement de mot de passe. Un seul oubli, et la règle tombe.
 
+## Exemple pas à pas : vérifier sans révéler le mot de passe
+Le k-anonymat permet d'interroger HaveIBeenPwned sans lui donner ton mot de passe. Déroulons-le.
+
+```tableau
+titre: Une vérification par k-anonymat
+colonnes: Backend | HaveIBeenPwned
+étape: On calcule le SHA-1 du mot de passe, en local.
+Backend: SHA1 = 5BAA6 1E4C9B...
+étape: On envoie seulement les 5 premiers caractères. Des centaines de mots de passe partagent ce début.
+Backend -> HaveIBeenPwned: 5BAA6
+étape: Le service renvoie toute la liste des suites connues pour ce début.
+HaveIBeenPwned -> Backend: liste de suites
+étape: La comparaison se fait chez toi. Le service ne sait pas laquelle tu cherchais.
++ Backend: compare en local
+```
+
 ## Erreurs fréquentes
 - Tester avant la mise en minuscules.
 - Une liste absente de l'image Docker : le fichier doit être copié à l'étape `runtime`.
@@ -65,3 +98,5 @@ Un client peut appeler l'API directement avec `curl`, sans passer par le formula
 - [Argon2id : stocker un mot de passe](argon2id.md)
 - [Valider les entrées](../web/validation-entrees.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
+
+<!-- enrichie -->

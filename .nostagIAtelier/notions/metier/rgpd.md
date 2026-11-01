@@ -4,6 +4,24 @@
 ## Mise en situation
 Le sujet demande une position GPS au quartier, avec consentement. Sur un site de rencontre, une position exacte révèle un domicile. Une fuite serait un vrai risque physique pour les personnes, pas seulement un problème juridique.
 
+### Le risque, sur une scène réelle
+Prends une personne qui utilise matcha et rentre chez elle chaque soir. Si le serveur enregistre sa position GPS brute à 5 mètres près, une fuite de la base révèle son adresse. Si le serveur ne garde que le quartier, la même fuite ne révèle presque rien. La protection la plus solide n'est pas de bien cacher la donnée : c'est de ne pas l'avoir.
+
+```tableau
+titre: Une position, de la demande au stockage
+colonnes: Navigateur | Backend | Base
+étape: Le navigateur demande la permission : c'est une autorisation technique.
+Navigateur: permission accordée
+étape: Le backend enregistre aussi le **choix de la personne**, avec sa date.
+Navigateur -> Backend: position + consentement
+Backend -> Base: location_consent_at
+étape: L'arrondi se fait avant l'écriture. La position précise n'atteint jamais le disque.
++ Backend -> Base: 48,86 ; 2,35
+étape: Si la personne retire son consentement, la position est effacée.
+Navigateur -> Backend: retrait
++ Backend -> Base: position supprimée
+```
+
 ## La théorie
 ### Les principes utiles
 Le Règlement général sur la protection des données fixe notamment :
@@ -59,3 +77,5 @@ Si la position exacte est en base, une fuite ou un bug d'API la révèle. Arrond
 - [Le géocodage](geocodage.md)
 - [Upload d'images sécurisé](../web/upload-securise.md)
 - [La formule de Haversine](haversine.md)
+
+<!-- enrichie -->

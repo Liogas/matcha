@@ -4,6 +4,26 @@
 ## Mise en situation
 `ProfileRoutes.cpp` accepte n'importe quelle chaîne non vide comme orientation. Le genre accepte tout `[A-Za-z_]+`. La biographie n'a pas de limite. Avec un `curl`, on envoie 10 Mo de biographie ou l'orientation `licorne`. Le sujet précise que la validation sera largement évaluée.
 
+### Trois lignes de défense, trois rôles
+Suis la biographie de 10 Mo envoyée avec `curl`. Chaque couche attrape ce qu'elle peut, et aucune ne remplace les autres.
+
+```tableau
+titre: La route des données, avec une attaque
+colonnes: curl | Nginx | Route | Service | PostgreSQL
+étape: Un `curl` contourne complètement le front : le formulaire et ses vérifications n'existent pas pour lui.
+! curl -> Nginx: PATCH bio = 10 Mo
+étape: Nginx coupe tout ce qui dépasse sa limite de taille, avant même de réveiller le backend.
+Nginx -> curl: 413
+étape: Une biographie de 800 caractères passe la taille, mais pas la règle métier.
+curl -> Route: PATCH bio = 800 car.
+Route -> curl: 400 biography too long
+étape: Une valeur valide devient une valeur **typée**. Le service ne reçoit plus du texte libre.
+curl -> Route: PATCH bio = 120 car.
++ Route -> Service: Biography
+étape: La base garde le dernier mot avec ses contraintes, même si un bug a tout laissé passer.
+Service -> PostgreSQL: UPDATE
+```
+
 ## La théorie
 ### Où valider
 À la frontière du système, là où les données entrent. Une fois validées, les couches internes peuvent leur faire confiance. Le front valide pour le confort, le serveur pour la sécurité, la base pour la vérité.
@@ -46,6 +66,27 @@ Un [point de code](../cpp/utf-8.md) prend au plus 4 octets, donc plus de 2000 oc
 ### Pour l'âge
 Le sujet n'en parle pas, mais un site de rencontre exige une majorité. La date de naissance ne doit pas être dans le futur, et l'âge minimal doit être fixé. C'est une décision ouverte du projet.
 
+## Exemple pas à pas : l'ordre des vérifications compte
+Sur la biographie, on vérifie d'abord la taille en octets, ce qui ne coûte rien. On valide ensuite l'UTF-8, puis on compte les caractères. Dans l'autre ordre, un texte de 10 Mo serait parcouru entièrement avant d'être refusé.
+
+```tableau
+titre: validateBiography sur trois entrées
+colonnes: Entrée | Taille | UTF-8 | Longueur
+étape: 10 Mo : refus immédiat, sans lire le contenu.
+! Taille: refus
+étape: Texte de 200 octets avec une séquence invalide : la taille passe, pas l'encodage.
+Taille: ok
+! UTF-8: refus
+étape: 600 caractères en UTF-8 valide : seule la longueur en caractères peut le voir.
+Taille: ok
+UTF-8: ok
+! Longueur: refus
+étape: 120 caractères valides : le texte passe toutes les étapes, du moins cher au plus cher.
+Taille: ok
+UTF-8: ok
++ Longueur: ok
+```
+
 ## Erreurs fréquentes
 - Valider, puis utiliser une autre valeur.
 - Afficher l'entrée brute dans un message d'erreur.
@@ -67,3 +108,5 @@ C'est un test en [temps constant](../auth/enumeration-temps-constant.md), qui re
 - [std::regex](../cpp/std-regex.md)
 - [Les contraintes d'intégrité](../sql/contraintes.md)
 - [XSS et échappement](xss-echappement.md)
+
+<!-- enrichie -->

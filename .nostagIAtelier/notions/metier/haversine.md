@@ -4,6 +4,23 @@
 ## Mise en situation
 Il faut afficher « à 3 km » et trier par proximité. La tentation est d'utiliser Pythagore sur les degrés. Mais les degrés de longitude n'ont pas la même taille partout : environ 111 km à l'équateur, 71 km à Paris, et 0 au pôle. Le résultat serait faux, et de plus en plus faux en s'éloignant de l'équateur.
 
+### Pythagore se trompe, et de combien ?
+Mesure l'erreur sur un vrai exemple. Paris et Vienne sont à peu près à la même latitude, mais éloignées en longitude.
+
+```tableau
+titre: Paris - Vienne, deux calculs
+étape: Coordonnées : Paris (48,86 ; 2,35), Vienne (48,21 ; 16,37). Les longitudes diffèrent de 14,02°.
+= Δlat = 0,65°    Δlon = 14,02°
+étape: Pythagore compte chaque degré pour 111 km, comme à l'équateur.
+! = √(72² + 1556²) ≈ 1558 km
+étape: À cette latitude, un degré de longitude ne fait que 111 × cos(48,5°), soit 73,5 km.
+= Δlon réel ≈ 14,02 × 73,5 ≈ 1030 km
+étape: Haversine tient compte de cette réduction, et donne environ 1034 km.
++ = distance réelle ≈ 1034 km
+étape: L'erreur dépasse 500 km : c'est une distance de plus de 50 %, pas un détail d'arrondi.
+! = écart ≈ 524 km
+```
+
 ## La théorie
 ### Les coordonnées
 La latitude va de -90 à 90, la longitude de -180 à 180. Ce sont des angles depuis le centre de la Terre.
@@ -55,6 +72,23 @@ Une fonction pure se teste facilement : même point (0 km), Paris-Lyon (environ 
 ## En SQL
 Calculer cette formule sur toute la table est coûteux. On réduit d'abord le nombre de candidats avec une [bounding box](bounding-box.md), à l'aide d'un [index](../sql/index.md). PostGIS existe, mais une lib maison suffit, et elle se présente bien.
 
+## Exemple pas à pas : les pièges de l'implémentation
+Trois erreurs reviennent presque toujours. Chacune se détecte avec un test simple.
+
+```cpp
+// 1. Oublier les radians : std::sin attend des radians
+std::sin(48.8);             // faux
+std::sin(radians(48.8));    // juste
+
+// 2. Inverser latitude et longitude : aucune erreur de compilation avec deux double
+haversineKm({2.35, 48.86}, ...);        // faux
+haversineKm({.lat = 48.86, .lon = 2.35}, ...); // lisible et sûr
+
+// 3. Ignorer les points identiques : h = 0, résultat 0, sans division à risque
+```
+
+Un test utile tient en trois cas : la distance d'un point à lui-même vaut 0, Paris-Lyon est proche de 392 km, et le calcul est symétrique (`d(a, b) == d(b, a)`).
+
 ## Erreurs fréquentes
 - Oublier de convertir en radians.
 - Inverser latitude et longitude.
@@ -73,3 +107,5 @@ Pourquoi le résultat pour (0, 179) et (0, -179) reste-t-il correct, sans cas pa
 
 - [Bounding box et antiméridien](bounding-box.md)
 - [RGPD : consentement et minimisation](rgpd.md)
+
+<!-- enrichie -->
