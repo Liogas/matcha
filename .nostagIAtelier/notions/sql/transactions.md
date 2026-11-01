@@ -27,6 +27,9 @@ Serveur -> PostgreSQL: INSERT match
 
 Sans transaction, chaque écriture est validée séparément. Si le serveur plante entre 2 et 3, il reste un match sans conversation, et les deux personnes voient « vous êtes connectés » sans pouvoir se parler. C'est exactement ce que répare la boucle de `main.cpp:107` au démarrage. Ce code soigne un symptôme : la transaction supprime la cause.
 
+### Ce que le mot « atomique » change pour toi
+Pense à un virement : débiter un compte, créditer l'autre. Personne n'accepterait qu'une panne laisse l'argent disparu. Ton like est de la même nature, avec trois écritures qui n'ont de sens qu'ensemble. La transaction n'est pas une optimisation : c'est la façon de dire à la base « ces écritures sont une seule opération ».
+
 ## La théorie
 ### Le contrat ACID
 - **Atomicité** : tout ou rien. Un échec avant `COMMIT` annule toutes les écritures.
@@ -113,6 +116,24 @@ Une transaction rend tes écritures atomiques entre elles. Elle n'empêche pas d
 
 Elle ne couvre pas non plus le monde extérieur. Un email ou un message [WebSocket](../temps-reel/websocket.md) envoyé avant `COMMIT` ne peut pas être annulé : d'où la règle de publier après le commit.
 
+## Exemple pas à pas : ce que voient deux connexions
+Ouvre deux terminaux `psql` et reproduis ceci. C'est la meilleure façon de sentir ce qu'est une écriture non validée.
+
+```tableau
+titre: Deux terminaux psql
+colonnes: Terminal 1 | Terminal 2
+étape: Le terminal 1 ouvre une transaction et insère.
+Terminal 1: BEGIN
+Terminal 1: INSERT tag 'rando'
+étape: Il voit sa propre ligne : il est dans sa transaction.
+Terminal 1: SELECT : 1 ligne
+étape: Le terminal 2 ne voit rien. La ligne n'existe pas encore pour le reste du monde.
+Terminal 2: SELECT : 0 ligne
+étape: Après le `COMMIT`, elle apparaît pour tout le monde, d'un seul coup.
+Terminal 1: COMMIT
++ Terminal 2: SELECT : 1 ligne
+```
+
 ## Erreurs fréquentes
 - **Garder la transaction ouverte pendant un appel réseau** : la connexion du [pool](pool-connexions.md) est bloquée, et les verrous restent posés.
 - **Ignorer le résultat de `commit()`** : il peut échouer.
@@ -135,3 +156,5 @@ Premier scénario : le `COMMIT` échoue. L'utilisateur reçoit une notification 
 - [SAVEPOINT](savepoint.md)
 - [RAII](../cpp/raii.md)
 - [L'outbox et publier après le commit](../temps-reel/outbox.md)
+
+<!-- enrichie -->

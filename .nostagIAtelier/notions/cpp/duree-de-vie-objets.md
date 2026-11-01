@@ -13,6 +13,24 @@ std::string_view prenom(pg::Rows &rows) {
 
 Tout compile. En test, ça affiche parfois le bon prénom. En production, le texte devient du charabia. [ASan](../build/sanitizers.md) finit par s'arrêter sur `stack-use-after-return`. Pour comprendre, il faut savoir exactement quand `nom` meurt, et ce que `string_view` est en réalité.
 
+### Suis `nom` jusqu'à sa mort
+La question à te poser devant toute référence : qui possède la mémoire, et vit-il assez longtemps ?
+
+```tableau
+titre: Le string_view qui survit à sa chaîne
+colonnes: appelant | prenom() | mémoire
+étape: `nom` est créé dans la fonction. Il possède le texte.
+prenom() -> mémoire: nom possède "Alice"
+étape: Le `return` fabrique un `string_view` : un pointeur et une taille, rien de plus.
+prenom() -> appelant: view vers "Alice"
+étape: La fonction se termine. `nom` est détruit, sa mémoire est rendue.
+! mémoire: "Alice" libéré
+étape: L'appelant lit par un pointeur vers une mémoire qui ne lui appartient plus.
+! appelant -> mémoire: lecture interdite
+étape: Souvent, l'ancien texte est encore là : ça « marche ». C'est le pire des cas, car le bug reste caché jusqu'à la production.
+! = comportement indéfini
+```
+
 ## La théorie
 ### Objet et stockage
 Un objet occupe de la mémoire pendant sa durée de vie. Sa vie commence à la fin de son constructeur et s'arrête au début de son destructeur. Lire un objet en dehors de cette période est un comportement indéfini : le programme peut sembler marcher, puis casser n'importe quand.
@@ -107,6 +125,31 @@ Ces deux questions suffisent pour la grande majorité de ces bugs.
 - Les routes Crow capturent `[&]` : c'est sûr ici, car tout ce qui est capturé vit dans `main` jusqu'à l'arrêt du serveur.
 - `Executor::query` prend un `string_view` : la chaîne n'a besoin de vivre que pendant l'appel.
 
+## Exemple pas à pas : corriger sans copier partout
+Il y a trois corrections possibles. Elles répondent à la même question : qui garde la mémoire ?
+
+```cpp
+// 1. Renvoyer un possesseur : le plus simple et le plus sûr
+std::string prenom(pg::Rows &rows);
+
+// 2. L'appelant fournit le stockage
+void prenom(pg::Rows &rows, std::string &out);
+
+// 3. Observer quelque chose qui vit plus longtemps que l'appel
+std::string_view prenom(const Compte &compte); // valable tant que compte existe
+```
+
+Le troisième cas est légitime : `compte` appartient à l'appelant et survit à la fonction. Retiens la règle : on peut renvoyer un observateur d'un paramètre, jamais d'une variable locale.
+
+Le temporaire piège aussi les plus expérimentés :
+
+```cpp
+std::string_view vue = lireNom();  // lireNom() renvoie std::string
+use(vue);                          // le temporaire est mort au ';' précédent
+```
+
+Alors que `use(lireNom())` est correct : le temporaire vit jusqu'à la fin de l'instruction complète, donc pendant tout l'appel.
+
 ## Erreurs fréquentes
 - Renvoyer une référence ou un `string_view` vers une locale.
 - Stocker un `string_view` dans un objet qui survit à la chaîne.
@@ -138,3 +181,5 @@ std::cout << row.get<int>(0);
 - [unique_ptr, shared_ptr, weak_ptr](pointeurs-intelligents.md)
 - [La sémantique de déplacement](semantique-deplacement.md)
 - [Les sanitizers : ASan, UBSan, LSan](../build/sanitizers.md)
+
+<!-- enrichie -->

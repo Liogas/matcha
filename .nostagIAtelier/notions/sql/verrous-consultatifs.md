@@ -6,6 +6,40 @@ Pour éviter le like croisé décrit dans la fiche sur l'[isolation](isolation.m
 
 Il nous faut un verrou sur une idée : « la relation entre Alice et Bob ».
 
+### Pourquoi le verrou de ligne ne peut pas marcher
+Reprends le like croisé et essaie vraiment le `FOR UPDATE` :
+
+```tableau
+titre: Le verrou de ligne ne protège rien ici
+colonnes: Alice | PostgreSQL | Bob
+étape: Alice veut verrouiller le like de Bob vers elle, pour voir s'il existe.
+Alice -> PostgreSQL: SELECT ... FOR UPDATE
+PostgreSQL -> Alice: 0 ligne
+étape: Aucune ligne, donc aucun verrou posé. Bob fait exactement pareil, au même instant.
+Bob -> PostgreSQL: SELECT ... FOR UPDATE
+PostgreSQL -> Bob: 0 ligne
+étape: Les deux pensent être les premiers. Personne n'a attendu personne.
+! = deux likes, aucun match
+```
+
+```tableau
+titre: Le verrou consultatif sur la paire
+colonnes: Alice | PostgreSQL | Bob
+étape: Les deux transactions calculent **la même clé**, car la paire est triée avec `LEAST` et `GREATEST`.
+Alice -> PostgreSQL: lock(paire)
++ PostgreSQL: Alice a le verrou
+étape: Bob demande la même clé : il attend, sans rien consommer.
+Bob -> PostgreSQL: lock(paire)
+! Bob: en attente
+étape: Alice fait son travail. Elle ne voit aucun like de Bob, et valide.
+Alice -> PostgreSQL: INSERT like, COMMIT
+étape: Le `COMMIT` libère le verrou. Bob repart, et sa requête suivante voit le like d'Alice.
+Bob -> PostgreSQL: like d'Alice ?
++ PostgreSQL -> Bob: oui
+étape: Bob crée le match. Un seul match, quel que soit l'ordre d'arrivée.
++ Bob -> PostgreSQL: INSERT match, COMMIT
+```
+
 ## La théorie
 ### Le principe
 PostgreSQL tient une table de verrous nommés par des entiers de 64 bits. Tu choisis le nombre, et PostgreSQL ne lui donne aucun sens. Il garantit seulement que deux [transactions](transactions.md) ne tiennent pas le même nombre en même temps. Le mot consultatif vient de là : seul le code qui demande le verrou est concerné. Une requête qui ne le demande pas passe sans attendre.
@@ -77,3 +111,5 @@ Une clé basée sur le compte, avec un préfixe pour ne pas croiser d'autres usa
 - [Le deadlock](deadlock.md)
 - [Les migrations](migrations.md)
 - [Les transactions et ACID](transactions.md)
+
+<!-- enrichie -->

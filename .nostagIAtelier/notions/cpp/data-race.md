@@ -19,6 +19,39 @@ Thread 2 : écrit 1
 
 Il restait 0 connexion, mais le compteur vaut 1. L'utilisateur restera en ligne pour toujours. Et `_compteurs` étant une table de hachage, une insertion simultanée peut la réorganiser pendant qu'un autre thread la lit, et faire planter le serveur.
 
+### Déroule la perte de mise à jour
+`-= 1` paraît être une seule action. Pour le processeur, ce sont trois : lire, calculer, écrire. Tout le problème tient dans ce qui peut se glisser entre les deux.
+
+```tableau
+titre: Deux onglets se ferment en même temps
+colonnes: Thread 1 | Compteur | Thread 2
+étape: Il y a 2 connexions. Thread 1 lit la valeur.
+Compteur: vaut 2
+Thread 1 -> Compteur: lit 2
+étape: Thread 2 lit à son tour, avant que Thread 1 ait écrit.
+Thread 2 -> Compteur: lit 2
+étape: Chacun calcule 2 - 1 de son côté, puis écrit.
+Thread 1 -> Compteur: écrit 1
+Thread 2 -> Compteur: écrit 1
+étape: Deux fermetures, mais une seule a compté. L'utilisateur reste « en ligne » pour toujours.
+! Compteur: vaut 1 au lieu de 0
+```
+
+```tableau
+titre: La même scène avec un mutex
+colonnes: Thread 1 | Compteur | Thread 2
+étape: Thread 1 prend le verrou, Thread 2 doit attendre dehors.
+Thread 1: lock
+Thread 2: attend
+étape: Lecture, calcul, écriture : plus rien ne peut s'y glisser.
+Thread 1 -> Compteur: 2 devient 1
+Thread 1: unlock
+étape: Thread 2 entre et **voit** la valeur écrite : c'est la relation happens-before.
+Thread 2: lock
+Thread 2 -> Compteur: 1 devient 0
++ Compteur: vaut 0
+```
+
 ## La théorie
 ### La définition exacte
 Il y a data race quand deux accès à la même mémoire :
@@ -107,3 +140,5 @@ Parce qu'aucune mémoire C++ n'est partagée sans synchronisation. Chaque thread
 - [Mutex et contention de verrou](mutex-contention.md)
 - [Les sanitizers : ASan, UBSan, LSan](../build/sanitizers.md)
 - [Les verrous consultatifs](../sql/verrous-consultatifs.md)
+
+<!-- enrichie -->

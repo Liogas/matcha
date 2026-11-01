@@ -4,6 +4,37 @@
 ## Mise en situation
 Docker lance le backend, mais comment sait-il qu'il répond vraiment ? Et lors d'un `docker stop`, une [transaction](../sql/transactions.md) en cours est coupée net si le processus meurt sans prévenir. La connexion disparaît, et PostgreSQL annule : c'est sûr, mais brutal pour l'utilisateur.
 
+### Ce que `docker stop` déclenche
+Imagine un utilisateur qui envoie un message à l'instant où tu redéploies. Selon que l'arrêt est propre ou non, il voit soit une réponse normale, soit une erreur réseau.
+
+```tableau
+titre: Un arrêt propre
+colonnes: Docker | Backend | PostgreSQL
+étape: Docker demande poliment au processus de s'arrêter.
+Docker -> Backend: SIGTERM
+étape: Crow n'accepte plus de nouvelles requêtes, mais termine celles en cours.
+Backend: finit la requête
+Backend -> PostgreSQL: COMMIT
+étape: `app.run()` rend la main. `main` continue, et les objets sont détruits dans l'ordre inverse.
+Backend: serveur détruit
+Backend -> PostgreSQL: pool fermé
+étape: Le processus sort de lui-même, bien avant les 10 secondes.
++ Backend -> Docker: exit 0
+```
+
+```tableau
+titre: Le même arrêt, avec un script d'entrée sans exec
+colonnes: Docker | sh | Backend
+étape: Le PID 1 est le shell, pas le serveur. C'est lui qui reçoit le signal.
+Docker -> sh: SIGTERM
+étape: Le shell ne le transmet pas à son enfant. Le serveur continue comme si de rien n'était.
+! sh: ignore le signal
+étape: 10 secondes plus tard, Docker perd patience.
+! Docker -> Backend: SIGKILL
+étape: Les requêtes en cours sont coupées net, et chaque redéploiement prend 10 secondes.
+! = coupure brutale
+```
+
 ## La théorie
 ### Vivant ou prêt
 - **Liveness** (`/health`) : le processus répond. Sinon, il faut le redémarrer.
@@ -72,3 +103,5 @@ Il échoue quand une dépendance tombe. Redémarrer le backend ne répare pas Po
 
 - [Docker Compose](docker-compose.md)
 - [RAII](../cpp/raii.md)
+
+<!-- enrichie -->

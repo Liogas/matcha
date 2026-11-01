@@ -14,6 +14,28 @@ A : COMMIT                      B : COMMIT
 
 Deux likes sont en base, et aucun match. Aucune requête n'est fausse, et les deux transactions ont fonctionné. Le problème vient de ce que chacune a le droit de voir pendant que l'autre travaille.
 
+### Revois la scène au ralenti
+La chronologie ci-dessus se joue en quelques millisecondes. Déroule-la étape par étape, en regardant ce que chaque transaction voit.
+
+```tableau
+titre: Le like croisé, en READ COMMITTED
+colonnes: Transaction A | PostgreSQL | Transaction B
+étape: Chacune insère son like. Aucune n'a encore validé.
+Transaction A -> PostgreSQL: INSERT Alice -> Bob
+Transaction B -> PostgreSQL: INSERT Bob -> Alice
+étape: A cherche le like de Bob. Il existe, mais il n'est pas validé : A ne peut pas le voir.
+Transaction A -> PostgreSQL: Bob a liké ?
+! PostgreSQL -> Transaction A: non
+étape: B fait la même chose, avec le même résultat.
+Transaction B -> PostgreSQL: Alice a liké ?
+! PostgreSQL -> Transaction B: non
+étape: Les deux valident. Chacune a raisonné juste sur ce qu'elle voyait.
+Transaction A -> PostgreSQL: COMMIT
+Transaction B -> PostgreSQL: COMMIT
+étape: Le résultat est faux alors qu'aucune requête n'est fausse. C'est le signe d'un problème d'isolation.
+! = 2 likes, 0 match
+```
+
 ## La théorie
 ### La photo de la base
 Chaque requête lit une photo cohérente de la base, appelée snapshot, grâce à MVCC (voir les [transactions](transactions.md)). Le niveau d'isolation répond à une question simple : quand cette photo est-elle prise ?
@@ -63,6 +85,24 @@ Un niveau d'isolation plus élevé donne d'autres garanties, pas plus de sécuri
 
 Dans cpp-pg, le choix se fait à l'ouverture, avec `pg::Isolation` : `ReadCommitted`, `RepeatableRead` ou `Serializable`. `errorCodeFor` traduit `40001` en `Unavailable`, voir [SQLSTATE](sqlstate.md).
 
+## Exemple pas à pas : la photo selon le niveau
+Même scénario, deux niveaux. T1 lit deux fois pendant que T2 valide entre les deux.
+
+```tableau
+titre: Quand la photo est-elle prise ?
+colonnes: READ COMMITTED | REPEATABLE READ
+étape: Première lecture : les deux niveaux voient 10.
+READ COMMITTED: lit 10
+REPEATABLE READ: lit 10
+étape: Une autre transaction passe la valeur à 20 et valide.
+= T2 : UPDATE à 20, COMMIT
+étape: Deuxième lecture. Le premier niveau prend une nouvelle photo, le second garde la sienne.
+! READ COMMITTED: lit 20
++ REPEATABLE READ: lit 10
+étape: Aucun n'a tort. Tu choisis selon ce que ton code suppose : ici, le service utilise `READ COMMITTED` avec un verrou, plus simple qu'un rejeu sur `40001`.
+= le niveau ne corrige rien tout seul
+```
+
 ## Erreurs fréquentes
 - **Croire qu'une [transaction](transactions.md) évite les courses** : elle ne le fait pas en `READ COMMITTED`.
 - **Utiliser `SERIALIZABLE` sans boucle de reprise** : les utilisateurs verront des erreurs au hasard.
@@ -83,3 +123,5 @@ Premier cas : 12. La seconde [transaction](transactions.md) attend le verrou de 
 - [Les verrous consultatifs](verrous-consultatifs.md)
 - [Les codes SQLSTATE](sqlstate.md)
 - [Data race et ThreadSanitizer](../cpp/data-race.md)
+
+<!-- enrichie -->

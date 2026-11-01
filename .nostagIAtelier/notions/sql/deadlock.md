@@ -13,6 +13,39 @@ T2 : UPDATE ligne Alice   (attend T1)
 
 Personne ne peut avancer. Sans intervention, cela durerait toujours.
 
+### Dessine le cycle
+Dès que tu soupçonnes un deadlock, dessine qui attend qui. S'il y a une boucle, tu l'as trouvé.
+
+```tableau
+titre: Formation d'un deadlock
+colonnes: T1 | Ligne Alice | Ligne Bob | T2
+étape: T1 verrouille la ligne d'Alice.
+T1 -> Ligne Alice: verrou obtenu
+étape: T2 verrouille la ligne de Bob. Pour l'instant, tout va bien.
+T2 -> Ligne Bob: verrou obtenu
+étape: T1 veut la ligne de Bob, tenue par T2. Il attend en gardant la sienne.
+! T1 -> Ligne Bob: attend T2
+étape: T2 veut la ligne d'Alice, tenue par T1. La boucle est fermée.
+! T2 -> Ligne Alice: attend T1
+étape: Après 1 seconde, PostgreSQL trouve le cycle et sacrifie une transaction.
+! T2: annulée 40P01
++ T1: continue
+```
+
+```tableau
+titre: Le même travail, avec un ordre fixe
+colonnes: T1 | Ligne Alice | Ligne Bob | T2
+étape: Les deux prennent d'abord la ligne au plus petit identifiant. T1 arrive le premier.
+T1 -> Ligne Alice: verrou obtenu
+étape: T2 attend **sans rien détenir** : aucun cycle n'est possible.
+T2 -> Ligne Alice: attend T1
+étape: T1 termine son travail et libère tout.
+T1 -> Ligne Bob: verrou obtenu
++ T1: COMMIT
+étape: T2 repart. Il a seulement attendu un peu.
++ T2 -> Ligne Alice: verrou obtenu
+```
+
 ## La théorie
 ### Quatre conditions
 Un deadlock exige quatre conditions réunies :
@@ -88,3 +121,5 @@ On verrouille d'abord le plus petit identifiant, puis le plus grand : `std::min(
 - [Les codes SQLSTATE](sqlstate.md)
 - [Mutex et contention de verrou](../cpp/mutex-contention.md)
 - [Le pool de connexions](pool-connexions.md)
+
+<!-- enrichie -->

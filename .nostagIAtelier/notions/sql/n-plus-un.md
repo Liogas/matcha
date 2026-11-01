@@ -29,6 +29,9 @@ PostgreSQL -> Service: 3 ids
 + PostgreSQL -> Service: 3 profils complets
 ```
 
+### Pourquoi personne ne l'a vu
+Fais le calcul avec de vrais chiffres. En développement, tu as 3 likes reçus : 4 requêtes à 1 ms sur le réseau local du conteneur, soit 4 ms. La page paraît instantanée. Le jour de la soutenance, le correcteur génère 500 profils. Le compte le plus liké en a reçu 120 : 121 requêtes, chacune avec son passage par le pool et son aller-retour. Le code n'a pas changé, seule la quantité de données a changé. C'est ce qui rend ce défaut traître : il ne se voit jamais sur la machine de celui qui l'écrit.
+
 ## La théorie
 Le coût d'une requête vient surtout de l'aller-retour, pas du travail. N+1 multiplie les allers-retours. Il est difficile à voir, car chaque requête est rapide, et il passe inaperçu avec peu de données.
 
@@ -80,6 +83,39 @@ La réponse API contient directement des profils résumés, et le front n'a plus
 - Dans le navigateur, regarde l'onglet réseau.
 - Écris un test qui compte les requêtes exécutées.
 
+## Exemple pas à pas : réécrire la boucle
+Voici la transformation à savoir refaire sans réfléchir.
+
+```cpp
+// Avant : une requête cachée dans la boucle
+std::vector<ProfileSummary> out;
+for (auto &like : repo.receivedLikes(me))
+    out.push_back(repo.findSummary(like.id));
+```
+
+**Étape 1.** Repère ce dont la boucle a besoin : pour chaque like, le profil. Les deux tables se rejoignent sur `liker_account_id`.
+
+**Étape 2.** Écris une seule méthode qui ramène le résultat final, au lieu de deux méthodes à combiner :
+
+```cpp
+// Après : tout en une requête
+auto out = repo.receivedLikeSummaries(me, limit);
+```
+
+**Étape 3.** Pour ce qui compte plusieurs lignes par profil, les tags, charge en bloc puis range en mémoire :
+
+```cpp
+std::vector<std::int64_t> ids;
+for (auto &profil : out)
+    ids.push_back(profil.accountId);
+
+auto tags = repo.tagsFor(ids);          // ANY($1), une requête
+for (auto &profil : out)
+    profil.tags = std::move(tags[profil.accountId]);
+```
+
+`tags` est une `std::unordered_map<std::int64_t, std::vector<std::string>>` : retrouver les tags d'un profil ne coûte aucune requête. Si la map n'a pas la clé, `operator[]` crée un vecteur vide, ce qui convient à un profil sans tag.
+
 ## Erreurs fréquentes
 - Tout joindre : deux relations multiples dans une même requête multiplient les lignes, c'est le produit cartésien.
 - Corriger seulement le backend, en gardant une API qui renvoie des ids.
@@ -98,3 +134,5 @@ Le seed ne compte que 10 profils, avec peu de likes : quelques requêtes rapides
 - [Les relations N-N](relation-nn.md)
 - [Tableaux et unnest](tableaux-unnest.md)
 - [Concevoir une API REST](../web/rest-conception.md)
+
+<!-- enrichie -->

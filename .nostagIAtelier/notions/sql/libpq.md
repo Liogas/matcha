@@ -4,6 +4,28 @@
 ## Mise en situation
 Tu veux comprendre ce qui se passe sous `db.query(...)`, par exemple pour expliquer un `PGresult` qui fuit, ou pourquoi l'ancien `getTimestamp` ne fonctionnait jamais. Tout passe par une poignée de fonctions C.
 
+### Ce qui se passe vraiment sous `db.query`
+Prends une requête banale : afficher le pseudo du compte 42. Côté repository, une ligne. Côté libpq, quatre choses doivent se passer, dans cet ordre, et chacune peut échouer. Si tu oublies la dernière, ton serveur perd un peu de mémoire à chaque requête. Après 100 000 requêtes, le conteneur grossit sans que rien ne plante, et le bug devient très difficile à relier à sa cause.
+
+```tableau
+titre: Une requête, vue depuis libpq
+colonnes: cpp-pg | libpq | PostgreSQL
+étape: Tu passes le SQL et les valeurs **séparément**. Le serveur ne peut pas confondre les deux.
+cpp-pg -> libpq: PQexecParams(conn, sql, values)
+libpq -> PostgreSQL: requête + paramètres
+étape: La réponse arrive entière dans la mémoire de ton processus, dans un `PGresult`. C'est toi qui en es responsable à partir de maintenant.
+PostgreSQL -> libpq: lignes
+libpq -> cpp-pg: PGresult *
+étape: Rien n'a encore été vérifié. Un `PGresult` existe même quand la requête a échoué : il faut demander son état.
+cpp-pg -> libpq: PQresultStatus(res)
+libpq -> cpp-pg: PGRES_TUPLES_OK
+étape: Tout arrive en texte. `"42"` n'est pas encore un entier : c'est à toi de le convertir.
+cpp-pg -> libpq: PQgetvalue(res, 0, 0)
+libpq -> cpp-pg: "alice"
+étape: Sans cet appel, la mémoire n'est jamais rendue. C'est exactement ce que le destructeur de `pg::Rows` fait pour toi.
+! cpp-pg -> libpq: PQclear(res)
+```
+
 ## La théorie
 ### Les deux objets
 - **`PGconn *`** : une connexion. Créée par `PQconnectdb`, fermée par `PQfinish`.
@@ -65,6 +87,23 @@ Le wrapper apporte la libération automatique, l'accès par nom et des types. L'
 ## Une connexion, un utilisateur
 Un `PGconn` n'est pas thread-safe : deux threads ne doivent pas l'utiliser en même temps. Le [pool](pool-connexions.md) garantit l'exclusivité.
 
+## Exemple déroulé : lire une colonne qui peut être vide
+La colonne `biography` de `matcha_profiles` accepte `NULL`. Regarde ce que renvoie libpq pour trois comptes :
+
+```tableau
+titre: Trois comptes, trois cas
+étape: Biographie remplie : `PQgetvalue` renvoie le texte.
+> "J'aime la randonnée"     PQgetisnull = 0
+étape: Biographie vide, mais renseignée : chaîne vide.
+> ""                        PQgetisnull = 0
+étape: Biographie jamais saisie : `PQgetvalue` renvoie **aussi** une chaîne vide.
+! > ""                        PQgetisnull = 1
+étape: Sans `PQgetisnull`, les deux derniers cas sont indiscernables. Le typage de `Row::get<std::optional<std::string>>` règle ce problème une fois pour toutes.
++ = NULL devient std::nullopt, "" reste une chaîne vide
+```
+
+C'est la raison d'être de `Row::get<T>` : la vérification de `NULL` n'est plus une chose à penser à chaque lecture.
+
 ## Erreurs fréquentes
 - Oublier `PQclear` : [LSan](../build/sanitizers.md) le signale.
 - Garder un `char *` de `PQgetvalue` après `PQclear`.
@@ -86,3 +125,5 @@ Pourquoi faut-il `std::string(column).c_str()` plutôt que `column.data()` pour 
 - [Les codes SQLSTATE](sqlstate.md)
 - [Le pool de connexions](pool-connexions.md)
 - [RAII](../cpp/raii.md)
+
+<!-- enrichie -->

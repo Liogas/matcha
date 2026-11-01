@@ -34,6 +34,9 @@ Test -> PostgreSQL: SELECT ...
 ! PostgreSQL: 25P02
 ```
 
+### Pourquoi PostgreSQL est si sévère
+Ce comportement paraît excessif, mais il protège tes données. Si une requête d'une transaction échoue et que PostgreSQL te laissait continuer, un `COMMIT` validerait une opération incomplète. Il préfère donc refuser tout le reste jusqu'à ce que tu dises explicitement quoi faire : tout annuler, ou revenir à un point précis. Le savepoint est ce point précis.
+
 ## La théorie
 Un savepoint marque un état dans la [transaction](transactions.md) :
 
@@ -79,6 +82,27 @@ Le test reste dans une seule [transaction](transactions.md), annulée à la fin,
 ## Quand s'en passer
 Si l'échec est prévu sur un conflit d'unicité, [ON CONFLICT](on-conflict.md) est plus simple, plus rapide, et n'empoisonne pas la [transaction](transactions.md).
 
+## Exemple pas à pas : ce que voit la table
+Reprends une suite d'instructions et regarde le contenu de `t` après chacune :
+
+```tableau
+titre: Le contenu de la table, ligne après ligne
+étape: La transaction commence, la table est vide.
+> BEGIN;                        t = {}
+étape: Première insertion.
+> INSERT 1;                     t = {1}
+étape: On pose le point de retour.
+> SAVEPOINT s;                  t = {1}
+étape: On insère de nouveau, après le point.
+> INSERT 2;                     t = {1, 2}
+étape: On revient en arrière : seul ce qui suit le point est annulé.
+! > ROLLBACK TO s;                t = {1}
+étape: La transaction n'est pas terminée, on peut continuer.
+> INSERT 3;                     t = {1, 3}
+étape: `COMMIT` valide tout ce qui reste. Le 2 n'a jamais existé pour les autres connexions.
++ > COMMIT;                       t = {1, 3}
+```
+
 ## Erreurs fréquentes
 - Croire que `ROLLBACK TO` termine la [transaction](transactions.md) : elle continue.
 - Faire un `COMMIT` en pensant valider seulement la partie après le savepoint : tout est validé.
@@ -108,3 +132,5 @@ COMMIT;
 - [Les transactions et ACID](transactions.md)
 - [Tests de repository en transaction annulée](../tests/transaction-annulee.md)
 - [INSERT ON CONFLICT](on-conflict.md)
+
+<!-- enrichie -->

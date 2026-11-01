@@ -4,6 +4,27 @@
 ## Mise en situation
 Tu dois vérifier la [compatibilité d'orientation](../metier/orientation.md) sur toutes les combinaisons, et plusieurs tests de [pool](../sql/pool-connexions.md) ont besoin d'une base. Recopier la même préparation dans chaque test les rend longs, et une correction doit se faire partout.
 
+### Une suite de tests qui se dégrade
+Tu écris un premier test de pool : dix lignes de préparation, trois de vérification. Tu copies pour le test suivant, puis encore cinq fois. Un mois plus tard, le constructeur du pool prend un paramètre de plus : tu corriges sept endroits. Pour les orientations, tu as 6 orientations multipliées par 2 genres, de chaque côté : 144 combinaisons. Personne n'écrit 144 fois `TEST`. On écrit donc 5 cas, et les 139 autres ne sont jamais testés.
+
+Fixture et tests paramétrés répondent à ces deux problèmes : une préparation à un seul endroit, et une table de cas au lieu d'une pile de copier-coller.
+
+```tableau
+titre: Ce que GoogleTest fait pour chaque TEST_F
+colonnes: GoogleTest | Fixture | Ton test
+étape: Il crée un objet fixture **neuf**. Rien ne reste du test précédent.
+GoogleTest -> Fixture: new PoolTest
+étape: Il prépare le terrain.
+GoogleTest -> Fixture: SetUp()
+étape: Le corps du test s'exécute. Dans le code, c'est une méthode d'une classe fille de la fixture : d'où l'accès direct à `pool`.
+GoogleTest -> Ton test: corps du test
+étape: Un `ASSERT` qui échoue sort du test, mais `TearDown` est quand même appelé.
+! Ton test: ASSERT échoué
+GoogleTest -> Fixture: TearDown()
+étape: L'objet est détruit, puis tout recommence pour le test suivant.
+GoogleTest -> Fixture: delete
+```
+
 ## La théorie
 ### Un test
 ```cpp
@@ -76,6 +97,24 @@ Sur un échec, GoogleTest donne fichier, ligne, valeur attendue et valeur reçue
 ./tests --gtest_filter='PoolTest.*'
 ```
 
+## Exemple pas à pas : EXPECT ou ASSERT ?
+Le choix se décide en une question : si cette vérification échoue, la ligne suivante a-t-elle encore un sens ?
+
+```cpp
+TEST_F(ProfileRepositoryTest, FindsCompletedProfile) {
+    auto id = accounts.create("a@example.test", "alice");
+    ASSERT_TRUE(id);                    // sans id, *id plante juste après
+
+    auto profil = profiles.find(*id);
+    ASSERT_TRUE(profil);                // sans profil, profil-> plante
+
+    EXPECT_EQ(profil->firstName, "Alice"); // on veut voir tous les écarts d'un coup
+    EXPECT_EQ(profil->age, 30);
+}
+```
+
+Les deux premières vérifications sont des `ASSERT` : la suite déréférence la valeur. Les deux dernières sont des `EXPECT` : si le prénom est faux, tu veux quand même savoir si l'âge l'est aussi.
+
 ## Erreurs fréquentes
 - `EXPECT_EQ` sur des `double` : utilise `EXPECT_NEAR`.
 - Dépendre de l'ordre des tests.
@@ -96,3 +135,5 @@ Quand la suite dépend du résultat. Si `pool.begin()` échoue, utiliser le rés
 - [Les faux objets de test](faux-objets.md)
 - [Tests de repository en transaction annulée](transaction-annulee.md)
 - [La pyramide de tests](pyramide.md)
+
+<!-- enrichie -->

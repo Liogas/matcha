@@ -6,6 +6,38 @@ Tu veux vérifier qu'un utilisateur bloqué ne reçoit aucune notification. Si [
 
 Le même problème apparaît pour les [repositories](../archi/couche-services.md) : si `LikeRepository` possède sa connexion, il ne peut pas participer à la [transaction](../sql/transactions.md) du service.
 
+### Le même test, avant et après
+Regarde ce qu'il faut pour vérifier une seule règle : « un utilisateur bloqué ne reçoit pas de notification ». Tu vas voir que la règle ne change pas, seule la façon de brancher le code change.
+
+```tableau
+titre: Tester une règle quand le code est soudé
+colonnes: Test | Dispatcher | PostgreSQL | WebSocket
+étape: Le dispatcher crée lui-même ses dépendances. Le test ne peut rien remplacer.
+Test -> Dispatcher: envoyer(notif)
+étape: Il faut donc une vraie base, avec un vrai schéma, pour une règle qui tient en un `if`.
+! Dispatcher -> PostgreSQL: INSERT
+étape: Et un vrai client connecté, juste pour vérifier que **rien** n'arrive.
+! Dispatcher -> WebSocket: push
+étape: Le test est lent, dépend de l'environnement, et échoue pour des raisons sans rapport avec la règle.
+! = 2 services à lancer, plusieurs secondes par test
+```
+
+```tableau
+titre: Le même test avec une dépendance injectée
+colonnes: Test | Dispatcher | FakeStore
+étape: Le test construit un faux et le donne au dispatcher. Le dispatcher ne voit qu'une `INotificationStore &`.
+Test -> Dispatcher: Dispatcher(fake)
+étape: L'appel est identique à celui de la production.
+Test -> Dispatcher: envoyer(notif vers bloqué)
+étape: La règle s'applique : le dispatcher n'appelle pas `save`.
+Dispatcher: bloqué : rien à faire
+étape: Le faux a compté les appels. Le test vérifie un simple nombre.
+Test -> FakeStore: saved.size()
++ FakeStore -> Test: 0
+étape: Aucun service, quelques microsecondes, et l'échec ne peut venir que de la règle.
++ = 0 service, test instantané
+```
+
 ## La théorie
 ### Une interface en C++
 C++ n'a pas de mot-clé `interface`. On utilise une classe dont les méthodes sont virtuelles pures (`= 0`) :
@@ -82,6 +114,24 @@ Une interface a un coût : un fichier de plus, et une navigation moins directe. 
 
 Garde-les petites : un faux avec 15 méthodes à écrire est un signe que l'interface en fait trop.
 
+## Exemple déroulé : d'où vient l'objet concret ?
+Suis une dépendance depuis `main.cpp` jusqu'à son utilisation. C'est le chemin à reconnaître dans tout le backend.
+
+```tableau
+titre: Le composition root, en production et en test
+colonnes: main.cpp ou test | LikeRepository | pg::Executor
+étape: En production, `main.cpp` crée le pool, une seule fois.
+main.cpp ou test: pool créé
+étape: Le repository ne reçoit qu'une référence vers ce qu'il sait utiliser : un `Executor`.
+main.cpp ou test -> LikeRepository: LikeRepository(*pool)
+étape: Il appelle `query`. Il ne sait pas si c'est un pool, une connexion ou une transaction.
+LikeRepository -> pg::Executor: query(sql, args)
+étape: En test, seule la première ligne change : on passe la transaction de la fixture.
++ main.cpp ou test -> LikeRepository: LikeRepository(fixtureTx)
+étape: Le code du repository n'a pas changé d'un caractère. C'est tout l'intérêt.
++ = même code, autre branchement
+```
+
 ## Erreurs fréquentes
 - Injecter par référence un objet qui meurt avant son utilisateur, voir la [durée de vie](duree-de-vie-objets.md).
 - Oublier le destructeur virtuel.
@@ -101,3 +151,5 @@ Le code ne doit pas appeler l'horloge système directement, mais un `IClock &` i
 - [Les faux objets de test](../tests/faux-objets.md)
 - [Templates variadiques et fold expressions](templates-variadiques.md)
 - [La couche services](../archi/couche-services.md)
+
+<!-- enrichie -->

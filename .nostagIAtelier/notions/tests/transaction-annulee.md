@@ -6,6 +6,11 @@ Les anciens tests de [repository](../archi/couche-services.md) écrivaient dans 
 
 Tu pourrais vider les tables avant chaque test avec `TRUNCATE`, mais ce serait lent, et dangereux si le test tourne sur la mauvaise base.
 
+### Ce que tu évites, concrètement
+Imagine la suite complète sans cette technique. Tu lances `make test` une première fois : tout passe. Tu relances : `create("a@example.test")` échoue en `23505`, car le compte existe encore. Tu ajoutes un `TRUNCATE` : les tests passent, mais tu viens de vider ta base de développement et tes profils de seed. Tu crées alors une base dédiée, et deux tests lancés en parallèle se marchent dessus.
+
+Chaque solution crée le problème suivant. La transaction annulée règle tout d'un coup, car elle ne laisse rien à nettoyer.
+
 ## La théorie
 ### L'idée
 Ce qui n'est pas validé n'existe que pour la connexion qui l'a écrit. Une [transaction](../sql/transactions.md) ouverte au début du test et annulée à la fin efface donc tout, quoi qu'il se soit passé.
@@ -67,6 +72,26 @@ Trois cas exigent une vraie validation :
 
 Dans ces cas, on utilise une base de test en `tmpfs` et `TRUNCATE` avant chaque test, comme les tests de cpp-pg.
 
+## Exemple pas à pas : deux tests qui utilisent le même email
+Les deux tests créent `a@example.test`. Sans annulation, le second échouerait. Suis ce qui existe dans la base à chaque instant :
+
+```tableau
+titre: Deux tests, le même email
+colonnes: Test 1 | PostgreSQL | Test 2
+étape: Test 1 ouvre sa transaction et crée le compte. Seule sa connexion voit la ligne.
+Test 1 -> PostgreSQL: BEGIN, INSERT a@
+étape: À la fin du test 1, tout est annulé.
+Test 1 -> PostgreSQL: ROLLBACK
++ PostgreSQL: table vide
+étape: Test 2 démarre sur une base identique à celle du test 1.
+Test 2 -> PostgreSQL: BEGIN, INSERT a@
++ PostgreSQL: OK
+étape: Pas de doublon : aux yeux de la base, le test 1 n'a jamais existé.
+Test 2 -> PostgreSQL: ROLLBACK
+```
+
+L'ordre des tests n'a plus d'importance, et `ctest -j8` peut les lancer en parallèle : chacun vit dans sa transaction.
+
 ## Erreurs fréquentes
 - Utiliser `NOW()` pour vérifier une date : dans une [transaction](../sql/transactions.md), `NOW()` renvoie le début de la transaction, et reste identique pendant tout le test. `clock_timestamp()` donne l'heure réelle.
 - Faire appeler le [pool](../sql/pool-connexions.md) par du code sous test : il ne voit pas les données de la transaction.
@@ -86,3 +111,5 @@ Il faut deux [transactions](../sql/transactions.md) sur deux connexions, et le t
 - [SAVEPOINT](../sql/savepoint.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [GoogleTest : fixtures et tests paramétrés](gtest.md)
+
+<!-- enrichie -->
