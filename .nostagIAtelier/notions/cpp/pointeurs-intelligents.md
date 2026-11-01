@@ -11,6 +11,38 @@ std::unordered_map<std::int64_t, std::set<crow::websocket::connection *>> _conne
 
 Lis ces deux lignes en te demandant qui libère quoi. Le type ne dit rien. Le `new` doit être compensé par un `delete` à la fermeture. Et si un client se déconnecte alors qu'un autre thread parcourt la liste, le pointeur désigne peut-être un objet détruit. Un pointeur brut n'exprime aucune propriété : il dépend d'une convention dans la tête du développeur.
 
+### Le crash que le type aurait évité
+Voici comment le hub actuel peut planter, avec deux threads et une déconnexion au mauvais moment.
+
+```tableau
+titre: Pointeur brut : l'objet meurt pendant l'envoi
+colonnes: Thread d'envoi | Liste | Thread de fermeture | Connexion
+étape: Le thread d'envoi lit l'adresse d'une connexion dans la liste.
+Thread d'envoi -> Liste: lit connection*
+étape: Au même moment, le client se déconnecte. Crow détruit l'objet.
+Thread de fermeture -> Connexion: détruit
+! Connexion: mémoire libérée
+étape: Le pointeur brut garde son adresse. Il ne peut pas savoir que l'objet n'existe plus.
+! Thread d'envoi -> Connexion: send_text
+étape: Écriture dans une mémoire libérée : crash, ou corruption silencieuse.
+! = use-after-free
+```
+
+```tableau
+titre: Avec weak_ptr et shared_ptr
+colonnes: Thread d'envoi | Bloc de contrôle | Thread de fermeture
+étape: La liste contient des `weak_ptr` : ils observent sans posséder.
+Thread d'envoi -> Bloc de contrôle: lock()
+étape: Si l'objet vit encore, `lock()` renvoie un `shared_ptr`, et le thread devient copropriétaire.
++ Bloc de contrôle -> Thread d'envoi: shared_ptr
+étape: La fermeture retire sa propre référence. L'objet survit tant que l'envoi est en cours.
+Thread de fermeture -> Bloc de contrôle: reset
+étape: L'envoi finit proprement. Le dernier propriétaire détruit l'objet en sortant.
++ Thread d'envoi: objet détruit ici
+étape: Si la session était déjà morte, `lock()` aurait renvoyé un pointeur vide, et le thread l'aurait simplement ignorée.
++ = plus de use-after-free
+```
+
 ## La théorie
 ### unique_ptr : un seul propriétaire
 ```cpp
@@ -93,6 +125,21 @@ std::unique_ptr<PGconn, PgConnDeleter> _handle;
 
 Un pointeur brut reste correct s'il observe sans posséder. C'est `new` et `delete` à la main qu'il faut éviter.
 
+## Exemple pas à pas : quel pointeur choisir ?
+Pose les questions dans cet ordre. Elles règlent presque tous les cas du backend.
+
+```tableau
+titre: Choisir un type de pointeur
+étape: L'objet peut-il être une simple valeur, membre de sa classe ? C'est toujours le plus simple.
++ = oui : pas de pointeur du tout
+étape: Un seul propriétaire clairement identifié ? Exemple : `main` possède le pool.
++ = oui : std::unique_ptr
+étape: Plusieurs propriétaires qui peuvent mourir dans n'importe quel ordre ? Exemple : une session vue par plusieurs threads.
+= oui : std::shared_ptr
+étape: Tu dois seulement regarder un objet possédé ailleurs, sans le garder en vie ?
+= oui : std::weak_ptr, ou une référence si sa durée de vie est garantie
+```
+
 ## Erreurs fréquentes
 - Deux `shared_ptr` créés depuis le même pointeur brut : deux compteurs, double destruction. Utilise `make_shared`.
 - Passer un `shared_ptr` par valeur partout : coût atomique inutile. Passe `const T &` si la fonction ne garde rien.
@@ -113,3 +160,5 @@ C'est un cycle : le hub garde les sessions en vie, qui gardent le hub en vie, do
 - [La durée de vie des objets](duree-de-vie-objets.md)
 - [WebSocket](../temps-reel/websocket.md)
 - [Mutex et contention de verrou](mutex-contention.md)
+
+<!-- enrichie -->

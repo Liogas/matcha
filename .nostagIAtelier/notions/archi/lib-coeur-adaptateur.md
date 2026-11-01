@@ -4,6 +4,22 @@
 ## Mise en situation
 Le hub de messagerie utilise directement `crow::websocket::connection`. On ne peut le tester qu'avec un vrai serveur, et il ne pourra pas servir ailleurs. Dès qu'une bibliothèque inclut `crow.h`, elle hérite de tout Crow.
 
+### Où va chaque ligne de code ?
+Prends le chat de matcha et applique la règle de découpage sur trois morceaux concrets.
+
+```tableau
+titre: Le tri d'une fonctionnalité
+colonnes: Code | cpp-realtime | cpp-realtime-crow | backend
+étape: « Livrer un message aux sessions d'un sujet » : aucun mot de Matcha, aucun Crow.
+Code -> cpp-realtime: Hub::publish
+étape: « Envoyer du texte sur une connexion Crow » : générique, mais lié au framework.
+Code -> cpp-realtime-crow: CrowSession
+étape: « Il faut un match pour discuter » : la règle parle de Matcha.
+Code -> backend: IConversationPolicy
+étape: Le test du hub tourne avec une `FakeSession`, sans serveur ni Crow.
++ cpp-realtime: testé seul
+```
+
 ## La théorie
 ### L'architecture hexagonale, en simple
 Le cœur contient la logique et définit ce dont il a besoin par des [interfaces](../cpp/interfaces-injection.md). Les adaptateurs branchent le monde extérieur sur ces interfaces.
@@ -78,3 +94,5 @@ On crée deux [`FakeSession`](../tests/faux-objets.md), dont une dont `send` blo
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [Rendre une lib installable](../build/package-cmake.md)
 - [Les faux objets de test](../tests/faux-objets.md)
+
+<!-- enrichie -->

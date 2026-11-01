@@ -17,6 +17,37 @@ void MessagingWebSocketHub::sendToAccount(std::int64_t id, const std::string &pa
 
 Tous les envois, toutes les ouvertures et toutes les fermetures de [WebSocket](../temps-reel/websocket.md) passent par ce même verrou. Chaque envoi retarde tous les autres utilisateurs. Plus il y a de connexions, plus l'attente grandit.
 
+### Mesure le coût d'un verrou tenu pendant le réseau
+Trois utilisateurs reçoivent un message en même temps. L'un d'eux a une connexion lente, et l'envoi prend 200 ms.
+
+```tableau
+titre: Envoi sous verrou : tout le monde attend le plus lent
+colonnes: Thread 1 | Mutex | Thread 2 | Thread 3
+étape: Le thread 1 prend le verrou et envoie au client lent.
+Thread 1 -> Mutex: lock
+! Thread 1: envoi 200 ms
+étape: Les deux autres n'ont rien à voir avec ce client, mais ils attendent.
+! Thread 2: attend
+! Thread 3: attend
+étape: Le temps total est la somme : 600 ms pour trois envois indépendants.
+! = 3 × 200 ms en série
+```
+
+```tableau
+titre: Copier sous verrou, envoyer dehors
+colonnes: Thread 1 | Mutex | Thread 2 | Thread 3
+étape: Chaque thread ne tient le verrou que le temps de copier la liste : quelques microsecondes.
+Thread 1 -> Mutex: copie, unlock
+Thread 2 -> Mutex: copie, unlock
+Thread 3 -> Mutex: copie, unlock
+étape: Les envois se font en parallèle, sans verrou.
++ Thread 1: envoi
++ Thread 2: envoi
++ Thread 3: envoi
+étape: Le client lent ne ralentit plus que lui-même.
++ = 200 ms au total
+```
+
 ## La théorie
 ### Le problème à résoudre
 Deux threads qui modifient une `unordered_map` en même temps peuvent la corrompre. Un mutex, pour exclusion mutuelle, garantit qu'un seul thread exécute une portion de code à la fois. Cette portion s'appelle la section critique.
@@ -104,3 +135,5 @@ Non. `contains` lit la table sans verrou pendant qu'un autre thread peut l'écri
 - [std::condition_variable](condition-variable.md)
 - [Le deadlock](../sql/deadlock.md)
 - [Le pool de connexions](../sql/pool-connexions.md)
+
+<!-- enrichie -->

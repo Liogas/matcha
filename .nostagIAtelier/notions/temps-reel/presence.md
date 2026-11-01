@@ -4,6 +4,26 @@
 ## Mise en situation
 Le sujet demande de voir si quelqu'un est en ligne, et sinon sa dernière connexion. L'information change sans arrêt, mais personne n'exige une précision à la seconde. Toute la conception revient à éviter d'écrire en base à chaque mouvement.
 
+### Pourquoi un booléen ne suffit pas
+Fais l'expérience sur une journée normale : Alice ouvre matcha sur son ordinateur, puis dans un deuxième onglet, puis ferme le premier.
+
+```tableau
+titre: Booléen ou compteur
+colonnes: Événement | Booléen | Compteur
+étape: Premier onglet ouvert : les deux sont d'accord.
+Booléen: en ligne
+Compteur: 1, en ligne
+étape: Deuxième onglet.
+Booléen: en ligne
+Compteur: 2, en ligne
+étape: Elle ferme un onglet. Le booléen passe à faux, alors qu'elle est toujours là.
+! Booléen: hors ligne
++ Compteur: 1, en ligne
+étape: Elle ferme le dernier. Seul le compteur peut déclencher le bon événement, au passage de 1 à 0.
+Booléen: hors ligne
++ Compteur: 0, hors ligne
+```
+
 ## La théorie
 ### Définir en ligne
 Une personne a plusieurs onglets. Elle est en ligne si au moins une connexion est ouverte : il faut un compteur, pas un booléen.
@@ -69,3 +89,5 @@ Il passe hors ligne, puis en ligne. Une notification de présence s'envoie deux 
 - [Heartbeat : détecter une connexion morte](heartbeat.md)
 - [Data race et ThreadSanitizer](../cpp/data-race.md)
 - [Redis](../infra/redis.md)
+
+<!-- enrichie -->

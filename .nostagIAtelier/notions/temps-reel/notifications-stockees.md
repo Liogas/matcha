@@ -4,6 +4,23 @@
 ## Mise en situation
 Quelqu'un te like pendant que tu es hors ligne. À ta connexion, la notification doit être là, avec le compteur de non-lus sur toutes les pages. Le sujet exige cinq événements : like reçu, profil consulté, message reçu, like retourné, unlike par un connecté.
 
+### Connecté ou non, le même chemin
+Le choix clé est de ne pas avoir deux logiques. La notification est toujours stockée, et le WebSocket n'est qu'un signal en plus.
+
+```tableau
+titre: Une notification pendant une absence
+colonnes: Service | PostgreSQL | Hub | Bob
+étape: Le like est enregistré avec sa notification, dans la même transaction.
+Service -> PostgreSQL: INSERT like, notification
+Service -> PostgreSQL: COMMIT
+étape: Après le commit, on tente de prévenir. Bob est absent : personne n'écoute.
+Service -> Hub: publish(account:12)
+Hub: aucun abonné
+étape: Bob se connecte une heure plus tard. Rien n'a été perdu, car la vérité est en base.
+Bob -> PostgreSQL: GET unread-count
++ PostgreSQL -> Bob: 1 non lue
+```
+
 ## La théorie
 ### Le modèle
 ```sql
@@ -84,3 +101,5 @@ La lib ne doit rien savoir du blocage ni de l'unlike, pour rester réutilisable.
 - [L'outbox et publier après le commit](outbox.md)
 - [Fan-out et Pub/Sub](fan-out.md)
 - [Une règle transversale centralisée](../metier/policy-centralisee.md)
+
+<!-- enrichie -->

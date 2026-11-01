@@ -4,6 +4,24 @@
 ## Mise en situation
 Un téléphone entre dans un tunnel. Aucune fermeture n'arrive au serveur. L'utilisateur reste affiché en ligne, et les messages partent dans le vide. Sa session reste en mémoire dans le hub.
 
+### Le téléphone dans le tunnel
+La connexion ne se ferme pas : elle cesse d'exister sans prévenir. Regarde ce que sait le serveur à chaque instant.
+
+```tableau
+titre: Détecter une connexion morte
+colonnes: Serveur | Téléphone
+étape: Tout va bien : le navigateur répond automatiquement aux pings.
+Serveur -> Téléphone: ping
+Téléphone -> Serveur: pong
+étape: Le train entre dans le tunnel. Aucune fermeture ne part : le téléphone n'en a pas l'occasion.
+! Téléphone: plus de réseau
+étape: Sans ping, le serveur le croirait encore en ligne pendant des heures. Au ping suivant, rien ne revient.
+Serveur -> Téléphone: ping
+! Serveur: 10 s sans pong
+étape: Le serveur ferme la session, libère la mémoire et passe l'utilisateur hors ligne.
++ Serveur: session fermée
+```
+
 ## La théorie
 ### Pourquoi TCP ne suffit pas
 TCP ne détecte une panne que s'il essaie d'envoyer. Si rien n'est envoyé, une connexion dont l'autre extrémité a disparu semble ouverte, parfois pendant des heures. Un proxy ou un routeur peut aussi fermer silencieusement une connexion inactive.
@@ -62,3 +80,5 @@ Après un redémarrage, tous les clients ont perdu la connexion au même moment.
 - [WebSocket](websocket.md)
 - [Présence et dernière connexion](presence.md)
 - [Nginx en proxy inverse](../infra/nginx.md)
+
+<!-- enrichie -->

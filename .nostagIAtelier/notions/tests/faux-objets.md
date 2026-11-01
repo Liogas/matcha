@@ -4,6 +4,29 @@
 ## Mise en situation
 Tu veux vérifier qu'une notification arrive avec le bon compteur. Un vrai [WebSocket](../temps-reel/websocket.md) exigerait un serveur, un client, et de l'attente. Le test serait lent, instable, et difficile à comprendre en cas d'échec.
 
+### Choisir la bonne doublure
+Les mots se confondent facilement. Voici le même besoin, tester l'envoi d'une notification, avec ce que chaque doublure apporte.
+
+```tableau
+titre: Cinq doublures pour un même test
+colonnes: Doublure | Ce qu'elle fait
+étape: Le dummy remplit un paramètre obligatoire. Il n'est jamais appelé.
+Doublure: Dummy
+Ce qu'elle fait: rien
+étape: Le stub répond une valeur prévue, pour conduire le code vers un cas.
+Doublure: Stub
+Ce qu'elle fait: isBlocked() : true
+étape: Le spy note ce qu'il reçoit. Le test relit ces notes.
+Doublure: Spy
+Ce qu'elle fait: garde les publications
+étape: Le fake est une vraie version simplifiée, qui marche pour de bon.
+Doublure: Fake
+Ce qu'elle fait: InMemoryBroker
+étape: Le mock contient lui-même ses attentes. Il est puissant, mais fragile si le code se réorganise.
+Doublure: Mock
+Ce qu'elle fait: EXPECT_CALL(...)
+```
+
 ## La théorie
 ### Les doublures de test
 - **Dummy** : un objet passé, jamais utilisé.
@@ -72,3 +95,5 @@ Le code lit l'heure via `IClock`. Le test crée l'objet, appelle `FakeClock::adv
 
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [La pyramide de tests](pyramide.md)
+
+<!-- enrichie -->

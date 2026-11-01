@@ -4,6 +4,36 @@
 ## Mise en situation
 Alice écrit à Bob. Le sujet exige que Bob le voie en moins de 10 secondes, sur n'importe quelle page. En HTTP pur, le serveur ne peut pas parler le premier : le client doit redemander toutes les quelques secondes, ce qui gaspille des requêtes et ajoute du délai.
 
+### Polling ou WebSocket, sur le même message
+Bob attend un message. Compare ce qui transite sur le réseau pendant les 12 secondes où rien ne se passe.
+
+```tableau
+titre: Le polling toutes les 5 secondes
+colonnes: Navigateur de Bob | Serveur
+étape: Le navigateur demande sans savoir s'il y a du nouveau.
+Navigateur de Bob -> Serveur: nouveau message ?
+! Serveur -> Navigateur de Bob: non
+étape: Cinq secondes plus tard, même question, même réponse, et autant de travail pour le serveur.
+Navigateur de Bob -> Serveur: nouveau message ?
+! Serveur -> Navigateur de Bob: non
+étape: Le message arrive juste après ce passage. Il attendra le prochain.
+! = jusqu'à 5 s de retard, des requêtes pour rien
+```
+
+```tableau
+titre: Le WebSocket
+colonnes: Navigateur de Bob | Serveur
+étape: Une requête HTTP demande à changer de protocole.
+Navigateur de Bob -> Serveur: GET /api/ws, Upgrade
+Serveur -> Navigateur de Bob: 101
+étape: La connexion reste ouverte. Tant qu'il ne se passe rien, rien ne transite.
+Navigateur de Bob: connexion ouverte
+étape: Dès que le message est enregistré, le serveur parle le premier.
++ Serveur -> Navigateur de Bob: message
+étape: Le délai ne dépend plus d'un intervalle : le message arrive quand il existe.
++ = quelques millisecondes
+```
+
 ## La théorie
 ### Les alternatives
 - **Polling** : le client demande régulièrement. Simple, mais du trafic pour rien, et du retard.
@@ -74,3 +104,5 @@ Le blocage peut arriver à tout moment. Un contrôle à l'ouverture laisserait u
 - [Le ticket WebSocket](ticket-websocket.md)
 - [Fan-out et Pub/Sub](fan-out.md)
 - [unique_ptr, shared_ptr, weak_ptr](../cpp/pointeurs-intelligents.md)
+
+<!-- enrichie -->

@@ -17,6 +17,24 @@ hub.publish(...);   // le serveur meurt ici
 
 Le match existe, et la notification est perdue. Il y a deux systèmes, la base et le [WebSocket](websocket.md), et aucune [transaction](../sql/transactions.md) ne couvre les deux.
 
+### Trois ordres possibles, trois pannes
+Il n'existe aucun ordre sans risque entre deux systèmes. On choisit donc la panne la moins grave.
+
+```tableau
+titre: Publier avant ou après le commit
+colonnes: Service | PostgreSQL | WebSocket
+étape: Avant le commit : la notification part tout de suite.
+Service -> WebSocket: match !
+étape: Puis la transaction échoue. L'utilisateur a été prévenu d'un match qui n'existe pas.
+! Service -> PostgreSQL: ROLLBACK
+! = notification fausse : inacceptable
+étape: Après le commit : la base est sûre d'abord.
+Service -> PostgreSQL: COMMIT
+étape: Si le serveur meurt ici, la notification en direct est perdue, mais elle est stockée en base.
+Service: panne éventuelle
++ = au pire, visible au prochain chargement
+```
+
 ## La théorie
 ### Le problème de la double écriture
 Dès qu'une action touche deux systèmes, l'un peut réussir et l'autre échouer. On ne peut pas les rendre atomiques, sauf avec un protocole lourd comme le two-phase commit. Il faut donc choisir un ordre, et un moyen de rattraper.
@@ -63,6 +81,25 @@ Aujourd'hui, l'inscription crée le compte, puis envoie l'email. Si le SMTP éch
 
 La requête ne dépend plus du SMTP, ce qui règle aussi l'[énumération](../auth/enumeration-temps-constant.md) par le temps.
 
+## Exemple pas à pas : le worker d'outbox
+Si tu mets en place l'outbox, suis une ligne de sa création à son traitement, avec une panne au pire moment.
+
+```tableau
+titre: Une ligne d'outbox
+colonnes: Service | Table outbox | Worker | Hub
+étape: L'événement est écrit dans la transaction du match : il existe si et seulement si le match existe.
+Service -> Table outbox: INSERT, COMMIT
+étape: Le worker réserve des lignes. `SKIP LOCKED` évite que deux workers prennent les mêmes.
+Worker -> Table outbox: SELECT ... SKIP LOCKED
+étape: Il publie.
+Worker -> Hub: publish
+étape: Il meurt avant de marquer la ligne. Au redémarrage, elle est toujours à traiter.
+! Worker: panne
+Worker -> Hub: publish une deuxième fois
+étape: Le message arrive deux fois. L'identifiant de l'événement permet au client d'ignorer le doublon.
++ = au moins une fois, doublons tolérés
+```
+
 ## Erreurs fréquentes
 - Publier dans la [transaction](../sql/transactions.md).
 - Oublier qu'un worker peut rejouer.
@@ -82,3 +119,5 @@ La notification est stockée dans la base dans la même [transaction](../sql/tra
 - [Les transactions et ACID](../sql/transactions.md)
 - [Notifications stockées et compteurs](notifications-stockees.md)
 - [Les événements de domaine](../archi/evenements.md)
+
+<!-- enrichie -->

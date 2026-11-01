@@ -6,6 +6,22 @@ Avec 10 profils, tout va vite. Avec 500, puis des milliers de likes et de notifi
 
 Imagine un livre sans index à la fin : pour trouver un mot, tu lis tout.
 
+### Compter les pages lues
+Une table de 1 000 000 de notifications. PostgreSQL range ses lignes dans des pages de 8 Ko. Cherche celles du compte 42.
+
+```tableau
+titre: Avec et sans index
+colonnes: Requête | Index | Table
+étape: Sans index, il faut lire toute la table, quelle que soit la taille du résultat.
+! Requête -> Table: lit 1 000 000 de lignes
+étape: Avec un index, on descend l'arbre : quelques pages suffisent, même sur un million de lignes.
++ Requête -> Index: 4 niveaux
+étape: Les feuilles donnent les emplacements. On ne lit que les lignes concernées.
++ Index -> Table: 20 lignes précises
+étape: La différence grandit avec la table : doubler la table ajoute à peine une lecture à l'index.
++ = la recherche passe de N à log N
+```
+
 ## La théorie
 ### Le B-tree
 Un index B-tree est un arbre équilibré et trié. Chaque niveau réduit fortement la recherche :
@@ -66,6 +82,21 @@ Sans cet index, il lirait tous les likes, filtrerait, trierait, puis garderait 2
 - La colonne est transformée : `WHERE LOWER(email) = $1` n'utilise pas un index sur `email`.
 - `LIKE '%abc'` : le début n'est pas connu, voir [pg_trgm](recherche-floue.md).
 
+## Exemple pas à pas : l'ordre des colonnes
+Un index `(recipient_id, read_at, id DESC)` est trié comme un annuaire. Tout dépend de ce qu'on peut chercher dans cet ordre.
+
+```tableau
+titre: Ce que peut faire un index composite
+étape: On fixe le destinataire : tout est regroupé, l'index s'applique directement.
++ > WHERE recipient_id = 42
+étape: On fixe aussi `read_at` : on descend d'un niveau dans le tri.
++ > WHERE recipient_id = 42 AND read_at IS NULL
+étape: Le tri sur `id` est déjà celui de l'index : aucun tri à faire.
++ > ... ORDER BY id DESC LIMIT 20
+étape: Sans le destinataire, c'est comme chercher un prénom dans un annuaire trié par nom.
+! > WHERE read_at IS NULL
+```
+
 ## Erreurs fréquentes
 - Un index par colonne au lieu d'un index composite adapté.
 - Oublier d'indexer une [clé étrangère](contraintes.md).
@@ -85,3 +116,5 @@ Quel index choisir pour `SELECT ... FROM messaging_messages WHERE conversation_i
 - [EXPLAIN ANALYZE](explain-analyze.md)
 - [Pagination keyset ou OFFSET](pagination-keyset.md)
 - [Autocomplétion et pg_trgm](recherche-floue.md)
+
+<!-- enrichie -->

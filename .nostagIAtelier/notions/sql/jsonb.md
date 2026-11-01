@@ -4,6 +4,25 @@
 ## Mise en situation
 La table `notifications` contient plusieurs types : like, visite, match, message, unlike. Chacun a ses propres détails. Ajouter une colonne par détail laisserait la plupart vides, et surtout [`cpp-notify`](../temps-reel/notifications-stockees.md) ne doit pas connaître les types de matcha. Il lui faut une place pour une donnée opaque.
 
+### Une colonne ou du JSON ?
+Regarde la même notification selon les deux choix, en imaginant les requêtes que tu vas écrire.
+
+```tableau
+titre: Où ranger chaque donnée
+colonnes: Donnée | Colonne | JSONB
+étape: `recipient_id` sert à filtrer chaque liste de notifications.
+Donnée: destinataire
+Colonne: oui
+étape: `actor_id` doit référencer un compte réel, donc une clé étrangère.
+Donnée: auteur
+Colonne: oui
+étape: `conversation_id` n'a de sens que pour un message, et la lib ne doit pas connaître ce concept.
+Donnée: détail du message
+JSONB: oui
+étape: Règle à retenir : si tu filtres, joins ou contrains dessus, c'est une colonne.
+= le reste peut aller dans le JSON
+```
+
 ## La théorie
 ### JSON ou JSONB
 - `JSON` garde le texte exact, et le réanalyse à chaque lecture.
@@ -72,3 +91,5 @@ Il sert à filtrer les non lues et à compter, à chaque chargement de page. En 
 
 - [Notifications stockées et compteurs](../temps-reel/notifications-stockees.md)
 - [Les index](index.md)
+
+<!-- enrichie -->
