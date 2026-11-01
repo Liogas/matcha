@@ -11,6 +11,25 @@ Compte réel    : Argon2 vérifie le hash   ->  80 ms
 
 Un script compare les durées et sait quels comptes existent. C'est un canal auxiliaire, ou side channel : une information qui fuit par autre chose que la réponse.
 
+### L'attaque, côté attaquant
+Le script d'attaque tient en dix lignes. Il n'a besoin ni de faille ni d'accès particulier : il mesure, c'est tout.
+
+```tableau
+titre: Deviner si un compte existe avec un chronomètre
+colonnes: Script | /api/auth/login | Base
+étape: Le script envoie une adresse et un faux mot de passe, puis note le temps de réponse.
+Script -> /api/auth/login: inconnu@test
+/api/auth/login -> Base: cherche le compte
+étape: Le compte n'existe pas : le serveur répond sans calculer de hash.
+Base -> /api/auth/login: rien
+! /api/auth/login -> Script: 401 en 2 ms
+étape: Même chose avec une adresse réelle. Le message est identique, pas la durée.
+Script -> /api/auth/login: alice@test
+! /api/auth/login -> Script: 401 en 80 ms
+étape: Avec la vérification factice, Argon2 tourne dans les deux cas. Les deux durées se confondent.
++ /api/auth/login -> Script: 401 en 80 ms
+```
+
 ## La théorie
 ### Les canaux d'énumération
 - Le **message** : « mot de passe incorrect » contre « compte inconnu ».
@@ -66,3 +85,5 @@ Sinon, n'importe qui peut apprendre l'état d'un compte en donnant un mauvais mo
 - [Argon2id : stocker un mot de passe](argon2id.md)
 - [Limitation de débit et Redis](rate-limiting.md)
 - [L'outbox et publier après le commit](../temps-reel/outbox.md)
+
+<!-- enrichie -->

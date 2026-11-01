@@ -4,6 +4,25 @@
 ## Mise en situation
 Le navigateur doit charger le front et appeler l'API, sur la même origine, ce qui évite les problèmes de CORS. Il faut aussi limiter le débit, borner les uploads et gérer les [WebSockets](../temps-reel/websocket.md), sans mettre tout cela dans le C++.
 
+### Un seul point d'entrée
+Le navigateur ne parle qu'à Nginx. Suis trois requêtes différentes, qui prennent trois chemins.
+
+```tableau
+titre: Trois requêtes, trois routes
+colonnes: Navigateur | Nginx | Backend | Fichiers
+étape: Une page du site : Nginx sert le fichier lui-même.
+Navigateur -> Nginx: GET /
+Nginx -> Fichiers: index.html
+étape: Un appel d'API : il est transmis au backend, avec l'IP réelle.
+Navigateur -> Nginx: POST /api/login
+Nginx -> Backend: proxy_pass
+étape: Une limite de débit s'applique avant le backend : un excès ne le réveille même pas.
+! Nginx -> Navigateur: 429
+étape: Le WebSocket a besoin des en-têtes `Upgrade`, sinon la connexion reste en HTTP.
+Navigateur -> Nginx: GET /api/ws
+Nginx -> Backend: Upgrade transmis
+```
+
 ## La théorie
 ### Proxy inverse
 Un proxy classique représente le client. Un proxy inverse représente le serveur : le client ne parle qu'à lui.
@@ -88,3 +107,5 @@ Ils protègent des choses différentes. Nginx bloque un volume par IP, sans coû
 - [Proxies de confiance](../web/proxies-confiance.md)
 - [Limitation de débit et Redis](../auth/rate-limiting.md)
 - [Heartbeat : détecter une connexion morte](../temps-reel/heartbeat.md)
+
+<!-- enrichie -->

@@ -4,6 +4,25 @@
 ## Mise en situation
 Un [JWT](jwt.md) de 15 minutes oblige à se reconnecter sans arrêt. On ajoute un refresh token, à longue [durée de vie](../cpp/duree-de-vie-objets.md), dans un [cookie](../web/cookies.md). Mais s'il est volé, l'attaquant garde l'accès pendant des semaines, sans que personne ne le sache.
 
+### Le vol d'un refresh token
+La rotation sert à une chose précise : rendre un vol visible. Suis le même token utilisé par deux personnes.
+
+```tableau
+titre: Détection d'un refresh token volé
+colonnes: Alice | Serveur | Voleur
+étape: Le voleur a copié le refresh token R1. Il l'utilise en premier.
+! Voleur -> Serveur: refresh R1
+Serveur -> Voleur: JWT + R2
+étape: R1 est marqué comme consommé, et remplacé par R2. Pour l'instant, le serveur ne voit rien d'anormal.
+Serveur: R1 consommé
+étape: Alice revient avec R1, qu'elle croit encore valide.
+Alice -> Serveur: refresh R1
+étape: Un token déjà consommé qui revient : deux personnes le possèdent, le serveur ne sait pas laquelle est légitime.
+! Serveur: réutilisation détectée
+étape: Toute la famille de tokens est révoquée, donc aussi R2. Alice se reconnecte, le voleur est dehors.
++ Serveur: famille révoquée
+```
+
 ## La théorie
 ### Deux jetons, deux rôles
 - **Jeton d'accès** : courte durée, envoyé à chaque requête, vérifié sans base.
@@ -78,3 +97,5 @@ Un mot de passe a peu d'entropie : on peut tester un dictionnaire. Un token de 2
 - [JWT : les jetons d'accès](jwt.md)
 - [Cookies : HttpOnly, Secure, SameSite](../web/cookies.md)
 - [Les transactions et ACID](../sql/transactions.md)
+
+<!-- enrichie -->

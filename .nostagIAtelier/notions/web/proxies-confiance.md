@@ -10,6 +10,24 @@ X-Real-IP: 1.2.3.4
 
 Il change la valeur à chaque essai, et le limiteur le prend pour des milliers de clients.
 
+### Comment un attaquant se fabrique une nouvelle IP
+`X-Forwarded-For` est un simple en-tête. N'importe qui peut l'écrire. Tout dépend de qui on croit.
+
+```tableau
+titre: Le contournement de la limite par IP
+colonnes: Attaquant | Nginx | Backend
+étape: L'attaquant ajoute lui-même l'en-tête à sa requête.
+! Attaquant -> Nginx: X-Forwarded-For: 1.2.3.4
+étape: Si le backend croit le premier élément de la liste, il voit une IP inventée.
+! Backend: IP = 1.2.3.4
+étape: Il change la valeur à chaque essai : la limite ne s'applique jamais.
+! = limite contournée
+étape: Nginx écrit l'adresse réelle de la connexion dans `X-Real-IP`, en écrasant toute valeur reçue.
++ Nginx -> Backend: X-Real-IP réelle
+étape: Le backend ne lit cet en-tête que si la connexion vient d'un proxy de confiance.
++ Backend: IP réelle
+```
+
 ## La théorie
 ### Deux sources d'adresse
 - **`remote_ip_address`** : l'adresse de la connexion TCP. Elle ne se falsifie pas, car TCP a besoin d'une réponse. Derrière un proxy, c'est l'adresse du proxy.
@@ -69,3 +87,5 @@ L'adresse TCP est établie par la poignée de main : avec une fausse adresse, la
 
 - [Limitation de débit et Redis](../auth/rate-limiting.md)
 - [Nginx en proxy inverse](../infra/nginx.md)
+
+<!-- enrichie -->

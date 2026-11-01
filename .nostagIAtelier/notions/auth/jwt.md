@@ -4,6 +4,26 @@
 ## Mise en situation
 À chaque requête, le serveur doit savoir qui appelle. Avec une session classique, il lit une table à chaque fois. Un JWT, JSON Web Token, transporte directement l'information, avec une preuve qu'elle n'a pas été modifiée.
 
+### Ce que voit le serveur à chaque requête
+Un JWT évite d'interroger la base à chaque appel, parce que la preuve voyage avec la requête.
+
+```tableau
+titre: Vérifier un JWT
+colonnes: Navigateur | Backend
+étape: Le navigateur envoie le jeton, en trois parties séparées par des points.
+Navigateur -> Backend: en-tête.charge.signature
+étape: L'en-tête donne `alg` et `kid`. On n'accepte que `RS256`, jamais ce que le jeton réclame.
+Backend: alg = RS256 ?
+étape: La signature prouve que le contenu n'a pas été modifié.
+Backend: signature ok
+étape: On vérifie enfin l'expiration et le destinataire.
+Backend: exp, iss, aud ok
+étape: Aucune requête SQL : la validité se vérifie uniquement par calcul.
++ Backend: compte 42 authentifié
+étape: Revers de la médaille : on ne peut pas révoquer un JWT déjà émis. D'où sa courte durée.
+! = 15 minutes, pas plus
+```
+
 ## La théorie
 ### Structure
 Un JWT comporte trois parties en Base64URL, séparées par des points :
@@ -72,3 +92,5 @@ Il peut agir à sa place jusqu'à `exp`, soit 15 minutes au plus, car la déconn
 - [JWKS et StaticJwksProvider](jwks.md)
 - [Rotation des refresh tokens](refresh-rotation.md)
 - [Le ticket WebSocket](../temps-reel/ticket-websocket.md)
+
+<!-- enrichie -->

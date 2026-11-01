@@ -10,6 +10,22 @@ JWT_JWKS_URL=http://backend:18080/.well-known/jwks.json
 
 C'est circulaire. Au démarrage, le serveur n'écoute pas encore. Et il faut `allowInsecureHttp = true`, une option dangereuse. Si la requête échoue, un jeton valide est traité comme invalide.
 
+### Pourquoi le serveur s'appelait lui-même
+La configuration actuelle produit une situation absurde au démarrage. Suis-la.
+
+```tableau
+titre: Valider un jeton avec HttpJwksProvider
+colonnes: Requête | Backend | Backend en HTTP
+étape: Un client envoie son jeton. Le validateur a besoin de la clé publique.
+Requête -> Backend: Bearer eyJ...
+étape: Il va la chercher par le réseau... chez lui-même.
+! Backend -> Backend en HTTP: GET /.well-known/jwks.json
+étape: Si cet appel échoue, un jeton parfaitement valide devient invérifiable.
+! Backend en HTTP -> Backend: échec
+étape: Avec `StaticJwksProvider`, la clé est déjà en mémoire : le signataire la donne directement.
++ Backend: clé connue au démarrage
+```
+
 ## La théorie
 ### Le format
 ```json
@@ -75,3 +91,5 @@ Des jetons signés par l'ancienne clé circulent encore, et ils doivent rester v
 - [JWT : les jetons d'accès](jwt.md)
 - [HTTP : méthodes et codes de statut](../web/http-bases.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
+
+<!-- enrichie -->

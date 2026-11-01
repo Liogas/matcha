@@ -13,6 +13,24 @@ AccountCreationResult create(...);    // struct maison avec un Status
 
 Le handler doit connaître quatre styles. Une panne de base et un compte introuvable se ressemblent, et une exception oubliée finit en `500` générique. Pourtant, le client mérite un `409` pour un doublon, et un `503` pour une panne.
 
+### Une erreur qui remonte les couches
+Avec `Result`, une erreur traverse les couches sans perdre son sens. Suis un email déjà pris.
+
+```tableau
+titre: Un doublon, de PostgreSQL au client
+colonnes: PostgreSQL | Repository | Service | Handler
+étape: La base refuse avec un code précis.
+! PostgreSQL -> Repository: 23505
+étape: Le repository traduit en erreur du domaine, sans parler de SQL au-dessus de lui.
+Repository -> Service: Conflict
+étape: Le service n'a rien de particulier à faire : il transmet.
+Service -> Handler: unexpected(error)
+étape: Le handler choisit le statut, à un seul endroit.
+Handler: Conflict devient 409
+étape: Une panne de base aurait suivi le même chemin avec un autre code, et serait devenue `503`.
++ = chaque couche ne fait que sa part
+```
+
 ## La théorie
 ### Les trois façons de signaler un échec
 - **Code de retour** (`bool`, `int`) : simple, mais facile à ignorer, et sans explication.
@@ -87,6 +105,22 @@ Pour une erreur `Internal`, le message d'origine peut contenir du SQL. On le jou
 ### `Result<void>`
 Une fonction sans valeur utile renvoie `core::Result<void>`. `commit()` en est un exemple : on teste seulement la réussite.
 
+## Exemple pas à pas : la propagation à la main
+En C++23, `std::expected` n'a pas d'équivalent au `?` de Rust. La forme à reconnaître est donc celle-ci :
+
+```cpp
+core::Result<Profile> ProfileService::load(std::int64_t id) {
+    auto rows = _database.query("SELECT ... WHERE id = $1", id);
+    if (!rows)                                // le test oblige à penser à l'échec
+        return std::unexpected(rows.error()); // l'erreur remonte telle quelle
+    if (rows->empty())
+        return core::fail(core::ErrorCode::NotFound, "profile");
+    return toProfile(rows->front());          // conversion implicite en Result
+}
+```
+
+Lis chaque `return` : une erreur venue d'en bas, une erreur métier, une valeur. Trois sorties, toutes visibles.
+
 ## Erreurs fréquentes
 - Écrire `*result` sans tester : comportement indéfini si c'est une erreur.
 - Écrire `if (result)` en croyant tester la valeur contenue : pour un `Result<bool>`, cela teste la [présence](../temps-reel/presence.md) d'une valeur, pas le booléen. Il faut `*result`.
@@ -107,3 +141,5 @@ Pourquoi un [JWKS](../auth/jwks.md) injoignable doit-il donner `Unavailable` plu
 - [Les codes SQLSTATE](../sql/sqlstate.md)
 - [HTTP : méthodes et codes de statut](../web/http-bases.md)
 - [La couche services](../archi/couche-services.md)
+
+<!-- enrichie -->

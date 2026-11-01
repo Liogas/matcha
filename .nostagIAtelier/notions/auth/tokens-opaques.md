@@ -4,6 +4,25 @@
 ## Mise en situation
 La vérification d'email, le reset de mot de passe et le changement d'email ont le même besoin : un lien impossible à deviner, limité dans le temps, utilisable une fois. `OpaqueToken` et `EmailVerificationToken` font aujourd'hui presque la même chose en double.
 
+### Le lien de réinitialisation, de bout en bout
+Suis la valeur du token : elle n'existe en clair qu'à deux moments, dans l'email et dans le clic.
+
+```tableau
+titre: La vie d'un lien de reset
+colonnes: Backend | Base | Email | Navigateur
+étape: Le backend tire 32 octets aléatoires. C'est le token en clair.
+Backend: token = 9f3c...
+étape: La base ne reçoit que son empreinte. Une fuite de la table ne donne aucun lien utilisable.
+Backend -> Base: SHA-256(token), expire
+étape: Le lien part par email, avec le token en clair.
+Backend -> Email: /reset?token=9f3c...
+étape: Au clic, le serveur hache ce qu'il reçoit, et cherche cette empreinte.
+Email -> Navigateur: clic
+Navigateur -> Backend: token
+étape: Une seule instruction `UPDATE` vérifie et consomme d'un coup. Un deuxième clic ne trouve plus rien.
++ Backend -> Base: UPDATE ... RETURNING
+```
+
 ## La théorie
 ### Opaque
 Un token opaque ne contient aucune information. Sa valeur n'est qu'une clé vers une ligne en base. Contrairement à un [JWT](jwt.md), le serveur doit consulter la base, mais il peut le révoquer.
@@ -67,3 +86,5 @@ Certains clients de messagerie et antivirus ouvrent les liens automatiquement. U
 - [Rotation des refresh tokens](refresh-rotation.md)
 - [Réauthentification et prise de compte](reauthentification.md)
 - [Requêtes paramétrées et injection SQL](../sql/requetes-parametrees.md)
+
+<!-- enrichie -->

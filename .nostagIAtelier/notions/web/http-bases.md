@@ -4,6 +4,25 @@
 ## Mise en situation
 Le front reçoit une réponse. Il doit décider : afficher une erreur de formulaire, déconnecter, réessayer, ou signaler un bug. Tout repose sur le code de statut. Un mauvais code provoque un mauvais comportement : c'est exactement le bug du `401` à la place d'un `503` (audit 4.8).
 
+### Un seul code faux, et tout le monde est déconnecté
+Le front réagit au code de statut, et rien d'autre. Regarde les conséquences d'un `401` à la place d'un `503`.
+
+```tableau
+titre: Une panne de quelques secondes
+colonnes: Front | Backend | JWKS
+étape: Le jeton de l'utilisateur est valide, mais la vérification échoue à cause d'une panne.
+Front -> Backend: GET /api/profile
+Backend -> JWKS: clé ?
+! JWKS -> Backend: panne
+étape: Le serveur répond `401`, ce qui veut dire « tu n'es pas authentifié ».
+! Backend -> Front: 401
+étape: Le front applique la règle prévue : il supprime la session.
+! Front: déconnexion
+étape: Avec `503`, le front aurait su que le problème venait du serveur, et aurait réessayé.
++ Backend -> Front: 503
++ Front: réessaie, session gardée
+```
+
 ## La théorie
 ### Requête et réponse
 HTTP est un échange de texte sans état :
@@ -61,6 +80,23 @@ C'est important pour les réessais : si une réponse se perd, on peut rejouer un
 
 Une panne de quelques secondes déconnecte tout le monde. Avec `503`, le front affiche « réessaie plus tard », et la session reste intacte. Le code de statut est un contrat, pas un détail.
 
+## Exemple pas à pas : choisir le bon code
+Pose les questions dans cet ordre, sur une demande de like :
+
+```tableau
+titre: Quel code pour POST /api/profiles/7/like ?
+étape: Le jeton manque ou a expiré : on ne sait pas qui parle.
+> 401 Unauthorized
+étape: On sait qui parle, mais il n'a pas de photo : il n'a pas le droit.
+> 403 Forbidden
+étape: Le profil 7 n'existe pas, ou a bloqué l'utilisateur.
+> 404 Not Found
+étape: Tout est correct.
++ > 200 OK avec {"liked": true, "matched": false}
+étape: La base ne répond plus : le client n'y est pour rien, et réessayer peut marcher.
+! > 503 Service Unavailable
+```
+
 ## Erreurs fréquentes
 - Modifier des données sur un GET.
 - Répondre `200` avec une erreur dans le corps.
@@ -81,3 +117,5 @@ Choisis le code selon ce que le client doit faire ensuite.
 - [Concevoir une API REST](rest-conception.md)
 - [Result et std::expected](../cpp/result-expected.md)
 - [Middleware Crow et contexte de requête](middleware-crow.md)
+
+<!-- enrichie -->

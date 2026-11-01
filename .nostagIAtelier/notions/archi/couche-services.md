@@ -4,6 +4,26 @@
 ## Mise en situation
 `LikeRoutes.cpp` décide aujourd'hui de créer la conversation. Demain, il devra vérifier la photo, le blocage, écrire la notification, recalculer la popularité. Le handler deviendra un long bloc, impossible à tester sans HTTP, et la même logique sera recopiée pour le [WebSocket](../temps-reel/websocket.md).
 
+### La même demande, avant et après
+On te demande d'interdire le like sans photo. Regarde combien d'endroits il faut toucher dans chaque organisation.
+
+```tableau
+titre: Un like, couche par couche
+colonnes: Handler | MatchService | Repositories | PostgreSQL
+étape: Le handler lit l'identifiant et la cible. Il ne contient aucune règle.
+Handler -> MatchService: like(me, target)
+étape: Le service vérifie les règles. C'est ici, et seulement ici, qu'on ajoute « photo obligatoire ».
+MatchService: photo ? blocage ?
+étape: Il ouvre la transaction, et construit ses repositories dessus.
+MatchService -> Repositories: LikeRepository(*tx)
+Repositories -> PostgreSQL: INSERT
+étape: Le service valide, puis publie : il sait ce qui doit réussir ensemble.
+MatchService -> PostgreSQL: COMMIT
+étape: Il renvoie un `Result`. Seul le handler sait qu'il existe un code HTTP.
+MatchService -> Handler: Result
++ = une règle, un seul endroit
+```
+
 ## La théorie
 ### Les couches
 ```text
@@ -81,3 +101,5 @@ Il serait lié au transport. Le même cas d'usage peut venir d'un [WebSocket](..
 - [Result et std::expected](../cpp/result-expected.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [Les événements de domaine](evenements.md)
+
+<!-- enrichie -->

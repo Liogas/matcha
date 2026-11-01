@@ -12,6 +12,23 @@ if (!current)
 
 Oublier ces lignes sur une nouvelle route ouvre une faille. Et le mauvais code d'erreur (audit 4.8) est copié partout.
 
+### La route oubliée
+Le problème du code répété n'est pas sa longueur. C'est qu'un oubli ne produit aucune erreur : la route fonctionne, sans protection.
+
+```tableau
+titre: Une requête avec RequireAuth
+colonnes: Client | RequireAuth | Handler
+étape: La requête passe d'abord par `before_handle`.
+Client -> RequireAuth: GET /api/profile
+étape: Sans jeton valide, la réponse est écrite ici. Le handler n'est jamais appelé.
+! RequireAuth -> Client: 401
+étape: Avec un jeton valide, l'identifiant est rangé dans le contexte de cette requête.
+Client -> RequireAuth: GET avec jeton
+RequireAuth: ctx.accountId = 42
+étape: Le handler lit directement le contexte. Il ne peut plus oublier l'authentification.
++ RequireAuth -> Handler: appel
+```
+
 ## La théorie
 ### Le principe
 Un middleware s'insère dans le traitement de la requête :
@@ -84,3 +101,5 @@ Crow traite des requêtes en parallèle. Un champ partagé serait écrasé par u
 - [HTTP : méthodes et codes de statut](http-bases.md)
 - [JWT : les jetons d'accès](../auth/jwt.md)
 - [La couche services](../archi/couche-services.md)
+
+<!-- enrichie -->

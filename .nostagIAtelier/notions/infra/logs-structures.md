@@ -4,6 +4,24 @@
 ## Mise en situation
 Un utilisateur signale une erreur à 14 h 03. Les logs sont des `std::cerr` sans niveau, mêlés entre dix requêtes simultanées. Impossible de savoir quelles lignes vont ensemble.
 
+### Retrouver une erreur à 23 h
+Un utilisateur signale une erreur `500`. Sans `request_id`, tu cherches dans des milliers de lignes mélangées entre threads. Avec lui, une seule commande suffit.
+
+```tableau
+titre: Suivre une requête dans les logs
+colonnes: Nginx | Backend | Client
+étape: Le middleware crée un identifiant au début de la requête.
+Nginx -> Backend: POST like
+Backend: request_id = a1b2
+étape: Chaque ligne de log de cette requête porte cet identifiant, quel que soit le thread.
+Backend: [a1b2] like 7 -> 12
+! Backend: [a1b2] erreur 40P01
+étape: Le client reçoit le même identifiant dans sa réponse.
+Backend -> Client: 500, X-Request-Id: a1b2
+étape: Une recherche sur `a1b2` donne toute l'histoire, et seulement elle.
++ = grep a1b2
+```
+
 ## La théorie
 ### Les niveaux
 - **debug** : détail pour le développement.
@@ -72,3 +90,5 @@ Pourquoi le [JWT](../auth/jwt.md) dans l'URL du [WebSocket](../temps-reel/websoc
 
 - [Middleware Crow et contexte de requête](../web/middleware-crow.md)
 - [Mutex et contention de verrou](../cpp/mutex-contention.md)
+
+<!-- enrichie -->

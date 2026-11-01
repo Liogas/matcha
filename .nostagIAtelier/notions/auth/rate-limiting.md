@@ -7,6 +7,25 @@ Un script essaie un dictionnaire sur un compte, ou bombarde `/api/auth/login`, o
 - [Nginx](../infra/nginx.md) : 5 requêtes par minute par IP sur le login ;
 - `RedisLoginAttemptLimiter` : un compteur par couple compte et IP.
 
+### Le compteur, requête par requête
+Limite : 5 essais en 300 secondes, pour le couple compte et IP. Suis la clé dans Redis.
+
+```tableau
+titre: Six essais de connexion
+colonnes: Backend | Redis
+étape: Premier essai : la clé n'existe pas. Le script la crée et lui donne sa durée de vie.
+Backend -> Redis: INCR, EXPIRE 300
+Redis -> Backend: 1
+étape: Les essais suivants augmentent le compteur, sans toucher à l'expiration.
+Backend -> Redis: INCR
+Redis -> Backend: 5
+étape: Le sixième dépasse la limite. Argon2 n'est même pas lancé : le refus ne coûte rien.
+! Backend -> Redis: INCR
+! Redis -> Backend: 6, TTL 240
+étape: Le backend répond `429` avec `Retry-After`. Après 300 secondes, la clé disparaît seule.
++ Redis: clé expirée
+```
+
 ## La théorie
 ### Les algorithmes
 - **Fenêtre fixe** : un compteur remis à zéro toutes les N secondes. Simple, mais une rafale à cheval sur deux fenêtres passe.
@@ -71,3 +90,5 @@ Non : chaque couple n'a qu'un essai, donc aucun seuil n'est atteint. C'est une p
 - [Nginx en proxy inverse](../infra/nginx.md)
 - [Redis](../infra/redis.md)
 - [Énumération d'utilisateurs et temps constant](enumeration-temps-constant.md)
+
+<!-- enrichie -->

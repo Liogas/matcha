@@ -6,6 +6,22 @@ La base de matcha fuite. Si elle contient les mots de passe en clair, tous les c
 
 Avec un simple SHA-256, ce n'est guère mieux : une carte graphique en teste des milliards par seconde. Un attaquant passe un dictionnaire entier sur tes hashs, et une grande partie tombe en quelques heures.
 
+### La fuite de base, chiffres en main
+Prends un attaquant qui a volé la table et dispose d'une carte graphique. Compare ce qu'il obtient selon la fonction utilisée.
+
+```tableau
+titre: Le même dictionnaire, deux fonctions
+colonnes: Attaquant | SHA-256 | Argon2id
+étape: Il essaie un dictionnaire de 10 millions de mots de passe connus.
+Attaquant: 10 millions de candidats
+étape: SHA-256 a été conçu pour la vitesse : une carte graphique en calcule des milliards par seconde.
+! Attaquant -> SHA-256: fini en moins d'une seconde
+étape: Argon2id exige 64 Mo par essai, et la carte n'a pas assez de mémoire pour en faire beaucoup en parallèle.
++ Attaquant -> Argon2id: quelques dizaines d'essais par seconde
+étape: Le même dictionnaire prend des jours, pour un seul compte, car le sel oblige à recommencer pour chacun.
++ = le coût passe du négligeable au dissuasif
+```
+
 ## La théorie
 ### Hachage ou chiffrement
 Un chiffrement se déchiffre avec une clé : si la clé fuite, tout fuite. Un hachage est à sens unique : on ne remonte pas au mot de passe, on ne peut que tester des candidats. Pour vérifier une connexion, on hache l'essai et on compare.
@@ -54,6 +70,23 @@ crypto_pwhash_str_verify(stocke, essai.c_str(), essai.size()) == 0;
 
 La fonction relit les paramètres et le sel, recalcule, et compare en [temps constant](enumeration-temps-constant.md). Cela permet aussi de renforcer les paramètres plus tard : les anciens hashs restent lisibles.
 
+## Exemple pas à pas : ce que contient la colonne password_hash
+Argon2 stocke tout ce qu'il faut pour vérifier plus tard, dans une seule chaîne :
+
+```tableau
+titre: Lire un hash Argon2id
+étape: L'algorithme et sa version.
+> $argon2id$v=19
+étape: Les paramètres : mémoire en Ko, nombre de passes, parallélisme.
+> $m=65536,t=3,p=1
+étape: Le sel, en clair. Il n'est pas secret.
+> $c29tZXNhbHQ
+étape: L'empreinte elle-même.
+> $abcDEF...
+étape: Tu peux donc augmenter les paramètres plus tard : les anciens hashs restent vérifiables, et on les remplace à la prochaine connexion réussie.
++ = les paramètres voyagent avec le hash
+```
+
 ## Erreurs fréquentes
 - Comparer des hashs avec `==`.
 - Ne pas borner la longueur du mot de passe.
@@ -75,3 +108,5 @@ Avec sel, non : les hashs sont différents. Sans sel, les hashs seraient identiq
 - [Énumération d'utilisateurs et temps constant](enumeration-temps-constant.md)
 - [Politique de mot de passe (NIST 800-63B)](politique-mot-de-passe.md)
 - [Limitation de débit et Redis](rate-limiting.md)
+
+<!-- enrichie -->
