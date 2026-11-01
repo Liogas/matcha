@@ -85,5 +85,3 @@ La colonne a `CHECK (position BETWEEN 1 AND 5)`, donc `23514`. `errorCodeFor` do
 - [Result et std::expected](../cpp/result-expected.md)
 - [Les contraintes d'intégrité](contraintes.md)
 - [Les niveaux d'isolation](isolation.md)
-
-<!-- enrichie -->

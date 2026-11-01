@@ -80,5 +80,3 @@ Après un redémarrage, tous les clients ont perdu la connexion au même moment.
 - [WebSocket](websocket.md)
 - [Présence et dernière connexion](presence.md)
 - [Nginx en proxy inverse](../infra/nginx.md)
-
-<!-- enrichie -->

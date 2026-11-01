@@ -12,7 +12,7 @@ titre: Trois questions, deux schémas
 colonnes: Question | tags TEXT | Table de liaison
 étape: Trouver les profils `geek`.
 Question: qui aime geek ?
-! tags TEXT: LIKE '%geek%' trouve aussi 'mangeek'
+! tags TEXT: LIKE trouve 'mangeek'
 + Table de liaison: égalité sur interest_id
 étape: Compter les tags communs entre deux profils.
 Question: tags communs ?
@@ -125,5 +125,3 @@ WHERE LOWER(i.name) = ANY($1::text[]);
 - [INSERT ON CONFLICT](on-conflict.md)
 - [Tableaux et unnest](tableaux-unnest.md)
 - [Les contraintes d'intégrité](contraintes.md)
-
-<!-- enrichie -->

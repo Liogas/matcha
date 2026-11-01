@@ -8,7 +8,7 @@ Un script essaie un dictionnaire sur un compte, ou bombarde `/api/auth/login`, o
 - `RedisLoginAttemptLimiter` : un compteur par couple compte et IP.
 
 ### Le compteur, requête par requête
-Limite : 5 essais en 300 secondes, pour le couple compte et IP. Suis la clé dans Redis.
+Limite : 5 essais en 300 secondes, pour le couple compte et IP. Suis la clé dans [Redis](../infra/redis.md).
 
 ```tableau
 titre: Six essais de connexion
@@ -90,5 +90,3 @@ Non : chaque couple n'a qu'un essai, donc aucun seuil n'est atteint. C'est une p
 - [Nginx en proxy inverse](../infra/nginx.md)
 - [Redis](../infra/redis.md)
 - [Énumération d'utilisateurs et temps constant](enumeration-temps-constant.md)
-
-<!-- enrichie -->

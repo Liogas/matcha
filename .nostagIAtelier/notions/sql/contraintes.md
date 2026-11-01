@@ -117,5 +117,3 @@ CONSTRAINT user_reports_no_self CHECK (reporter_id <> reported_id)
 - [Les codes SQLSTATE](sqlstate.md)
 - [Les migrations](migrations.md)
 - [Valider les entrées](../web/validation-entrees.md)
-
-<!-- enrichie -->

@@ -98,5 +98,3 @@ Parce qu'aucune erreur n'est levée : le conflit est traité comme un cas normal
 - [Les relations N-N](relation-nn.md)
 - [Les contraintes d'intégrité](contraintes.md)
 - [Tableaux et unnest](tableaux-unnest.md)
-
-<!-- enrichie -->

@@ -160,5 +160,3 @@ C'est un cycle : le hub garde les sessions en vie, qui gardent le hub en vie, do
 - [La durée de vie des objets](duree-de-vie-objets.md)
 - [WebSocket](../temps-reel/websocket.md)
 - [Mutex et contention de verrou](mutex-contention.md)
-
-<!-- enrichie -->

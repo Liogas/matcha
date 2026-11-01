@@ -91,5 +91,3 @@ Des jetons signés par l'ancienne clé circulent encore, et ils doivent rester v
 - [JWT : les jetons d'accès](jwt.md)
 - [HTTP : méthodes et codes de statut](../web/http-bases.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
-
-<!-- enrichie -->

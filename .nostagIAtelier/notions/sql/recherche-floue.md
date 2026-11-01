@@ -87,5 +87,3 @@ Le paramètre empêche l'[injection SQL](requetes-parametrees.md), mais `LIKE` i
 
 - [Les index](index.md)
 - [Requêtes paramétrées et injection SQL](requetes-parametrees.md)
-
-<!-- enrichie -->

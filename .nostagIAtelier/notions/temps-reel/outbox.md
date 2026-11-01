@@ -119,5 +119,3 @@ La notification est stockée dans la base dans la même [transaction](../sql/tra
 - [Les transactions et ACID](../sql/transactions.md)
 - [Notifications stockées et compteurs](notifications-stockees.md)
 - [Les événements de domaine](../archi/evenements.md)
-
-<!-- enrichie -->

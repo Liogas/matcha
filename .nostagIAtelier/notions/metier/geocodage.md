@@ -83,5 +83,3 @@ Il contient des dizaines de milliers de lignes : le relire à chaque requête se
 - [La formule de Haversine](haversine.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [UTF-8 : octets et caractères](../cpp/utf-8.md)
-
-<!-- enrichie -->

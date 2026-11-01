@@ -96,5 +96,3 @@ Pourquoi le test doit-il passer par la route, et non directement par `is_blocked
 - [Les vues SQL](../sql/vues-sql.md)
 - [Notifications stockées et compteurs](../temps-reel/notifications-stockees.md)
 - [La pyramide de tests](../tests/pyramide.md)
-
-<!-- enrichie -->

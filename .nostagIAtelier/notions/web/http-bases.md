@@ -117,5 +117,3 @@ Choisis le code selon ce que le client doit faire ensuite.
 - [Concevoir une API REST](rest-conception.md)
 - [Result et std::expected](../cpp/result-expected.md)
 - [Middleware Crow et contexte de requête](middleware-crow.md)
-
-<!-- enrichie -->

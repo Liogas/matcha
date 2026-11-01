@@ -85,5 +85,3 @@ Quels statuts documenter pour `POST /api/profiles/{id}/block` ?
 ## Voir aussi
 
 - [Concevoir une API REST](rest-conception.md)
-
-<!-- enrichie -->

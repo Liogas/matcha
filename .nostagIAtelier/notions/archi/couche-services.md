@@ -101,5 +101,3 @@ Il serait lié au transport. Le même cas d'usage peut venir d'un [WebSocket](..
 - [Result et std::expected](../cpp/result-expected.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [Les événements de domaine](evenements.md)
-
-<!-- enrichie -->

@@ -83,5 +83,3 @@ Unitaire, sur le validateur : il couvre tous les cas limites instantanément. Un
 
 - [GoogleTest : fixtures et tests paramétrés](gtest.md)
 - [Les faux objets de test](faux-objets.md)
-
-<!-- enrichie -->

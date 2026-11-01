@@ -98,5 +98,3 @@ La [pagination](../sql/pagination-keyset.md) s'applique avant le filtre. Sur 20 
 - [Le score de matching](score-matching.md)
 - [GoogleTest : fixtures et tests paramétrés](../tests/gtest.md)
 - [Un QueryBuilder sûr](../sql/query-builder.md)
-
-<!-- enrichie -->

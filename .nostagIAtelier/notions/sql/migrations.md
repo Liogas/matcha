@@ -107,5 +107,3 @@ On crée une nouvelle migration avec `ALTER TABLE ... RENAME COLUMN`. Si tu modi
 - [Les verrous consultatifs](verrous-consultatifs.md)
 - [Les transactions et ACID](transactions.md)
 - [Les contraintes d'intégrité](contraintes.md)
-
-<!-- enrichie -->

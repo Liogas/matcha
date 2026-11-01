@@ -121,5 +121,3 @@ On verrouille d'abord le plus petit identifiant, puis le plus grand : `std::min(
 - [Les codes SQLSTATE](sqlstate.md)
 - [Mutex et contention de verrou](../cpp/mutex-contention.md)
 - [Le pool de connexions](pool-connexions.md)
-
-<!-- enrichie -->

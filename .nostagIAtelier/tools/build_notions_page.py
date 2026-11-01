@@ -38,9 +38,24 @@ def page_id(fiche_id):
     return fiche_id.replace("/", "-")
 
 
+def render_board(lines, fiche_id):
+    """Une démonstration ```tableau, à plat : un livre n'a pas de boutons, chaque étape reste lisible."""
+    parts, title = [], ""
+    for line in lines:
+        line = line.strip()
+        if line.startswith("titre:"):
+            title = line[6:].strip()
+        elif line.startswith("étape:"):
+            parts.append("<li>" + inline(line[6:].strip(), fiche_id) + "<ul>")
+        elif parts and line and not line.startswith("colonnes:"):
+            parts[-1] += "<li><code>" + html.escape(line.lstrip("!+=> "), quote=False) + "</code></li>"
+    return f"<p><strong>{html.escape(title, quote=False)}</strong></p><ol>" + "".join(p + "</ul></li>" for p in parts) + "</ol>"
+
+
 def render(md, fiche_id):
     """Markdown limité des fiches vers HTML : titres, code, listes, citations, liens de fiches."""
     out, code, in_code, lst, in_answer = [], [], False, None, False
+    code_lang = ""
     title, summary = "", ""
 
     def close():
@@ -52,10 +67,12 @@ def render(md, fiche_id):
     for line in md.split("\n"):
         if line.startswith("```"):
             if in_code:
-                out.append("<pre tabindex=\"0\"><code>" + html.escape("\n".join(code), quote=False) + "</code></pre>")
+                out.append(render_board(code, fiche_id) if code_lang == "tableau" else
+                           "<pre tabindex=\"0\"><code>" + html.escape("\n".join(code), quote=False) + "</code></pre>")
                 code = []
             else:
                 close()
+                code_lang = line[3:].strip()
             in_code = not in_code
         elif in_code:
             code.append(line)

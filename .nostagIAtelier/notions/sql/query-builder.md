@@ -153,5 +153,3 @@ Paramètres : `[10, 18, 30]`. C'est le rôle de `_limitParam` : retenir le numé
 - [Pagination keyset ou OFFSET](pagination-keyset.md)
 - [Un seul moteur pour suggestions et recherche](../metier/recherche-unifiee.md)
 - [Templates variadiques et fold expressions](../cpp/templates-variadiques.md)
-
-<!-- enrichie -->

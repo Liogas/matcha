@@ -107,5 +107,3 @@ Pourquoi le résultat pour (0, 179) et (0, -179) reste-t-il correct, sans cas pa
 
 - [Bounding box et antiméridien](bounding-box.md)
 - [RGPD : consentement et minimisation](rgpd.md)
-
-<!-- enrichie -->

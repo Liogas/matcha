@@ -120,5 +120,3 @@ ORDER BY id DESC LIMIT 50;
 - [Un QueryBuilder sûr](query-builder.md)
 - [EXPLAIN ANALYZE](explain-analyze.md)
 - [Un seul moteur pour suggestions et recherche](../metier/recherche-unifiee.md)
-
-<!-- enrichie -->

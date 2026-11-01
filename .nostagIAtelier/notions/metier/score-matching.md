@@ -102,5 +102,3 @@ Avec `0,2 × 80 = 16` contre un maximum de 0,5 pour la proximité, la popularit�
 - [Compatibilité d'orientation](orientation.md)
 - [Bounding box et antiméridien](bounding-box.md)
 - [Les CTE (WITH)](../sql/cte.md)
-
-<!-- enrichie -->

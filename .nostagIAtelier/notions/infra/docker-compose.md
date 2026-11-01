@@ -95,5 +95,3 @@ La base serait joignable depuis le réseau, et seul son mot de passe la protége
 - [Secrets et fichiers .env](secrets-fichiers.md)
 - [Docker : build multi-étapes](docker-multi-etapes.md)
 - [Healthcheck et arrêt propre](sante-arret-propre.md)
-
-<!-- enrichie -->

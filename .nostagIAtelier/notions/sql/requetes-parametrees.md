@@ -126,5 +126,3 @@ Quel est le risque, et comment corriger ?
 - [libpq, l'API C de PostgreSQL](libpq.md)
 - [Valider les entrées](../web/validation-entrees.md)
 - [XSS et échappement](../web/xss-echappement.md)
-
-<!-- enrichie -->

@@ -98,5 +98,3 @@ Un client peut appeler l'API directement avec `curl`, sans passer par le formula
 - [Argon2id : stocker un mot de passe](argon2id.md)
 - [Valider les entrées](../web/validation-entrees.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
-
-<!-- enrichie -->

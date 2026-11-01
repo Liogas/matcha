@@ -97,5 +97,3 @@ Un mot de passe a peu d'entropie : on peut tester un dictionnaire. Un token de 2
 - [JWT : les jetons d'accès](jwt.md)
 - [Cookies : HttpOnly, Secure, SameSite](../web/cookies.md)
 - [Les transactions et ACID](../sql/transactions.md)
-
-<!-- enrichie -->

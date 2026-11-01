@@ -19,7 +19,7 @@ Un preset remplace une ligne à retenir par un nom versionné.
 titre: Une configuration, trois endroits
 colonnes: CMakePresets.json | Toi | CI | Docker
 étape: Les options sont écrites une seule fois, dans le dépôt.
-CMakePresets.json: debug, sanitize, release
+CMakePresets.json: 3 presets
 étape: Tu tapes un nom court.
 CMakePresets.json -> Toi: cmake --preset debug
 étape: La CI lance exactement la même chose.
@@ -85,5 +85,3 @@ Un consommateur d'une lib ne veut pas compiler ses tests : cela ralentit le buil
 - [Les sanitizers : ASan, UBSan, LSan](sanitizers.md)
 - [Warnings en erreur](warnings.md)
 - [CMake : cibles et visibilité](cmake-cibles.md)
-
-<!-- enrichie -->

@@ -156,5 +156,3 @@ Premier scénario : le `COMMIT` échoue. L'utilisateur reçoit une notification 
 - [SAVEPOINT](savepoint.md)
 - [RAII](../cpp/raii.md)
 - [L'outbox et publier après le commit](../temps-reel/outbox.md)
-
-<!-- enrichie -->

@@ -5,7 +5,7 @@
 Tu dois vérifier la [compatibilité d'orientation](../metier/orientation.md) sur toutes les combinaisons, et plusieurs tests de [pool](../sql/pool-connexions.md) ont besoin d'une base. Recopier la même préparation dans chaque test les rend longs, et une correction doit se faire partout.
 
 ### Une suite de tests qui se dégrade
-Tu écris un premier test de pool : dix lignes de préparation, trois de vérification. Tu copies pour le test suivant, puis encore cinq fois. Un mois plus tard, le constructeur du pool prend un paramètre de plus : tu corriges sept endroits. Pour les orientations, tu as 6 orientations multipliées par 2 genres, de chaque côté : 144 combinaisons. Personne n'écrit 144 fois `TEST`. On écrit donc 5 cas, et les 139 autres ne sont jamais testés.
+Tu écris un premier test de [pool](../sql/pool-connexions.md) : dix lignes de préparation, trois de vérification. Tu copies pour le test suivant, puis encore cinq fois. Un mois plus tard, le constructeur du pool prend un paramètre de plus : tu corriges sept endroits. Pour les orientations, tu as 6 orientations multipliées par 2 genres, de chaque côté : 144 combinaisons. Personne n'écrit 144 fois `TEST`. On écrit donc 5 cas, et les 139 autres ne sont jamais testés.
 
 Fixture et tests paramétrés répondent à ces deux problèmes : une préparation à un seul endroit, et une table de cas au lieu d'une pile de copier-coller.
 
@@ -135,5 +135,3 @@ Quand la suite dépend du résultat. Si `pool.begin()` échoue, utiliser le rés
 - [Les faux objets de test](faux-objets.md)
 - [Tests de repository en transaction annulée](transaction-annulee.md)
 - [La pyramide de tests](pyramide.md)
-
-<!-- enrichie -->

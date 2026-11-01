@@ -86,5 +86,3 @@ Certains clients de messagerie et antivirus ouvrent les liens automatiquement. U
 - [Rotation des refresh tokens](refresh-rotation.md)
 - [Réauthentification et prise de compte](reauthentification.md)
 - [Requêtes paramétrées et injection SQL](../sql/requetes-parametrees.md)
-
-<!-- enrichie -->

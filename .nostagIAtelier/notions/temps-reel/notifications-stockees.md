@@ -5,7 +5,7 @@
 Quelqu'un te like pendant que tu es hors ligne. À ta connexion, la notification doit être là, avec le compteur de non-lus sur toutes les pages. Le sujet exige cinq événements : like reçu, profil consulté, message reçu, like retourné, unlike par un connecté.
 
 ### Connecté ou non, le même chemin
-Le choix clé est de ne pas avoir deux logiques. La notification est toujours stockée, et le WebSocket n'est qu'un signal en plus.
+Le choix clé est de ne pas avoir deux logiques. La notification est toujours stockée, et le [WebSocket](websocket.md) n'est qu'un signal en plus.
 
 ```tableau
 titre: Une notification pendant une absence
@@ -101,5 +101,3 @@ La lib ne doit rien savoir du blocage ni de l'unlike, pour rester réutilisable.
 - [L'outbox et publier après le commit](outbox.md)
 - [Fan-out et Pub/Sub](fan-out.md)
 - [Une règle transversale centralisée](../metier/policy-centralisee.md)
-
-<!-- enrichie -->

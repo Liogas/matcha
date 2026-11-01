@@ -96,5 +96,3 @@ L'ancienne valeur, 1, car il lit la photo du début d'instruction. Pour voir la 
 - [Les transactions et ACID](transactions.md)
 - [Les niveaux d'isolation](isolation.md)
 - [EXPLAIN ANALYZE](explain-analyze.md)
-
-<!-- enrichie -->

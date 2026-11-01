@@ -141,5 +141,3 @@ Pourquoi un [JWKS](../auth/jwks.md) injoignable doit-il donner `Unavailable` plu
 - [Les codes SQLSTATE](../sql/sqlstate.md)
 - [HTTP : méthodes et codes de statut](../web/http-bases.md)
 - [La couche services](../archi/couche-services.md)
-
-<!-- enrichie -->

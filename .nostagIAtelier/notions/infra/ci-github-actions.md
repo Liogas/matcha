@@ -87,5 +87,3 @@ Ta machine contient des fichiers non commités, d'anciens objets de compilation,
 
 - [Les presets CMake](../build/presets.md)
 - [Les sanitizers : ASan, UBSan, LSan](../build/sanitizers.md)
-
-<!-- enrichie -->

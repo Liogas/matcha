@@ -17,7 +17,7 @@ Nginx -> Client: 413
 ! Client -> ImageProcessor: faux JPEG
 ImageProcessor -> Client: 400
 étape: Une bombe de décompression : ses dimensions sont lues avant de décoder les pixels.
-! ImageProcessor: 30 000 × 30 000 : refus
+! ImageProcessor: dimensions : refus
 étape: Une vraie photo est **réencodée** : seuls les pixels sont gardés, les métadonnées GPS disparaissent.
 + ImageProcessor -> Stockage: nouveau fichier, nom aléatoire
 ```
@@ -81,5 +81,3 @@ Le nettoyage d'un chemin est une liste noire, facile à contourner selon les sys
 
 - [Valider les entrées](validation-entrees.md)
 - [RGPD : consentement et minimisation](../metier/rgpd.md)
-
-<!-- enrichie -->

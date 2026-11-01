@@ -5,7 +5,7 @@
 Tu veux comprendre ce qui se passe sous `db.query(...)`, par exemple pour expliquer un `PGresult` qui fuit, ou pourquoi l'ancien `getTimestamp` ne fonctionnait jamais. Tout passe par une poignée de fonctions C.
 
 ### Ce qui se passe vraiment sous `db.query`
-Prends une requête banale : afficher le pseudo du compte 42. Côté repository, une ligne. Côté libpq, quatre choses doivent se passer, dans cet ordre, et chacune peut échouer. Si tu oublies la dernière, ton serveur perd un peu de mémoire à chaque requête. Après 100 000 requêtes, le conteneur grossit sans que rien ne plante, et le bug devient très difficile à relier à sa cause.
+Prends une requête banale : afficher le pseudo du compte 42. Côté [repository](../archi/couche-services.md), une ligne. Côté libpq, quatre choses doivent se passer, dans cet ordre, et chacune peut échouer. Si tu oublies la dernière, ton serveur perd un peu de mémoire à chaque requête. Après 100 000 requêtes, le conteneur grossit sans que rien ne plante, et le bug devient très difficile à relier à sa cause.
 
 ```tableau
 titre: Une requête, vue depuis libpq
@@ -125,5 +125,3 @@ Pourquoi faut-il `std::string(column).c_str()` plutôt que `column.data()` pour 
 - [Les codes SQLSTATE](sqlstate.md)
 - [Le pool de connexions](pool-connexions.md)
 - [RAII](../cpp/raii.md)
-
-<!-- enrichie -->

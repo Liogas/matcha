@@ -5,7 +5,7 @@
 Le sujet exige 500 profils, avec photos, tags, likes et visites, soit des milliers de lignes. Avec un `INSERT` par ligne hors [transaction](transactions.md), chaque ligne déclenche un aller-retour et une écriture forcée sur disque, et la génération prend plusieurs minutes.
 
 ### Ce qui coûte vraiment
-La lenteur vient surtout du `COMMIT`, qui attend le disque. Les chiffres ci-dessous sont des ordres de grandeur.
+La lenteur vient surtout du [`COMMIT`](transactions.md), qui attend le disque. Les chiffres ci-dessous sont des ordres de grandeur.
 
 ```tableau
 titre: 500 profils, trois façons
@@ -87,5 +87,3 @@ Le coût principal d'un [`COMMIT`](transactions.md) est l'écriture forcée du j
 
 - [Tableaux et unnest](tableaux-unnest.md)
 - [Argon2id : stocker un mot de passe](../auth/argon2id.md)
-
-<!-- enrichie -->

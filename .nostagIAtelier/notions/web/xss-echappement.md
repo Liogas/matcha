@@ -105,5 +105,3 @@ Sans guillemets, un simple espace termine la valeur, et `x onmouseover=alert(1)`
 - [Cookies : HttpOnly, Secure, SameSite](cookies.md)
 - [Valider les entrées](validation-entrees.md)
 - [UTF-8 : octets et caractères](../cpp/utf-8.md)
-
-<!-- enrichie -->

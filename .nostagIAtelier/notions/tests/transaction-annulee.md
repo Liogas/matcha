@@ -90,7 +90,7 @@ Test 2 -> PostgreSQL: BEGIN, INSERT a@
 Test 2 -> PostgreSQL: ROLLBACK
 ```
 
-L'ordre des tests n'a plus d'importance, et `ctest -j8` peut les lancer en parallèle : chacun vit dans sa transaction.
+L'ordre des tests n'a plus d'importance, et `ctest -j8` peut les lancer en parallèle : chacun vit dans sa [transaction](../sql/transactions.md).
 
 ## Erreurs fréquentes
 - Utiliser `NOW()` pour vérifier une date : dans une [transaction](../sql/transactions.md), `NOW()` renvoie le début de la transaction, et reste identique pendant tout le test. `clock_timestamp()` donne l'heure réelle.
@@ -111,5 +111,3 @@ Il faut deux [transactions](../sql/transactions.md) sur deux connexions, et le t
 - [SAVEPOINT](../sql/savepoint.md)
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [GoogleTest : fixtures et tests paramétrés](gtest.md)
-
-<!-- enrichie -->

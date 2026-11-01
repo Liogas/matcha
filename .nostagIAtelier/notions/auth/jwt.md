@@ -92,5 +92,3 @@ Il peut agir à sa place jusqu'à `exp`, soit 15 minutes au plus, car la déconn
 - [JWKS et StaticJwksProvider](jwks.md)
 - [Rotation des refresh tokens](refresh-rotation.md)
 - [Le ticket WebSocket](../temps-reel/ticket-websocket.md)
-
-<!-- enrichie -->

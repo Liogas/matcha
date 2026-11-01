@@ -91,5 +91,3 @@ Il sert à filtrer les non lues et à compter, à chaque chargement de page. En 
 
 - [Notifications stockées et compteurs](../temps-reel/notifications-stockees.md)
 - [Les index](index.md)
-
-<!-- enrichie -->

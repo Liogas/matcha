@@ -90,5 +90,3 @@ Pourquoi le [JWT](../auth/jwt.md) dans l'URL du [WebSocket](../temps-reel/websoc
 
 - [Middleware Crow et contexte de requête](../web/middleware-crow.md)
 - [Mutex et contention de verrou](../cpp/mutex-contention.md)
-
-<!-- enrichie -->

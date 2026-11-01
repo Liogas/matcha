@@ -97,5 +97,3 @@ Avec une somme, un profil à 1000 likes a 100 fois plus qu'un profil à 10, et l
 - [Dénormalisation et triggers](../sql/denormalisation.md)
 - [Les événements de domaine](../archi/evenements.md)
 - [Le score de matching](score-matching.md)
-
-<!-- enrichie -->

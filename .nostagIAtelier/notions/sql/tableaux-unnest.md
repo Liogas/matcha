@@ -85,5 +85,3 @@ Aucune ligne : aucune valeur ne peut être égale à un élément d'une liste vi
 - [Requêtes paramétrées et injection SQL](requetes-parametrees.md)
 - [Les relations N-N](relation-nn.md)
 - [INSERT ON CONFLICT](on-conflict.md)
-
-<!-- enrichie -->

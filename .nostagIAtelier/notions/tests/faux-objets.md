@@ -95,5 +95,3 @@ Le code lit l'heure via `IClock`. Le test crée l'objet, appelle `FakeClock::adv
 
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [La pyramide de tests](pyramide.md)
-
-<!-- enrichie -->

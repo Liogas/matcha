@@ -103,5 +103,3 @@ Il échoue quand une dépendance tombe. Redémarrer le backend ne répare pas Po
 
 - [Docker Compose](docker-compose.md)
 - [RAII](../cpp/raii.md)
-
-<!-- enrichie -->

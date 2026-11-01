@@ -97,5 +97,3 @@ Elle corrige toute dérive due à un bug, et elle permet de changer la formule :
 - [La note de popularité](../metier/fame-rating.md)
 - [Les vues SQL](vues-sql.md)
 - [Les événements de domaine](../archi/evenements.md)
-
-<!-- enrichie -->

@@ -94,5 +94,3 @@ On crée deux [`FakeSession`](../tests/faux-objets.md), dont une dont `send` blo
 - [Interfaces et injection de dépendances](../cpp/interfaces-injection.md)
 - [Rendre une lib installable](../build/package-cmake.md)
 - [Les faux objets de test](../tests/faux-objets.md)
-
-<!-- enrichie -->

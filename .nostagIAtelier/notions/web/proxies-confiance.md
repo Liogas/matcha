@@ -87,5 +87,3 @@ L'adresse TCP est établie par la poignée de main : avec une fausse adresse, la
 
 - [Limitation de débit et Redis](../auth/rate-limiting.md)
 - [Nginx en proxy inverse](../infra/nginx.md)
-
-<!-- enrichie -->

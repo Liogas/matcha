@@ -11,7 +11,7 @@ wss://matcha.local/api/messaging/ws?access_token=eyJhbGci...
 Cette URL est écrite dans les logs d'accès de [Nginx](../infra/nginx.md). Pendant 15 minutes, quiconque lit ces logs peut se faire passer pour l'utilisateur. C'est le point 4.12 de l'audit, et `MessagingWebSocket.cpp:32` commente d'ailleurs ce compromis.
 
 ### Pourquoi un ticket lu dans un log ne vaut rien
-Compare ce qu'obtient une personne qui lit le fichier de logs de Nginx.
+Compare ce qu'obtient une personne qui lit le fichier de logs de [Nginx](../infra/nginx.md).
 
 ```tableau
 titre: Le flux du ticket
@@ -85,5 +85,3 @@ Le ticket doit survivre au délai entre sa réception et l'ouverture du [WebSock
 - [WebSocket](websocket.md)
 - [Les tokens opaques à usage unique](../auth/tokens-opaques.md)
 - [JWT : les jetons d'accès](../auth/jwt.md)
-
-<!-- enrichie -->

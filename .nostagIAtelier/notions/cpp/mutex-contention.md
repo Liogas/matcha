@@ -135,5 +135,3 @@ Non. `contains` lit la table sans verrou pendant qu'un autre thread peut l'écri
 - [std::condition_variable](condition-variable.md)
 - [Le deadlock](../sql/deadlock.md)
 - [Le pool de connexions](../sql/pool-connexions.md)
-
-<!-- enrichie -->

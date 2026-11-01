@@ -151,5 +151,3 @@ Le code ne doit pas appeler l'horloge système directement, mais un `IClock &` i
 - [Les faux objets de test](../tests/faux-objets.md)
 - [Templates variadiques et fold expressions](templates-variadiques.md)
 - [La couche services](../archi/couche-services.md)
-
-<!-- enrichie -->

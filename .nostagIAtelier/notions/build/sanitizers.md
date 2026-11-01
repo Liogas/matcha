@@ -103,5 +103,3 @@ Tous les fichiers doivent être compilés avec l'instrumentation : mélanger des
 - [La durée de vie des objets](../cpp/duree-de-vie-objets.md)
 - [Data race et ThreadSanitizer](../cpp/data-race.md)
 - [Les presets CMake](presets.md)
-
-<!-- enrichie -->

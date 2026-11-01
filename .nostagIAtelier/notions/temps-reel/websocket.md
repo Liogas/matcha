@@ -104,5 +104,3 @@ Le blocage peut arriver à tout moment. Un contrôle à l'ouverture laisserait u
 - [Le ticket WebSocket](ticket-websocket.md)
 - [Fan-out et Pub/Sub](fan-out.md)
 - [unique_ptr, shared_ptr, weak_ptr](../cpp/pointeurs-intelligents.md)
-
-<!-- enrichie -->

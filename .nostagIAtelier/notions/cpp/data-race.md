@@ -140,5 +140,3 @@ Parce qu'aucune mémoire C++ n'est partagée sans synchronisation. Chaque thread
 - [Mutex et contention de verrou](mutex-contention.md)
 - [Les sanitizers : ASan, UBSan, LSan](../build/sanitizers.md)
 - [Les verrous consultatifs](../sql/verrous-consultatifs.md)
-
-<!-- enrichie -->

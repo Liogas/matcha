@@ -16,7 +16,7 @@ Page -> ProfileQuery: compatibles, proches
 Page -> ProfileQuery: âge, tags, ville
 étape: Le moteur assemble une seule requête, et y applique toujours blocage et compatibilité.
 ProfileQuery -> Moteur: filtres
-+ Moteur: blocage toujours appliqué
++ Moteur: blocage inclus
 étape: Une correction ici profite aux deux pages à la fois.
 Moteur -> PostgreSQL: SELECT unique
 ```
@@ -102,5 +102,3 @@ Oublier le blocage dans une des deux pages, ce qui ferait réapparaître un util
 - [Pagination keyset ou OFFSET](../sql/pagination-keyset.md)
 - [Le score de matching](score-matching.md)
 - [Une règle transversale centralisée](policy-centralisee.md)
-
-<!-- enrichie -->

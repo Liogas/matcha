@@ -77,5 +77,3 @@ Si la position exacte est en base, une fuite ou un bug d'API la révèle. Arrond
 - [Le géocodage](geocodage.md)
 - [Upload d'images sécurisé](../web/upload-securise.md)
 - [La formule de Haversine](haversine.md)
-
-<!-- enrichie -->

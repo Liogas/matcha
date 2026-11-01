@@ -108,5 +108,3 @@ Le front devrait charger chaque profil, soit N appels. Il faut renvoyer des prof
 - [Le problème N+1](../sql/n-plus-un.md)
 - [OpenAPI](openapi.md)
 - [Pagination keyset ou OFFSET](../sql/pagination-keyset.md)
-
-<!-- enrichie -->

@@ -89,5 +89,3 @@ Il passe hors ligne, puis en ligne. Une notification de présence s'envoie deux 
 - [Heartbeat : détecter une connexion morte](heartbeat.md)
 - [Data race et ThreadSanitizer](../cpp/data-race.md)
 - [Redis](../infra/redis.md)
-
-<!-- enrichie -->

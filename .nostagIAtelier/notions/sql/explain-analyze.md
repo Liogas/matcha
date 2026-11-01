@@ -112,5 +112,3 @@ Environ 500 × 0,02 ms = 10 ms. Le chiffre affiché est par boucle. Le nœud s'e
 
 - [Les index](index.md)
 - [Pagination keyset ou OFFSET](pagination-keyset.md)
-
-<!-- enrichie -->

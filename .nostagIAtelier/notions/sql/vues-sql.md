@@ -88,5 +88,3 @@ La table enregistre qui a décidé, utile pour permettre le déblocage. L'effet,
 - [Une règle transversale centralisée](../metier/policy-centralisee.md)
 - [Dénormalisation et triggers](denormalisation.md)
 - [Les index](index.md)
-
-<!-- enrichie -->

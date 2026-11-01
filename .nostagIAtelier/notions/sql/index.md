@@ -116,5 +116,3 @@ Quel index choisir pour `SELECT ... FROM messaging_messages WHERE conversation_i
 - [EXPLAIN ANALYZE](explain-analyze.md)
 - [Pagination keyset ou OFFSET](pagination-keyset.md)
 - [Autocomplétion et pg_trgm](recherche-floue.md)
-
-<!-- enrichie -->

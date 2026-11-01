@@ -71,5 +71,3 @@ Le but est de prouver que l'utilisateur contrôle la nouvelle adresse. L'ancienn
 
 - [Les tokens opaques à usage unique](tokens-opaques.md)
 - [Rotation des refresh tokens](refresh-rotation.md)
-
-<!-- enrichie -->

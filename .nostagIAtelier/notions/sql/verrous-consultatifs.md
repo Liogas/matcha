@@ -111,5 +111,3 @@ Une clé basée sur le compte, avec un préfixe pour ne pas croiser d'autres usa
 - [Le deadlock](deadlock.md)
 - [Les migrations](migrations.md)
 - [Les transactions et ACID](transactions.md)
-
-<!-- enrichie -->

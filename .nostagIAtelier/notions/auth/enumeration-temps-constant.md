@@ -85,5 +85,3 @@ Sinon, n'importe qui peut apprendre l'état d'un compte en donnant un mauvais mo
 - [Argon2id : stocker un mot de passe](argon2id.md)
 - [Limitation de débit et Redis](rate-limiting.md)
 - [L'outbox et publier après le commit](../temps-reel/outbox.md)
-
-<!-- enrichie -->

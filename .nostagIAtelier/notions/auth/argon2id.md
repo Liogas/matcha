@@ -108,5 +108,3 @@ Avec sel, non : les hashs sont différents. Sans sel, les hashs seraient identiq
 - [Énumération d'utilisateurs et temps constant](enumeration-temps-constant.md)
 - [Politique de mot de passe (NIST 800-63B)](politique-mot-de-passe.md)
 - [Limitation de débit et Redis](rate-limiting.md)
-
-<!-- enrichie -->

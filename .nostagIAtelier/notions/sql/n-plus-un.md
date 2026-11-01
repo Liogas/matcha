@@ -30,7 +30,7 @@ PostgreSQL -> Service: 3 ids
 ```
 
 ### Pourquoi personne ne l'a vu
-Fais le calcul avec de vrais chiffres. En développement, tu as 3 likes reçus : 4 requêtes à 1 ms sur le réseau local du conteneur, soit 4 ms. La page paraît instantanée. Le jour de la soutenance, le correcteur génère 500 profils. Le compte le plus liké en a reçu 120 : 121 requêtes, chacune avec son passage par le pool et son aller-retour. Le code n'a pas changé, seule la quantité de données a changé. C'est ce qui rend ce défaut traître : il ne se voit jamais sur la machine de celui qui l'écrit.
+Fais le calcul avec de vrais chiffres. En développement, tu as 3 likes reçus : 4 requêtes à 1 ms sur le réseau local du conteneur, soit 4 ms. La page paraît instantanée. Le jour de la soutenance, le correcteur génère 500 profils. Le compte le plus liké en a reçu 120 : 121 requêtes, chacune avec son passage par le [pool](pool-connexions.md) et son aller-retour. Le code n'a pas changé, seule la quantité de données a changé. C'est ce qui rend ce défaut traître : il ne se voit jamais sur la machine de celui qui l'écrit.
 
 ## La théorie
 Le coût d'une requête vient surtout de l'aller-retour, pas du travail. N+1 multiplie les allers-retours. Il est difficile à voir, car chaque requête est rapide, et il passe inaperçu avec peu de données.
@@ -134,5 +134,3 @@ Le seed ne compte que 10 profils, avec peu de likes : quelques requêtes rapides
 - [Les relations N-N](relation-nn.md)
 - [Tableaux et unnest](tableaux-unnest.md)
 - [Concevoir une API REST](../web/rest-conception.md)
-
-<!-- enrichie -->

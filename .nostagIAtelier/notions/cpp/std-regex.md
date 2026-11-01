@@ -119,5 +119,3 @@ Pourquoi `^[A-Za-z]+$` refuse-t-il `Élodie`, et que proposes-tu pour un prénom
 
 - [UTF-8 : octets et caractères](utf-8.md)
 - [Valider les entrées](../web/validation-entrees.md)
-
-<!-- enrichie -->

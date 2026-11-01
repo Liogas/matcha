@@ -107,5 +107,3 @@ Ils protègent des choses différentes. Nginx bloque un volume par IP, sans coû
 - [Proxies de confiance](../web/proxies-confiance.md)
 - [Limitation de débit et Redis](../auth/rate-limiting.md)
 - [Heartbeat : détecter une connexion morte](../temps-reel/heartbeat.md)
-
-<!-- enrichie -->

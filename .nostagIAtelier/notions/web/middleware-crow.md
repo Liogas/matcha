@@ -101,5 +101,3 @@ Crow traite des requêtes en parallèle. Un champ partagé serait écrasé par u
 - [HTTP : méthodes et codes de statut](http-bases.md)
 - [JWT : les jetons d'accès](../auth/jwt.md)
 - [La couche services](../archi/couche-services.md)
-
-<!-- enrichie -->

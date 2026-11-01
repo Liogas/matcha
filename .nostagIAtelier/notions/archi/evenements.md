@@ -87,5 +87,3 @@ Le premier décrit un fait, et chacun décide d'y réagir. Le second est un ordr
 
 - [La couche services](couche-services.md)
 - [L'outbox et publier après le commit](../temps-reel/outbox.md)
-
-<!-- enrichie -->

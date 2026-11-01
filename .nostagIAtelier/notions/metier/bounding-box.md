@@ -110,5 +110,3 @@ Il est construit pour contenir tout le cercle : aucun point à moins de R km ne 
 
 - [La formule de Haversine](haversine.md)
 - [Les index](../sql/index.md)
-
-<!-- enrichie -->

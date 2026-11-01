@@ -123,5 +123,3 @@ Combien d'octets et de points de code contient `€uro` ? Quels sont les premier
 - [std::regex](std-regex.md)
 - [Politique de mot de passe (NIST 800-63B)](../auth/politique-mot-de-passe.md)
 - [Valider les entrées](../web/validation-entrees.md)
-
-<!-- enrichie -->

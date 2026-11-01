@@ -15,7 +15,7 @@ A : COMMIT                      B : COMMIT
 Deux likes sont en base, et aucun match. Aucune requête n'est fausse, et les deux transactions ont fonctionné. Le problème vient de ce que chacune a le droit de voir pendant que l'autre travaille.
 
 ### Revois la scène au ralenti
-La chronologie ci-dessus se joue en quelques millisecondes. Déroule-la étape par étape, en regardant ce que chaque transaction voit.
+La chronologie ci-dessus se joue en quelques millisecondes. Déroule-la étape par étape, en regardant ce que chaque [transaction](transactions.md) voit.
 
 ```tableau
 titre: Le like croisé, en READ COMMITTED
@@ -123,5 +123,3 @@ Premier cas : 12. La seconde [transaction](transactions.md) attend le verrou de 
 - [Les verrous consultatifs](verrous-consultatifs.md)
 - [Les codes SQLSTATE](sqlstate.md)
 - [Data race et ThreadSanitizer](../cpp/data-race.md)
-
-<!-- enrichie -->

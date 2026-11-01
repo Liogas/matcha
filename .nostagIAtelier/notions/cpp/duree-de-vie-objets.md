@@ -181,5 +181,3 @@ std::cout << row.get<int>(0);
 - [unique_ptr, shared_ptr, weak_ptr](pointeurs-intelligents.md)
 - [La sémantique de déplacement](semantique-deplacement.md)
 - [Les sanitizers : ASan, UBSan, LSan](../build/sanitizers.md)
-
-<!-- enrichie -->

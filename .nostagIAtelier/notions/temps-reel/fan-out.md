@@ -13,7 +13,7 @@ colonnes: Service | Hub | Onglet 1 | Onglet 2 | Téléphone
 étape: Le service dit seulement à qui s'adresse l'événement.
 Service -> Hub: publish(account:7, match)
 étape: Le hub copie la liste des abonnés sous verrou, puis relâche le verrou avant d'envoyer.
-Hub: 2 sessions pour account:7
+Hub: 2 sessions
 étape: Chaque onglet d'Alice reçoit sa copie.
 Hub -> Onglet 1: match
 Hub -> Onglet 2: match
@@ -107,5 +107,3 @@ Il ne stocke rien : un utilisateur hors ligne perdrait la notification. La table
 - [Mutex et contention de verrou](../cpp/mutex-contention.md)
 - [Redis](../infra/redis.md)
 - [L'outbox et publier après le commit](outbox.md)
-
-<!-- enrichie -->

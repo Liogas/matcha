@@ -67,7 +67,7 @@ Un [point de code](../cpp/utf-8.md) prend au plus 4 octets, donc plus de 2000 oc
 Le sujet n'en parle pas, mais un site de rencontre exige une majorité. La date de naissance ne doit pas être dans le futur, et l'âge minimal doit être fixé. C'est une décision ouverte du projet.
 
 ## Exemple pas à pas : l'ordre des vérifications compte
-Sur la biographie, on vérifie d'abord la taille en octets, ce qui ne coûte rien. On valide ensuite l'UTF-8, puis on compte les caractères. Dans l'autre ordre, un texte de 10 Mo serait parcouru entièrement avant d'être refusé.
+Sur la biographie, on vérifie d'abord la taille en octets, ce qui ne coûte rien. On valide ensuite l'[UTF-8](../cpp/utf-8.md), puis on compte les caractères. Dans l'autre ordre, un texte de 10 Mo serait parcouru entièrement avant d'être refusé.
 
 ```tableau
 titre: validateBiography sur trois entrées
@@ -108,5 +108,3 @@ C'est un test en [temps constant](../auth/enumeration-temps-constant.md), qui re
 - [std::regex](../cpp/std-regex.md)
 - [Les contraintes d'intégrité](../sql/contraintes.md)
 - [XSS et échappement](xss-echappement.md)
-
-<!-- enrichie -->

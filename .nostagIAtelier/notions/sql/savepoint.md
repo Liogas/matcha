@@ -35,7 +35,7 @@ Test -> PostgreSQL: SELECT ...
 ```
 
 ### Pourquoi PostgreSQL est si sévère
-Ce comportement paraît excessif, mais il protège tes données. Si une requête d'une transaction échoue et que PostgreSQL te laissait continuer, un `COMMIT` validerait une opération incomplète. Il préfère donc refuser tout le reste jusqu'à ce que tu dises explicitement quoi faire : tout annuler, ou revenir à un point précis. Le savepoint est ce point précis.
+Ce comportement paraît excessif, mais il protège tes données. Si une requête d'une [transaction](transactions.md) échoue et que PostgreSQL te laissait continuer, un `COMMIT` validerait une opération incomplète. Il préfère donc refuser tout le reste jusqu'à ce que tu dises explicitement quoi faire : tout annuler, ou revenir à un point précis. Le savepoint est ce point précis.
 
 ## La théorie
 Un savepoint marque un état dans la [transaction](transactions.md) :
@@ -132,5 +132,3 @@ COMMIT;
 - [Les transactions et ACID](transactions.md)
 - [Tests de repository en transaction annulée](../tests/transaction-annulee.md)
 - [INSERT ON CONFLICT](on-conflict.md)
-
-<!-- enrichie -->
