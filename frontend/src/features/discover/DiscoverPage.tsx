@@ -36,14 +36,12 @@ export function DiscoverPage() {
   }, [accessToken])
 
   // Le jeton renouvelé ne doit pas relancer le chargement : il est lu via une ref
-  const fetchPage = useCallback(async (offset: number) => {
+  const fetchPage = useCallback(async (after?: number) => {
     const token = tokenRef.current
     if (!token) return
     try {
-      const page = await getProfiles(token, { limit: PAGE_SIZE, offset })
-      setProfiles((current) => offset === 0 ? page : [...current, ...page])
-      setHasMore(page.length === PAGE_SIZE)
-      setError('')
+      const page = await getProfiles(token, { limit: PAGE_SIZE, after })
+      setProfiles((current) => after === undefined ? page : [...current, ...page])
     } catch (loadPageError) {
       setError(describeApiError(loadPageError))
     } finally {
@@ -52,12 +50,12 @@ export function DiscoverPage() {
   }, [])
 
   useEffect(() => {
-    void fetchPage(0)
+    void fetchPage()
   }, [fetchPage])
 
   function loadMore() {
     setIsLoading(true)
-    void fetchPage(profiles.length)
+    void fetchPage(profiles.at(-1)?.account_id)
   }
 
   const visible = profiles.filter((profile) =>

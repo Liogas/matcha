@@ -351,14 +351,16 @@ export async function getProfile(accessToken: string): Promise<Profile> {
   return { ...body.profile, photos: body.photos ?? [] }
 }
 
+
+// after : le dernier account_id de la page précédente (pagination par curseur)
 export async function getProfiles(
   accessToken: string,
-  { limit = 24, offset = 0 }: { limit?: number; offset?: number } = {},
+  { limit = 24, after }: { limit?: number; after?: number } = {},
 ): Promise<Profile[]> {
+  const cursor = after === undefined ? '' : `&after=${after}`
   const { body } = await request<{ profiles?: Omit<Profile, 'photos'>[] }>(
-    `/api/profiles?limit=${limit}&offset=${offset}`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  )
+    `/api/profiles?limit=${limit}${cursor}`, { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
   return Array.isArray(body.profiles)
     ? body.profiles.map((profile) => ({ ...profile, photos: [] }))
     : []

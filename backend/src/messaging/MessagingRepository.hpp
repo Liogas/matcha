@@ -1,11 +1,11 @@
 #pragma once
 
+#include <pg/Executor.hpp>
+
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>
-
-class Database;
 
 struct MessagingConversation
 {
@@ -27,7 +27,7 @@ struct MessagingMessage
 class MessagingRepository
 {
 	public:
-		explicit MessagingRepository(Database &database);
+		explicit MessagingRepository(pg::Executor &database);
 
 		std::optional<std::int64_t> ensureDirectConversation(
 			std::int64_t firstAccountId, std::int64_t secondAccountId);
@@ -46,5 +46,5 @@ class MessagingRepository
 		bool markRead(std::int64_t accountId, std::int64_t conversationId);
 
 	private:
-		Database &_database;
+		pg::Executor &_database;
 };

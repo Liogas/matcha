@@ -1,12 +1,11 @@
 #pragma once
 
 #include <auth/credentials/IUserLookupRepository.hpp>
+#include <pg/Executor.hpp>
 
 #include <cstdint>
 #include <chrono>
 #include <string>
-
-class Database;
 
 struct AccountCreationResult
 {
@@ -88,7 +87,7 @@ struct PasswordResetResult
 class AccountRepository : public auth::IUserLookupRepository
 {
 	public:
-		explicit AccountRepository(Database &database);
+		explicit AccountRepository(pg::Executor &database);
 
 		AccountCreationResult createPendingAccountAndProfile(
 			const std::string &email,
@@ -139,5 +138,5 @@ class AccountRepository : public auth::IUserLookupRepository
 		) override;
 
 	private:
-		Database &_database;
+		pg::Executor &_database;
 };

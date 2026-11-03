@@ -1,10 +1,11 @@
 #pragma once
 
+#include <core/Result.hpp>
+#include <pg/Executor.hpp>
+
 #include <cstdint>
 #include <optional>
 #include <vector>
-
-class Database;
 
 struct LikeResult
 {
@@ -21,20 +22,22 @@ struct MatchRecord
 
 class LikeRepository
 {
-	public:
-		explicit LikeRepository(Database &database);
+public:
+	explicit LikeRepository(pg::Executor &database);
 
-		LikeResult like(std::int64_t likerAccountId,
-			std::int64_t likedAccountId);
-		bool unlike(std::int64_t likerAccountId,
-			std::int64_t likedAccountId);
-		std::vector<std::int64_t> listLikedAccountIds(
-			std::int64_t likerAccountId);
-		std::vector<std::int64_t> listIncomingLikeAccountIds(
-			std::int64_t likedAccountId);
-		std::vector<MatchRecord> listMatches(std::int64_t accountId);
-		std::vector<std::pair<std::int64_t, std::int64_t>> listAllMatches();
+	// À appeler dans la transaction de MatchService : seul, un like
+	// simultané dans l'autre sens peut faire rater le match.
+	core::Result<LikeResult> like(std::int64_t likerAccountId,
+								  std::int64_t likedAccountId);
+	// true si un like a été supprimé.
+	core::Result<bool> unlike(std::int64_t likerAccountId,
+							  std::int64_t likedAccountId);
+	std::vector<std::int64_t> listLikedAccountIds(
+		std::int64_t likerAccountId);
+	std::vector<std::int64_t> listIncomingLikeAccountIds(
+		std::int64_t likedAccountId);
+	std::vector<MatchRecord> listMatches(std::int64_t accountId);
 
-	private:
-		Database &_database;
+private:
+	pg::Executor &_database;
 };

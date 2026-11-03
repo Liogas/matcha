@@ -1,9 +1,6 @@
 #include "AccountRepository.hpp"
 
-#include "../database/Database.hpp"
-
-AccountRepository::AccountRepository(Database &database):
-	_database(database)
+AccountRepository::AccountRepository(pg::Executor &database) : _database(database)
 {}
 
 AccountCreationResult AccountRepository::createPendingAccountAndProfile(
@@ -13,16 +10,14 @@ AccountCreationResult AccountRepository::createPendingAccountAndProfile(
 	const std::string &firstName,
 	const std::string &lastName,
 	const std::string &verificationTokenHash,
-	std::chrono::seconds verificationLifetime
-)
+	std::chrono::seconds verificationLifetime)
 {
 	if (verificationLifetime <= std::chrono::seconds::zero())
 		return {
 			AccountCreationResult::Status::DatabaseError,
-			0
-		};
+			0};
 
-	QueryResult result = this->_database.executeParams(
+	const auto result = this->_database.query(
 		"WITH account AS ("
 		"  INSERT INTO auth_accounts "
 		"    (email, password_hash, email_verification_last_sent_at) "
@@ -42,54 +37,40 @@ AccountCreationResult AccountRepository::createPendingAccountAndProfile(
 		"  RETURNING account_id"
 		") "
 		"SELECT account_id FROM verification_token",
-		{
-			email,
-			passwordHash,
-			username,
-			firstName,
-			lastName,
-			verificationTokenHash,
-			std::to_string(verificationLifetime.count())
-		}
+		email,
+		passwordHash,
+		username,
+		firstName,
+		lastName,
+		verificationTokenHash,
+		verificationLifetime.count()
 	);
 
-	if (result.isError())
+	if (!result)
 	{
-		if (result.sqlState() == "23505")
+		if (result.error().code == core::ErrorCode::Conflict)
 			return {
 				AccountCreationResult::Status::IdentifierAlreadyExists,
-				0
-			};
+				0};
 		return {
 			AccountCreationResult::Status::DatabaseError,
-			0
-		};
+			0};
 	}
 
-	if (result.rowCount() != 1)
+	if (result->size() != 1)
 		return {
 			AccountCreationResult::Status::DatabaseError,
-			0
-		};
-
-	const auto accountId = result.getInt64(0, 0);
-	if (!accountId.has_value())
-		return {
-			AccountCreationResult::Status::DatabaseError,
-			0
-		};
+			0};
 
 	return {
 		AccountCreationResult::Status::Success,
-		*accountId
-	};
+		(*result)[0].get<std::int64_t>("account_id")};
 }
 
 EmailVerificationResult AccountRepository::verifyEmailToken(
-	const std::string &tokenHash
-)
+	const std::string &tokenHash)
 {
-	QueryResult result = this->_database.executeParams(
+	const auto result = this->_database.query(
 		"WITH matched AS ("
 		"  SELECT id, account_id FROM email_verification_tokens "
 		"  WHERE token_hash = $1 AND consumed_at IS NULL "
@@ -109,12 +90,11 @@ EmailVerificationResult AccountRepository::verifyEmailToken(
 		"  RETURNING a.id"
 		") "
 		"SELECT id FROM verified",
-		{tokenHash}
-	);
+		tokenHash);
 
-	if (result.isError())
+	if (!result)
 		return {EmailVerificationResult::Status::DatabaseError};
-	if (result.rowCount() == 1)
+	if (result->size() == 1)
 		return {EmailVerificationResult::Status::Verified};
 	return {EmailVerificationResult::Status::InvalidOrExpired};
 }
@@ -122,13 +102,12 @@ EmailVerificationResult AccountRepository::verifyEmailToken(
 ResendVerificationResult AccountRepository::issueEmailVerificationToken(
 	const std::string &email,
 	const std::string &tokenHash,
-	std::chrono::seconds tokenLifetime
-)
+	std::chrono::seconds tokenLifetime)
 {
 	if (tokenLifetime <= std::chrono::seconds::zero())
 		return {ResendVerificationResult::Status::DatabaseError, {}};
 
-	QueryResult result = this->_database.executeParams(
+	const auto result = this->_database.query(
 		"WITH eligible AS ("
 		"  UPDATE auth_accounts "
 		"  SET email_verification_last_sent_at = NOW(), updated_at = NOW() "
@@ -153,36 +132,30 @@ ResendVerificationResult AccountRepository::issueEmailVerificationToken(
 		") "
 		"SELECT e.email FROM eligible e "
 		"JOIN inserted i ON i.account_id = e.id",
-		{
-			email,
-			tokenHash,
-			std::to_string(tokenLifetime.count())
-		}
-	);
+		email,
+		tokenHash,
+		tokenLifetime.count());
 
-	if (result.isError())
+	if (!result)
 		return {ResendVerificationResult::Status::DatabaseError, {}};
-	if (result.rowCount() != 1)
+	if (result->size() != 1)
 		return {ResendVerificationResult::Status::Suppressed, {}};
-
-	const auto issuedEmail = result.getString(0, 0);
-	if (!issuedEmail.has_value())
-		return {ResendVerificationResult::Status::DatabaseError, {}};
-	return {ResendVerificationResult::Status::Issued, *issuedEmail};
+	return {
+		ResendVerificationResult::Status::Issued,
+		(*result)[0].get<std::string>("email")};
 }
 
 SessionResult AccountRepository::createSession(
 	std::int64_t accountId,
 	const std::string &refreshTokenHash,
 	std::chrono::seconds idleLifetime,
-	std::chrono::seconds absoluteLifetime
-)
+	std::chrono::seconds absoluteLifetime)
 {
 	if (idleLifetime <= std::chrono::seconds::zero() ||
 		absoluteLifetime < idleLifetime)
 		return {SessionResult::Status::DatabaseError, 0, {}};
 
-	QueryResult result = this->_database.executeParams(
+	const auto result = this->_database.query(
 		"WITH account AS ("
 		"  SELECT id, email FROM auth_accounts "
 		"  WHERE id = $1 AND email_verified_at IS NOT NULL"
@@ -201,35 +174,31 @@ SessionResult AccountRepository::createSession(
 		"SELECT a.id, a.email FROM account a "
 		"JOIN session s ON s.account_id = a.id "
 		"JOIN refresh r ON r.session_id = s.id",
-		{
-			std::to_string(accountId),
-			refreshTokenHash,
-			std::to_string(idleLifetime.count()),
-			std::to_string(absoluteLifetime.count())
-		}
-	);
-	if (result.isError())
+		accountId,
+		refreshTokenHash,
+		idleLifetime.count(),
+		absoluteLifetime.count());
+	if (!result)
 		return {SessionResult::Status::DatabaseError, 0, {}};
-	if (result.rowCount() != 1)
+	if (result->size() != 1)
 		return {SessionResult::Status::InvalidToken, 0, {}};
 
-	const auto id = result.getInt64(0, 0);
-	const auto email = result.getString(0, 1);
-	if (!id.has_value() || !email.has_value())
-		return {SessionResult::Status::DatabaseError, 0, {}};
-	return {SessionResult::Status::Success, *id, *email};
+	const pg::Row row = (*result)[0];
+	return {
+		SessionResult::Status::Success,
+		row.get<std::int64_t>("id"),
+		row.get<std::string>("email")};
 }
 
 SessionResult AccountRepository::rotateRefreshToken(
 	const std::string &currentTokenHash,
 	const std::string &replacementTokenHash,
-	std::chrono::seconds idleLifetime
-)
+	std::chrono::seconds idleLifetime)
 {
 	if (idleLifetime <= std::chrono::seconds::zero())
 		return {SessionResult::Status::DatabaseError, 0, {}};
 
-	QueryResult result = this->_database.executeParams(
+	const auto result = this->_database.query(
 		"WITH candidate AS ("
 		"  SELECT t.id AS token_id, t.session_id, t.expires_at AS token_expires_at, "
 		"    t.consumed_at, s.account_id, s.absolute_expires_at, "
@@ -270,58 +239,51 @@ SessionResult AccountRepository::rotateRefreshToken(
 		"SELECT a.id, a.email FROM inserted i "
 		"JOIN user_sessions s ON s.id = i.session_id "
 		"JOIN auth_accounts a ON a.id = s.account_id",
-		{
-			currentTokenHash,
-			replacementTokenHash,
-			std::to_string(idleLifetime.count())
-		}
-	);
-	if (result.isError())
+		currentTokenHash,
+		replacementTokenHash,
+		idleLifetime.count());
+	if (!result)
 		return {SessionResult::Status::DatabaseError, 0, {}};
-	if (result.rowCount() != 1)
+	if (result->size() != 1)
 		return {SessionResult::Status::InvalidToken, 0, {}};
 
-	const auto id = result.getInt64(0, 0);
-	const auto email = result.getString(0, 1);
-	if (!id.has_value() || !email.has_value())
-		return {SessionResult::Status::DatabaseError, 0, {}};
-	return {SessionResult::Status::Success, *id, *email};
+	const pg::Row row = (*result)[0];
+	return {
+		SessionResult::Status::Success,
+		row.get<std::int64_t>("id"),
+		row.get<std::string>("email")};
 }
 
 bool AccountRepository::revokeSessionByRefreshToken(
-	const std::string &refreshTokenHash
-)
+	const std::string &refreshTokenHash)
 {
-	QueryResult result = this->_database.executeParams(
-		"UPDATE user_sessions s SET revoked_at = NOW() "
-		"FROM refresh_tokens t "
-		"WHERE t.token_hash = $1 AND t.session_id = s.id "
-		"AND s.revoked_at IS NULL",
-		{refreshTokenHash}
-	);
-	return !result.isError();
+	return this->_database.query(
+							  "UPDATE user_sessions s SET revoked_at = NOW() "
+							  "FROM refresh_tokens t "
+							  "WHERE t.token_hash = $1 AND t.session_id = s.id "
+							  "AND s.revoked_at IS NULL",
+							  refreshTokenHash)
+		.has_value();
 }
 
 bool AccountRepository::revokeAllSessions(std::int64_t accountId)
 {
-	QueryResult result = this->_database.executeParams(
-		"UPDATE user_sessions SET revoked_at = NOW() "
-		"WHERE account_id = $1 AND revoked_at IS NULL",
-		{std::to_string(accountId)}
-	);
-	return !result.isError();
+	return this->_database.query(
+							  "UPDATE user_sessions SET revoked_at = NOW() "
+							  "WHERE account_id = $1 AND revoked_at IS NULL",
+							  accountId)
+		.has_value();
 }
 
 PasswordResetRequestResult AccountRepository::issuePasswordResetToken(
 	const std::string &email,
 	const std::string &tokenHash,
-	std::chrono::seconds tokenLifetime
-)
+	std::chrono::seconds tokenLifetime)
 {
 	if (tokenLifetime <= std::chrono::seconds::zero())
 		return {PasswordResetRequestResult::Status::DatabaseError, {}};
 
-	QueryResult result = this->_database.executeParams(
+	const auto result = this->_database.query(
 		"WITH eligible AS ("
 		"  UPDATE auth_accounts "
 		"  SET password_reset_last_sent_at = NOW(), updated_at = NOW() "
@@ -345,29 +307,23 @@ PasswordResetRequestResult AccountRepository::issuePasswordResetToken(
 		") "
 		"SELECT e.email FROM eligible e "
 		"JOIN inserted i ON i.account_id = e.id",
-		{
-			email,
-			tokenHash,
-			std::to_string(tokenLifetime.count())
-		}
-	);
-	if (result.isError())
+		email,
+		tokenHash,
+		tokenLifetime.count());
+	if (!result)
 		return {PasswordResetRequestResult::Status::DatabaseError, {}};
-	if (result.rowCount() != 1)
+	if (result->size() != 1)
 		return {PasswordResetRequestResult::Status::Suppressed, {}};
-
-	const auto issuedEmail = result.getString(0, 0);
-	if (!issuedEmail.has_value())
-		return {PasswordResetRequestResult::Status::DatabaseError, {}};
-	return {PasswordResetRequestResult::Status::Issued, *issuedEmail};
+	return {
+		PasswordResetRequestResult::Status::Issued,
+		(*result)[0].get<std::string>("email")};
 }
 
 PasswordResetResult AccountRepository::resetPassword(
 	const std::string &tokenHash,
-	const std::string &passwordHash
-)
+	const std::string &passwordHash)
 {
-	QueryResult result = this->_database.executeParams(
+	const auto result = this->_database.query(
 		"WITH candidate AS ("
 		"  SELECT t.id AS token_id, t.account_id "
 		"  FROM password_reset_tokens t "
@@ -393,81 +349,51 @@ PasswordResetResult AccountRepository::resetPassword(
 		"  RETURNING s.id"
 		") "
 		"SELECT id FROM updated_account",
-		{tokenHash, passwordHash}
-	);
-	if (result.isError())
+		tokenHash,
+		passwordHash);
+	if (!result)
 		return {PasswordResetResult::Status::DatabaseError};
-	if (result.rowCount() == 1)
+	if (result->size() == 1)
 		return {PasswordResetResult::Status::Reset};
 	return {PasswordResetResult::Status::InvalidOrExpired};
 }
 
-auth::UserLookupResult AccountRepository::findByEmail(
-	const std::string &email
-)
+namespace
 {
-	QueryResult result = this->_database.executeParams(
+	auth::UserLookupResult userFrom(const core::Result<pg::Rows> &result)
+	{
+		if (!result)
+			return {
+				auth::UserLookupResult::Status::DatabaseError,
+				std::nullopt};
+		if (result->empty())
+			return {
+				auth::UserLookupResult::Status::NotFound,
+				std::nullopt};
+		const pg::Row row = (*result)[0];
+		return {
+			auth::UserLookupResult::Status::Found,
+			auth::User{
+				row.get<std::int64_t>("id"),
+				row.get<std::string>("email"),
+				row.get<std::string>("password_hash")}};
+	}
+}
+
+auth::UserLookupResult AccountRepository::findByEmail(
+	const std::string &email)
+{
+	return userFrom(this->_database.query(
 		"SELECT id, email, password_hash FROM auth_accounts "
 		"WHERE LOWER(email) = LOWER($1) AND email_verified_at IS NOT NULL",
-		{email}
-	);
-	if (result.isError())
-		return {
-			auth::UserLookupResult::Status::DatabaseError,
-			std::nullopt
-		};
-	if (result.rowCount() == 0)
-		return {
-			auth::UserLookupResult::Status::NotFound,
-			std::nullopt
-		};
-
-	const auto id = result.getInt64(0, 0);
-	const auto userEmail = result.getString(0, 1);
-	const auto passwordHash = result.getString(0, 2);
-	if (!id.has_value() || !userEmail.has_value() ||
-		!passwordHash.has_value())
-		return {
-			auth::UserLookupResult::Status::DatabaseError,
-			std::nullopt
-		};
-	return {
-		auth::UserLookupResult::Status::Found,
-		auth::User{*id, *userEmail, *passwordHash}
-	};
+		email));
 }
 
 auth::UserLookupResult AccountRepository::findById(
-	const std::int64_t id
-)
+	const std::int64_t id)
 {
-	QueryResult result = this->_database.executeParams(
+	return userFrom(this->_database.query(
 		"SELECT id, email, password_hash FROM auth_accounts "
 		"WHERE id = $1 AND email_verified_at IS NOT NULL",
-		{std::to_string(id)}
-	);
-	if (result.isError())
-		return {
-			auth::UserLookupResult::Status::DatabaseError,
-			std::nullopt
-		};
-	if (result.rowCount() == 0)
-		return {
-			auth::UserLookupResult::Status::NotFound,
-			std::nullopt
-		};
-
-	const auto userId = result.getInt64(0, 0);
-	const auto userEmail = result.getString(0, 1);
-	const auto passwordHash = result.getString(0, 2);
-	if (!userId.has_value() || !userEmail.has_value() ||
-		!passwordHash.has_value())
-		return {
-			auth::UserLookupResult::Status::DatabaseError,
-			std::nullopt
-		};
-	return {
-		auth::UserLookupResult::Status::Found,
-		auth::User{*userId, *userEmail, *passwordHash}
-	};
+		id));
 }

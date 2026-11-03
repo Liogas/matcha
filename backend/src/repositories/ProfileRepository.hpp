@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pg/Executor.hpp>
 #include "../images/ImageTypes.hpp"
 
 #include <cstdint>
@@ -7,8 +8,6 @@
 #include <string>
 #include <vector>
 #include <unordered_set>
-
-class Database;
 
 struct ProfileData
 {
@@ -37,13 +36,13 @@ struct ProfilePhoto
 class ProfileRepository
 {
 	public:
-		explicit ProfileRepository(Database &database);
+		explicit ProfileRepository(pg::Executor &database);
 
 		std::optional<ProfileData> findProfile(std::int64_t accountId);
 		std::vector<ProfileData> listCompletedProfiles(
 			std::int64_t excludingAccountId,
 			std::int32_t limit,
-			std::int32_t offset
+			std::optional<std::int64_t> afterAccountId
 		);
 		std::optional<std::int64_t> findPhotoOwner(std::int64_t photoId);
 		bool updateProfile(
@@ -75,5 +74,5 @@ class ProfileRepository
 		std::unordered_set<std::string> listStorageKeys();
 
 	private:
-		Database &_database;
+		pg::Executor &_database;
 };

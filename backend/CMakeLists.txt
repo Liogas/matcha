@@ -12,7 +12,6 @@ include (CTest)
 enable_testing()
 
 find_package(Crow CONFIG REQUIRED)
-find_package(PostgreSQL REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(CURL CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
@@ -26,10 +25,6 @@ add_subdirectory(libs)
 add_executable(matcha_backend
     src/main.cpp
 
-    src/database/Database.cpp
-    src/database/QueryResult.cpp
-    src/database/DatabaseInitializer.cpp
-
     src/repositories/AccountRepository.cpp
     src/repositories/ProfileRepository.cpp
     src/repositories/LikeRepository.cpp
@@ -39,6 +34,8 @@ add_executable(matcha_backend
     src/security/EmailVerificationToken.cpp
     
     src/services/SmtpEmailSender.cpp
+    src/services/ProfilePhotoService.cpp
+    src/services/MatchService.cpp
     src/services/ProfilePhotoService.cpp
     
     src/security/RedisLoginAttemptLimiter.cpp
@@ -61,9 +58,9 @@ add_executable(matcha_backend
 
 target_link_libraries(matcha_backend
     PRIVATE cpp-core::cpp-core
+    PRIVATE cpp-pg::cpp-pg
     PRIVATE cpp-auth::cpp-auth
     PRIVATE Crow::Crow
-    PRIVATE PostgreSQL::PostgreSQL
     PRIVATE OpenSSL::Crypto
     PRIVATE CURL::libcurl
     PRIVATE unofficial-sodium::sodium
@@ -84,21 +81,32 @@ target_link_libraries(login_rate_limiter_tests
     PRIVATE redis++::redis++_static GTest::gtest_main OpenSSL::Crypto
 )
 
-add_executable(account_repository_integration_tests
+# Tests des repositories et de MatchService, sur la base postgres-test
+# (variables PG_TEST_*), avec le schéma appliqué depuis migrations/.
+add_executable(repository_tests
+    tests/support/DatabaseTest.cpp
     tests/integration/AccountRepositoryIntegrationTests.cpp
-    src/database/Database.cpp
-    src/database/QueryResult.cpp
+    tests/integration/ProfileRepositoryTests.cpp
+    tests/integration/MatchServiceTests.cpp
     src/repositories/AccountRepository.cpp
+    src/repositories/ProfileRepository.cpp
+    src/repositories/LikeRepository.cpp
+    src/messaging/MessagingRepository.cpp
+    src/services/MatchService.cpp
 )
 
-target_include_directories(account_repository_integration_tests
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+target_include_directories(repository_tests
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/tests
 )
 
-target_link_libraries(account_repository_integration_tests
+target_compile_definitions(repository_tests
+    PRIVATE MATCHA_MIGRATIONS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/migrations"
+)
+
+target_link_libraries(repository_tests
     PRIVATE
+        cpp-pg::cpp-pg
         cpp-auth::cpp-auth
-        PostgreSQL::PostgreSQL
         GTest::gtest_main
 )
 
@@ -147,7 +155,8 @@ target_link_libraries(password_hasher_tests
 
 include(GoogleTest)
 gtest_discover_tests(password_hasher_tests)
-gtest_discover_tests(account_repository_integration_tests)
+# Tous ces tests partagent la base de test : un seul à la fois, même avec ctest -j.
+gtest_discover_tests(repository_tests PROPERTIES RESOURCE_LOCK matcha-test-database)
 gtest_discover_tests(login_rate_limiter_tests)
 gtest_discover_tests(email_verification_token_tests)
 gtest_discover_tests(local_image_storage_tests)

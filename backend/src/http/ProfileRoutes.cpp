@@ -138,9 +138,9 @@ void registerProfileRoutes(
 		if (!id)
 			return unauthorized();
 		const auto limitValue = request.url_params.get("limit");
-		const auto offsetValue = request.url_params.get("offset");
+		const auto afterValue = request.url_params.get("after");
 		int limit = 24;
-		int offset = 0;
+		std::optional<std::int64_t> after;
 		if (limitValue)
 		{
 			const auto parsed = std::from_chars(
@@ -148,16 +148,18 @@ void registerProfileRoutes(
 			if (parsed.ec != std::errc{} || limit < 1 || limit > 50)
 				return auth_routes::jsonError(400, "Limit must be between 1 and 50");
 		}
-		if (offsetValue)
+		if (afterValue)
 		{
+			std::int64_t cursor = 0;
 			const auto parsed = std::from_chars(
-				offsetValue, offsetValue + std::strlen(offsetValue), offset);
-			if (parsed.ec != std::errc{} || offset < 0)
-				return auth_routes::jsonError(400, "Offset must be non-negative");
+				afterValue, afterValue + std::strlen(afterValue), cursor);
+			if (parsed.ec != std::errc{} || cursor < 1)
+				return auth_routes::jsonError(400, "After must be a positive account id");
+			after = cursor;
 		}
 		crow::json::wvalue::list profiles;
 		for (const auto &profile :
-			profileRepository.listCompletedProfiles(*id, limit, offset))
+			profileRepository.listCompletedProfiles(*id, limit, after))
 		{
 			crow::json::wvalue item;
 			item["account_id"] = profile.accountId;

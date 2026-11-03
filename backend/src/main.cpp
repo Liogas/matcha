@@ -1,16 +1,15 @@
 #include <crow.h>
 #include <crow/middlewares/cors.h>
-#include <libpq-fe.h>
+#include <sw/redis++/redis++.h>
 
 #include <chrono>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <sw/redis++/redis++.h>
+#include <memory>
+#include <string_view>
 
-#include "database/Database.hpp"
-#include "database/DatabaseInitializer.hpp"
 #include "repositories/AccountRepository.hpp"
 #include "security/PasswordHasher.hpp"
 #include "security/RedisLoginAttemptLimiter.hpp"
@@ -21,6 +20,7 @@
 #include "images/LocalImageStorage.hpp"
 #include "repositories/ProfileRepository.hpp"
 #include "repositories/LikeRepository.hpp"
+#include "services/MatchService.hpp"
 #include "services/ProfilePhotoService.hpp"
 #include "messaging/MessagingRepository.hpp"
 #include "messaging/MessagingRoutes.hpp"
@@ -28,6 +28,8 @@
 
 #include <core/ConfigReader.hpp>
 #include <core/Logger.hpp>
+#include <pg/Migrations.hpp>
+#include <pg/Pool.hpp>
 
 #include <auth/auth/Authenticator.hpp>
 #include <auth/http/CppHttpClient.hpp>
@@ -43,10 +45,17 @@
 #include <auth/token/TokenGenerator.hpp>
 #include <auth/token/RsaTokenSigner.hpp>
 
-int run(core::ILogger &logger)
+int run(
+	core::ILogger &logger,
+	bool migrationsDryRun)
 {
 	const core::SystemEnvironment environment;
 	core::ConfigReader config(environment);
+
+	pg::ConnectionSettings databaseSettings = pg::readSettings(config, "DB_");
+	databaseSettings.applicationName = "matcha_backend";
+	pg::PoolOptions poolOptions;
+	poolOptions.size = 8;
 
 	const std::string issuer = config.required("JWT_ISSUER");
 	const std::string audience = config.required("JWT_AUDIENCE");
@@ -88,29 +97,34 @@ int run(core::ILogger &logger)
 									   smtpPassword,
 									   smtpTls});
 
-	Database database;
-	DatabaseInitializer databaseInitializer(database);
-
-	if (!databaseInitializer.run())
+	auto openedPool = pg::ConnectionPool::open(databaseSettings, poolOptions, logger);
+	if (!openedPool)
 	{
-		logger.error("Database initialization failed");
+		logger.error("Database unavailable", {{"reason", openedPool.error().message}});
 		return 1;
 	}
+	// Déclaré avant tout ce qui l'utilise : détruit après eux (guide 05, Q7).
+	std::unique_ptr<pg::ConnectionPool> pool = std::move(*openedPool);
 
-	AccountRepository accountRepository(database);
-	ProfileRepository profileRepository(database);
-	LikeRepository likeRepository(database);
-	MessagingRepository messagingRepository(database);
-	for (const auto &[firstAccountId, secondAccountId] :
-		 likeRepository.listAllMatches())
+	pg::MigrationOptions migrationOptions;
+	migrationOptions.dryRun = migrationsDryRun;
+	const auto migrated = pg::migrate(*pool, migrationOptions, logger);
+	if (!migrated)
 	{
-		if (!messagingRepository.ensureDirectConversation(
-				firstAccountId, secondAccountId))
-		{
-			throw std::runtime_error(
-				"Unable to synchronize a match conversation");
-		}
+		logger.error("Database migration failed", {{"reason", migrated.error().message}});
+		return 1;
 	}
+	if (migrationsDryRun)
+	{
+		logger.info("Migrations dry run", {{"pending", std::to_string(migrated->applied.size())}});
+		return 0;
+	}
+
+	AccountRepository accountRepository(*pool);
+	ProfileRepository profileRepository(*pool);
+	LikeRepository likeRepository(*pool);
+	MessagingRepository messagingRepository(*pool);
+	MatchService matchService(*pool);
 	MessagingWebSocketHub messagingWebSocketHub;
 	ImageProcessor imageProcessor(
 		10 * 1024 * 1024,
@@ -256,7 +270,7 @@ int run(core::ILogger &logger)
 		authenticator,
 		likeRepository,
 		profileRepository,
-		messagingRepository);
+		matchService);
 	registerMessagingRoutes(
 		app,
 		authenticator,
@@ -275,16 +289,21 @@ int run(core::ILogger &logger)
 	return 0;
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	core::StreamLogger logger(std::cerr, core::LogLevel::Info);
+	// matcha_backend --migrations-dry-run : affiche les migrations en attente,
+	// les essaie, annule tout, et s'arrête.
+	const bool migrationsDryRun =
+		argc == 2 && std::string_view(argv[1]) == "--migrations-dry-run";
 	try
 	{
-		return run(logger);
-	}
-	catch (const std::exception &error)
+		return run(logger, migrationsDryRun);
+	} catch (std::exception &error)
 	{
-		logger.error("Startup failed", {{"reason", error.what()}});
+		logger.error("Startup failed", {{
+			"reason", error.what()
+		}});
 		return 1;
 	}
 }

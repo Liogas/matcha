@@ -3,7 +3,7 @@
 #include "AuthRoutes.hpp"
 #include "../repositories/LikeRepository.hpp"
 #include "../repositories/ProfileRepository.hpp"
-#include "../messaging/MessagingRepository.hpp"
+#include "../services/MatchService.hpp"
 #include <auth/auth/Authenticator.hpp>
 
 void registerLikeRoutes(
@@ -11,5 +11,5 @@ void registerLikeRoutes(
 	auth::Authenticator &authenticator,
 	LikeRepository &likeRepository,
 	ProfileRepository &profileRepository,
-	MessagingRepository &messagingRepository
+	MatchService &matchService
 );

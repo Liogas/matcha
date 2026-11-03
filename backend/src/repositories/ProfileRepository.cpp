@@ -1,45 +1,25 @@
 #include "ProfileRepository.hpp"
 
-#include "../database/Database.hpp"
+#include <pg/QueryBuilder.hpp>
 
-ProfileRepository::ProfileRepository(Database &database):
-	_database(database)
-{}
+ProfileRepository::ProfileRepository(pg::Executor &database) : _database(database)
+{
+}
 
 namespace
 {
-	std::optional<ProfileData> readProfile(
-		const QueryResult &result,
-		int row
-	)
-	{
-		const auto id = result.getInt64(row, 0);
-		const auto username = result.getString(row, 1);
-		const auto firstName = result.getString(row, 2);
-		const auto lastName = result.getString(row, 3);
-		const auto orientation = result.getString(row, 6);
-		const auto completed = result.getBool(row, 9);
-		if (!id || !username || !firstName || !lastName ||
-			!orientation || !completed)
-			return std::nullopt;
-		return ProfileData{
-			*id, *username, *firstName, *lastName,
-			result.getString(row, 4), result.getString(row, 5),
-			*orientation, result.getString(row, 7),
-			result.getString(row, 8), *completed,
-			result.getInt64(row, 10)
-		};
-	}
-}
+	// Les colonnes lues par readProfile, dans toutes les requêtes de profil.
+	constexpr const char *PROFILE_COLUMNS =
+		"p.account_id, p.username, p.first_name, p.last_name, "
+		"p.date_of_birth::text AS date_of_birth, p.gender, p.sexual_orientation, "
+		"p.biography, p.city, "
+		"(SELECT photo.id FROM matcha_profile_photos photo "
+		"WHERE photo.profile_account_id = p.account_id "
+		"AND photo.is_primary LIMIT 1) AS primary_photo_id";
 
-std::optional<ProfileData> ProfileRepository::findProfile(
-	std::int64_t accountId
-)
-{
-	const auto result = _database.executeParams(
-		"SELECT p.account_id, p.username, p.first_name, p.last_name, "
-		"p.date_of_birth::text, p.gender, p.sexual_orientation, p.biography, "
-		"p.city, (p.date_of_birth IS NOT NULL "
+	// Un profil est complet quand ces conditions sont toutes vraies.
+	constexpr const char *PROFILE_COMPLETED =
+		"p.date_of_birth IS NOT NULL "
 		"AND p.date_of_birth <= CURRENT_DATE - INTERVAL '18 years' "
 		"AND p.gender IS NOT NULL "
 		"AND NULLIF(BTRIM(p.biography), '') IS NOT NULL "
@@ -47,72 +27,74 @@ std::optional<ProfileData> ProfileRepository::findProfile(
 		"AND p.city ~ '^[[:alpha:]][[:alpha:] .''-]*$' "
 		"AND EXISTS (SELECT 1 FROM matcha_profile_photos photo "
 		"WHERE photo.profile_account_id = p.account_id "
-		"AND photo.is_primary)) "
-		", (SELECT photo.id FROM matcha_profile_photos photo "
-		"WHERE photo.profile_account_id = p.account_id "
-		"AND photo.is_primary LIMIT 1) "
-		"FROM matcha_profiles p WHERE p.account_id = $1",
-		{std::to_string(accountId)}
-	);
-	if (result.isError() || result.rowCount() != 1)
+		"AND photo.is_primary)";
+
+	// La recherche avancée ajoutera ici d'autres tris (âge, distance, popularité).
+	const pg::SortWhitelist PROFILE_SORTS{{"account", "p.account_id"}};
+
+	ProfileData readProfile(const pg::Row &row)
+	{
+		return ProfileData{
+			row.get<std::int64_t>("account_id"),
+			row.get<std::string>("username"),
+			row.get<std::string>("first_name"),
+			row.get<std::string>("last_name"),
+			row.get<std::optional<std::string>>("date_of_birth"),
+			row.get<std::optional<std::string>>("gender"),
+			row.get<std::string>("sexual_orientation"),
+			row.get<std::optional<std::string>>("biography"),
+			row.get<std::optional<std::string>>("city"),
+			row.get<bool>("completed"),
+			row.get<std::optional<std::int64_t>>("primary_photo_id")};
+	}
+}
+
+std::optional<ProfileData> ProfileRepository::findProfile(
+	std::int64_t accountId)
+{
+	const auto result = _database.query(
+		std::string("SELECT ") + PROFILE_COLUMNS + ", (" + PROFILE_COMPLETED +
+			") AS completed FROM matcha_profiles p WHERE p.account_id = $1",
+		accountId);
+	if (!result || result->size() != 1)
 		return std::nullopt;
-	return readProfile(result, 0);
+	return readProfile((*result)[0]);
 }
 
 std::vector<ProfileData> ProfileRepository::listCompletedProfiles(
 	std::int64_t excludingAccountId,
 	std::int32_t limit,
-	std::int32_t offset
-)
+	std::optional<std::int64_t> afterAccountId)
 {
-	const auto result = _database.executeParams(
-		"SELECT p.account_id, p.username, p.first_name, p.last_name, "
-		"p.date_of_birth::text, p.gender, p.sexual_orientation, p.biography, "
-		"p.city, TRUE, (SELECT photo.id FROM matcha_profile_photos photo "
-		"WHERE photo.profile_account_id = p.account_id "
-		"AND photo.is_primary LIMIT 1) "
-		"FROM matcha_profiles p "
-		"WHERE p.account_id <> $1 "
-		"AND p.date_of_birth IS NOT NULL "
-		"AND p.date_of_birth <= CURRENT_DATE - INTERVAL '18 years' "
-		"AND p.gender IS NOT NULL "
-		"AND NULLIF(BTRIM(p.biography), '') IS NOT NULL "
-		"AND p.city IS NOT NULL "
-		"AND p.city ~ '^[[:alpha:]][[:alpha:] .''-]*$' "
-		"AND EXISTS (SELECT 1 FROM matcha_profile_photos photo "
-		"WHERE photo.profile_account_id = p.account_id "
-		"AND photo.is_primary) "
-		"ORDER BY p.created_at, p.account_id LIMIT $2 OFFSET $3",
-		{
-			std::to_string(excludingAccountId),
-			std::to_string(limit),
-			std::to_string(offset)
-		}
-	);
+	pg::QueryBuilder builder(std::string("SELECT ") + PROFILE_COLUMNS +
+							 ", TRUE AS completed FROM matcha_profiles p");
+	builder.where("p.account_id <> ?", excludingAccountId)
+		.where(PROFILE_COMPLETED)
+		.whereIf(afterAccountId, "p.account_id > ?")
+		.orderBy("account", PROFILE_SORTS)
+		.limit(limit);
+	const auto query = builder.build();
 	std::vector<ProfileData> profiles;
-	if (result.isError())
+	if (!query)
 		return profiles;
-	for (int row = 0; row < result.rowCount(); ++row)
-	{
-		const auto profile = readProfile(result, row);
-		if (profile)
-			profiles.push_back(*profile);
-	}
+	const auto result = _database.execute(query->sql, query->params);
+	if (!result)
+		return profiles;
+	for (const pg::Row row : *result)
+		profiles.push_back(readProfile(row));
 	return profiles;
 }
 
 std::optional<std::int64_t> ProfileRepository::findPhotoOwner(
-	std::int64_t photoId
-)
+	std::int64_t photoId)
 {
-	const auto result = _database.executeParams(
+	const auto result = _database.query(
 		"SELECT profile_account_id FROM matcha_profile_photos "
 		"WHERE id = $1",
-		{std::to_string(photoId)}
-	);
-	if (result.isError() || result.rowCount() != 1)
+		photoId);
+	if (!result || result->size() != 1)
 		return std::nullopt;
-	return result.getInt64(0, 0);
+	return (*result)[0].get<std::int64_t>("profile_account_id");
 }
 
 bool ProfileRepository::updateProfile(
@@ -121,10 +103,9 @@ bool ProfileRepository::updateProfile(
 	const std::string &gender,
 	const std::string &sexualOrientation,
 	const std::string &biography,
-	const std::string &city
-)
+	const std::string &city)
 {
-	const auto result = _database.executeParams(
+	const auto result = _database.query(
 		"UPDATE matcha_profiles SET date_of_birth = NULLIF($2, '')::date, "
 		"gender = NULLIF($3, ''), sexual_orientation = $4, "
 		"biography = NULLIF($5, ''), city = NULLIF($6, ''), "
@@ -139,55 +120,38 @@ bool ProfileRepository::updateProfile(
 		"THEN COALESCE(completed_at, NOW()) ELSE NULL END, "
 		"updated_at = NOW() WHERE account_id = $1 "
 		"RETURNING account_id",
-		{
-			std::to_string(accountId),
-			dateOfBirth,
-			gender,
-			sexualOrientation,
-			biography,
-			city
-		}
-	);
-	return !result.isError() && result.rowCount() == 1;
+		accountId,
+		dateOfBirth,
+		gender,
+		sexualOrientation,
+		biography,
+		city);
+	return result && result->size() == 1;
 }
 
 std::vector<ProfilePhoto> ProfileRepository::listPhotos(
-	std::int64_t accountId
-)
+	std::int64_t accountId)
 {
-	const auto result = _database.executeParams(
+	const auto result = _database.query(
 		"SELECT id, storage_key, position, is_primary, content_type, "
 		"file_size, width, height, file_hash "
 		"FROM matcha_profile_photos WHERE profile_account_id = $1 "
 		"ORDER BY position",
-		{std::to_string(accountId)}
-	);
+		accountId);
 	std::vector<ProfilePhoto> photos;
-	if (result.isError())
+	if (!result)
 		return photos;
-	for (int row = 0; row < result.rowCount(); ++row)
+	for (const pg::Row row : *result)
 	{
-		const auto id = result.getInt64(row, 0);
-		const auto key = result.getString(row, 1);
-		const auto position = result.getInt(row, 2);
-		const auto primary = result.getBool(row, 3);
-		const auto type = result.getString(row, 4);
-		const auto size = result.getInt64(row, 5);
-		const auto width = result.getInt(row, 6);
-		const auto height = result.getInt(row, 7);
-		const auto hash = result.getString(row, 8);
-		if (!id || !key || !position || !primary || !type || !size ||
-			!width || !height || !hash)
-			continue;
-		photos.push_back({
-			*id,
-			static_cast<std::int16_t>(*position),
-			*primary,
-			*key,
-			{*type, static_cast<std::size_t>(*size),
-				static_cast<std::uint32_t>(*width),
-				static_cast<std::uint32_t>(*height), *hash}
-		});
+		photos.push_back({row.get<std::int64_t>("id"),
+						  row.get<std::int16_t>("position"),
+						  row.get<bool>("is_primary"),
+						  row.get<std::string>("storage_key"),
+						  {row.get<std::string>("content_type"),
+						   row.get<std::size_t>("file_size"),
+						   row.get<std::uint32_t>("width"),
+						   row.get<std::uint32_t>("height"),
+						   row.get<std::string>("file_hash")}});
 	}
 	return photos;
 }
@@ -197,68 +161,52 @@ std::optional<ProfilePhoto> ProfileRepository::addPhoto(
 	const std::string &storageKey,
 	const ImageMetadata &metadata,
 	std::int16_t position,
-	bool isPrimary
-)
+	bool isPrimary)
 {
-	const auto result = _database.executeParams(
+	const auto result = _database.query(
 		"INSERT INTO matcha_profile_photos "
 		"(profile_account_id, storage_key, position, is_primary, content_type, "
 		"file_size, width, height, file_hash) VALUES "
 		"($1, $2, $3, $4, $5, $6, $7, $8, $9) "
 		"RETURNING id",
-		{
-			std::to_string(accountId), storageKey, std::to_string(position),
-			isPrimary ? "true" : "false", metadata.contentType,
-			std::to_string(metadata.fileSize), std::to_string(metadata.width),
-			std::to_string(metadata.height), metadata.sha256
-		}
-	);
-	if (result.isError() || result.rowCount() != 1)
+		accountId, storageKey, position, isPrimary, metadata.contentType,
+		metadata.fileSize, metadata.width, metadata.height, metadata.sha256);
+	if (!result || result->size() != 1)
 		return std::nullopt;
-	const auto id = result.getInt64(0, 0);
-	if (!id)
-		return std::nullopt;
-	return ProfilePhoto{*id, position, isPrimary, storageKey, metadata};
+	return ProfilePhoto{(*result)[0].get<std::int64_t>("id"), position,
+						isPrimary, storageKey, metadata};
 }
 
 bool ProfileRepository::updatePhoto(
 	std::int64_t accountId,
 	std::int64_t photoId,
 	const std::string &storageKey,
-	const ImageMetadata &metadata
-)
+	const ImageMetadata &metadata)
 {
-	const auto result = _database.executeParams(
+	const auto result = _database.query(
 		"UPDATE matcha_profile_photos SET storage_key = $3, "
 		"content_type = $4, file_size = $5, width = $6, height = $7, "
 		"file_hash = $8 WHERE id = $1 AND profile_account_id = $2 "
 		"RETURNING id",
-		{
-			std::to_string(photoId), std::to_string(accountId), storageKey,
-			metadata.contentType, std::to_string(metadata.fileSize),
-			std::to_string(metadata.width), std::to_string(metadata.height),
-			metadata.sha256
-		}
-	);
-	return !result.isError() && result.rowCount() == 1;
+		photoId, accountId, storageKey, metadata.contentType,
+		metadata.fileSize, metadata.width, metadata.height, metadata.sha256);
+	return result && result->size() == 1;
 }
 
 bool ProfileRepository::deletePhoto(std::int64_t accountId, std::int64_t photoId)
 {
-	const auto result = _database.executeParams(
+	const auto result = _database.query(
 		"DELETE FROM matcha_profile_photos "
 		"WHERE id = $1 AND profile_account_id = $2 RETURNING id",
-		{std::to_string(photoId), std::to_string(accountId)}
-	);
-	return !result.isError() && result.rowCount() == 1;
+		photoId, accountId);
+	return result && result->size() == 1;
 }
 
 bool ProfileRepository::setPrimaryPhoto(
 	std::int64_t accountId,
-	std::int64_t photoId
-)
+	std::int64_t photoId)
 {
-	const auto result = _database.executeParams(
+	const auto result = _database.query(
 		"WITH target AS ("
 		"SELECT id FROM matcha_profile_photos "
 		"WHERE id = $2 AND profile_account_id = $1"
@@ -270,51 +218,38 @@ bool ProfileRepository::setPrimaryPhoto(
 		"UPDATE matcha_profile_photos SET is_primary = true "
 		"WHERE id IN (SELECT id FROM target) RETURNING id"
 		") SELECT id FROM selected",
-		{std::to_string(accountId), std::to_string(photoId)}
-	);
-	return !result.isError() && result.rowCount() == 1;
+		accountId, photoId);
+	return result && result->size() == 1;
 }
 
 bool ProfileRepository::hasPrimaryPhoto(std::int64_t accountId)
 {
-	const auto result = _database.executeParams(
+	const auto result = _database.query(
 		"SELECT 1 FROM matcha_profile_photos "
 		"WHERE profile_account_id = $1 AND is_primary",
-		{std::to_string(accountId)}
-	);
-	return !result.isError() && result.rowCount() == 1;
+		accountId);
+	return result && result->size() == 1;
 }
 
 bool ProfileRepository::refreshCompletion(std::int64_t accountId)
 {
-	const auto result = _database.executeParams(
-		"UPDATE matcha_profiles SET completed_at = CASE "
-		"WHEN date_of_birth IS NOT NULL "
-		"AND date_of_birth <= CURRENT_DATE - INTERVAL '18 years' "
-		"AND gender IS NOT NULL AND NULLIF(BTRIM(biography), '') IS NOT NULL "
-		"AND city IS NOT NULL "
-		"AND city ~ '^[[:alpha:]][[:alpha:] .''-]*$' "
-		"AND EXISTS (SELECT 1 FROM matcha_profile_photos "
-		"WHERE profile_account_id = $1 AND is_primary) "
-		"THEN COALESCE(completed_at, NOW()) ELSE NULL END, "
-		"updated_at = NOW() WHERE account_id = $1 RETURNING account_id",
-		{std::to_string(accountId)}
-	);
-	return !result.isError() && result.rowCount() == 1;
+	const auto result = _database.query(
+		std::string("UPDATE matcha_profiles p SET completed_at = CASE WHEN ") +
+			PROFILE_COMPLETED +
+			" THEN COALESCE(p.completed_at, NOW()) ELSE NULL END, "
+			"updated_at = NOW() WHERE p.account_id = $1 RETURNING p.account_id",
+		accountId);
+	return result && result->size() == 1;
 }
 
 std::unordered_set<std::string> ProfileRepository::listStorageKeys()
 {
-	const auto result = _database.execute(
+	const auto result = _database.query(
 		"SELECT storage_key FROM matcha_profile_photos");
 	std::unordered_set<std::string> keys;
-	if (result.isError())
+	if (!result)
 		return keys;
-	for (int row = 0; row < result.rowCount(); ++row)
-	{
-		const auto key = result.getString(row, 0);
-		if (key)
-			keys.insert(*key);
-	}
+	for (const pg::Row row : *result)
+		keys.insert(row.get<std::string>("storage_key"));
 	return keys;
 }
